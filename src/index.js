@@ -12,6 +12,10 @@ export default function outlierExplorer(element, settings){
 	let mergedSettings = Object.assign({}, config, settings);
 	//set some options based on the start_value
 	mergedSettings.x.label = mergedSettings.start_value;
+	mergedSettings.x.column = mergedSettings.value_col;
+	mergedSettings.marks[0].per[0] = mergedSettings.value_col;
+	controlInputs[0].value_col = mergedSettings.measure_col;
+	
 	//create controls now
 	let controls = createControls(element, {location: 'top', inputs: controlInputs});
 	//create chart

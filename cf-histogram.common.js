@@ -3,7 +3,7 @@
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var React = _interopDefault(require('react'));
-var d3$1 = require('d3');
+var d3 = require('d3');
 var webcharts = require('webcharts');
 
 function stringAccessor(o, s, v) {
@@ -184,12 +184,13 @@ var binding = {
 	]
 }
 
+const value_col = "STRESN";
 const settings = {
     //Addition settings for this template
     id_col: "USUBJID",
     time_col: "VISITN",
     measure_col: "TEST",
-    value_col: "STRESN",
+    value_col: value_col,
     unit_col: "STRESU",
     normal_col_low: "STNRLO",
     normal_col_high: "STNRHI",
@@ -200,7 +201,7 @@ const settings = {
     x:{
         "label":null,
         "type":"linear",
-        "column":"STRESN",
+        "column":value_col,
         "bin":25, 
         behavior:'flex', 
         "format":'.1f'
@@ -214,7 +215,7 @@ const settings = {
     },
     marks:[
         {
-            "per":["STRESN"],
+            "per":[value_col],
             "type":"bar",
             "summarizeY":"count",
             "summarizeX":"mean",
@@ -238,7 +239,7 @@ const controlInputs = [
 
 function onInit(){
     const config = this.config;
-    const allMeasures = d3$1.set(this.raw_data.map(m => m[config.measure_col])).values();
+    const allMeasures = d3.set(this.raw_data.map(m => m[config.measure_col])).values();
 
     // "All" variable for non-grouped comparisons
     this.raw_data.forEach(e => e[config.measure_col] = e[config.measure_col].trim() );
@@ -305,7 +306,7 @@ function onResize(){
     var myTable = this.table;
 
     //Show table of values in a bar on click
-    var cleanF = d3$1.format(".3f");
+    var cleanF = d3.format(".3f");
     var myBars = this.svg.selectAll('.bar');
 
     var note = this.wrap.select('.annote');
@@ -319,7 +320,7 @@ function onResize(){
 
         myTable.draw(d.values.raw);
         myBars.attr('fill-opacity', 0.5)
-        d3$1.select(this).attr('fill-opacity', 1);
+        d3.select(this).attr('fill-opacity', 1);
     })
     //Show # of values + range of a bar on mouseover 
     .on('mouseover' ,function(d){
@@ -350,6 +351,10 @@ function outlierExplorer(element, settings$$){
 	let mergedSettings = Object.assign({}, settings, settings$$);
 	//set some options based on the start_value
 	mergedSettings.x.label = mergedSettings.start_value;
+	mergedSettings.x.column = mergedSettings.value_col;
+	mergedSettings.marks[0].per[0] = mergedSettings.value_col;
+	controlInputs[0].value_col = mergedSettings.measure_col;
+	
 	//create controls now
 	let controls = webcharts.createControls(element, {location: 'top', inputs: controlInputs});
 	//create chart
@@ -374,14 +379,14 @@ class ReactHistogram extends React.Component {
 	componentDidMount(prevProps, prevState){
 		if(this.props.data.length){
 			//manually clear div and redraw
-			d3$1.select(`.chart-div.id-${this.props.id}`).selectAll('*').remove();
+			d3.select(`.chart-div.id-${this.props.id}`).selectAll('*').remove();
 			let chart = outlierExplorer(`.chart-div.id-${this.props.id}`, this.props.settings).init(this.props.data);
 		}
 	}
 	componentDidUpdate(prevProps, prevState){
 		if(this.props.data.length){
 			//manually clear div and redraw
-			d3$1.select(`.chart-div.id-${this.props.id}`).selectAll('*').remove();
+			d3.select(`.chart-div.id-${this.props.id}`).selectAll('*').remove();
 			let chart = outlierExplorer(`.chart-div.id-${this.props.id}`, this.props.settings).init(this.props.data);
 		}
 	}

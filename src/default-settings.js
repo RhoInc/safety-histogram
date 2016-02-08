@@ -1,9 +1,10 @@
+const value_col = "STRESN";
 const settings = {
     //Addition settings for this template
     id_col: "USUBJID",
     time_col: "VISITN",
     measure_col: "TEST",
-    value_col: "STRESN",
+    value_col: value_col,
     unit_col: "STRESU",
     normal_col_low: "STNRLO",
     normal_col_high: "STNRHI",
@@ -14,7 +15,7 @@ const settings = {
     x:{
         "label":null,
         "type":"linear",
-        "column":"STRESN",
+        "column":value_col,
         "bin":25, 
         behavior:'flex', 
         "format":'.1f'
@@ -28,7 +29,7 @@ const settings = {
     },
     marks:[
         {
-            "per":["STRESN"],
+            "per":[value_col],
             "type":"bar",
             "summarizeY":"count",
             "summarizeX":"mean",
@@ -51,8 +52,7 @@ export const controlInputs = [
 ];
 
 export const tableSettings = {
-    cols: ["key","shiftx","shifty"],
-    headers: ["ID","Start Value", "End Value"]
+    
 };
 
 export default settings

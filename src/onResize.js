@@ -1,5 +1,4 @@
 import { select, format } from 'd3';
-import addBoxplot from './addBoxplot';
 
 export default function onResize(){
     const config = this.config;

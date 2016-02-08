@@ -1,12 +1,13 @@
-var histogram = (function (webcharts,d3$1) {
+var histogram = (function (webcharts,d3) {
 	'use strict';
 
+	const value_col = "STRESN";
 	const settings = {
 	    //Addition settings for this template
 	    id_col: "USUBJID",
 	    time_col: "VISITN",
 	    measure_col: "TEST",
-	    value_col: "STRESN",
+	    value_col: value_col,
 	    unit_col: "STRESU",
 	    normal_col_low: "STNRLO",
 	    normal_col_high: "STNRHI",
@@ -17,7 +18,7 @@ var histogram = (function (webcharts,d3$1) {
 	    x:{
 	        "label":null,
 	        "type":"linear",
-	        "column":"STRESN",
+	        "column":value_col,
 	        "bin":25, 
 	        behavior:'flex', 
 	        "format":'.1f'
@@ -31,7 +32,7 @@ var histogram = (function (webcharts,d3$1) {
 	    },
 	    marks:[
 	        {
-	            "per":["STRESN"],
+	            "per":[value_col],
 	            "type":"bar",
 	            "summarizeY":"count",
 	            "summarizeX":"mean",
@@ -55,7 +56,7 @@ var histogram = (function (webcharts,d3$1) {
 
 	function onInit(){
 	    const config = this.config;
-	    const allMeasures = d3$1.set(this.raw_data.map(m => m[config.measure_col])).values();
+	    const allMeasures = d3.set(this.raw_data.map(m => m[config.measure_col])).values();
 
 	    // "All" variable for non-grouped comparisons
 	    this.raw_data.forEach(e => e[config.measure_col] = e[config.measure_col].trim() );
@@ -99,8 +100,8 @@ var histogram = (function (webcharts,d3$1) {
 	}
 
 	function onDataTransform(){
-	  const units = this.filtered_data[0][this.config.unit_col];
-	  const measure = this.filtered_data[0][this.config.measure_col];
+	  const units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
+	  const measure = this.filtered_data[0] ? this.filtered_data[0][this.config.measure_col] : this.raw_data[0][this.config.measure_col];
 	  //Customize the x-axis label
 	  this.config.x.label = measure+" level ("+units+")";
 
@@ -115,14 +116,14 @@ var histogram = (function (webcharts,d3$1) {
 
 	function onResize(){
 	    const config = this.config;
-	    const units = this.filtered_data[0][config.unit_col];
-	    const measure = this.filtered_data[0][config.measure_col];
+	    const units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
+	    const measure = this.filtered_data[0] ? this.filtered_data[0][this.config.measure_col] : this.raw_data[0][this.config.measure_col];
 
 	    //pointer to the linked table
 	    var myTable = this.table;
 
 	    //Show table of values in a bar on click
-	    var cleanF = d3$1.format(".3f");
+	    var cleanF = d3.format(".3f");
 	    var myBars = this.svg.selectAll('.bar');
 
 	    var note = this.wrap.select('.annote');
@@ -136,7 +137,7 @@ var histogram = (function (webcharts,d3$1) {
 
 	        myTable.draw(d.values.raw);
 	        myBars.attr('fill-opacity', 0.5)
-	        d3$1.select(this).attr('fill-opacity', 1);
+	        d3.select(this).attr('fill-opacity', 1);
 	    })
 	    //Show # of values + range of a bar on mouseover 
 	    .on('mouseover' ,function(d){
@@ -167,6 +168,8 @@ var histogram = (function (webcharts,d3$1) {
 		let mergedSettings = Object.assign({}, settings, settings$$);
 		//set some options based on the start_value
 		mergedSettings.x.label = mergedSettings.start_value;
+		mergedSettings.x.column = mergedSettings.value_col;
+		mergedSettings.marks[0].per[0] = mergedSettings.value_col;
 		//create controls now
 		let controls = webcharts.createControls(element, {location: 'top', inputs: controlInputs});
 		//create chart

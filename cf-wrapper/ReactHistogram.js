@@ -1,6 +1,6 @@
 import React from 'react';
 import { select } from 'd3';
-import outlierExplorer from '../src/index';
+import mainChart from '../src/index';
 
 export default class ReactHistogram extends React.Component {
 	constructor(props) {
@@ -11,14 +11,14 @@ export default class ReactHistogram extends React.Component {
 		if(this.props.data.length){
 			//manually clear div and redraw
 			select(`.chart-div.id-${this.props.id}`).selectAll('*').remove();
-			let chart = outlierExplorer(`.chart-div.id-${this.props.id}`, this.props.settings).init(this.props.data);
+			let chart = mainChart(`.chart-div.id-${this.props.id}`, this.props.settings).init(this.props.data);
 		}
 	}
 	componentDidUpdate(prevProps, prevState){
 		if(this.props.data.length){
 			//manually clear div and redraw
 			select(`.chart-div.id-${this.props.id}`).selectAll('*').remove();
-			let chart = outlierExplorer(`.chart-div.id-${this.props.id}`, this.props.settings).init(this.props.data);
+			let chart = mainChart(`.chart-div.id-${this.props.id}`, this.props.settings).init(this.props.data);
 		}
 	}
 	render(){

@@ -23,160 +23,12 @@ var bundle = (function (React,d3,webcharts) {
 
 	var binding = {
 		dataMappings : [
-			{
-				source:"x",
-				target:"x.column"
-			},
-			{
-				source:"x_order",
-				target:"x.order"
-			},
-			{
-				source:"x_domain",
-				target:"x.domain"
-			},
-			{
-				source:"y",
-				target:"y.column"
-			},
-			{
-				source:"y_order",
-				target:"y.order"
-			},
-			{
-				source:"y_domain",
-				target:"y.domain"
-			},
-			{
-				source:"group",
-				target:"marks.0.per"
-			},
-			{
-				source:"subgroup",
-				target:"marks.0.split"
-			},
-			{
-				source:"subset",
-				target:"marks.0.values"
-			},
-			{
-				source:"color_by",
-				target:"color_by"
-			},
-			{
-				source:"legend_order",
-				target:"legend.order"
-			},
-			{
-				source:"tooltip",
-				target:"marks.0.tooltip"
-			}
+			
 		],
 		chartProperties: [
 			{
-				source:"date_format",
-				target:"date_format"
-			},
-			{
-				source:"x_label",
-				target:"x.label"
-			},
-
-			{
-				source:"x_type",
-				target:"x.type"
-			},
-			{
-				source:"x_format",
-				target:"x.format"
-			},
-			{
-				source:"x_sort",
-				target:"x.sort"
-			},
-			{
-				source:"x_bin",
-				target:"x.bin"
-			},
-			{
-				source:"x_behavior",
-				target:"x.behavior"
-			},
-			{
-				source:"y_label",
-				target:"y.label"
-			},
-			{
-				source:"y_type",
-				target:"y.type"
-			},
-			{
-				source:"y_format",
-				target:"y.format"
-			},
-			{
-				source:"y_sort",
-				target:"y.sort"
-			},
-			{
-				source:"y_behavior",
-				target:"y.behavior"
-			},
-			{
-				source:"marks_type",
-				target:"marks.0.type"
-			},
-			{
-				source:"marks_summarizeX",
-				target:"marks.0.summarizeX"
-			},
-			{
-				source:"marks_summarizeY",
-				target:"marks.0.summarizeY"
-			},
-			{
-				source:"marks_arrange",
-				target:"marks.0.arrange"
-			},
-			{
-				source:"marks_fill_opacity",
-				target:"marks.0.attributes.fill-opacity"
-			},
-			{
-				source:"aspect_ratio",
-				target:"aspect"
-			},
-			{
-				source:"range_band",
-				target:"range_band"
-			},
-			{
-				source:"colors",
-				target:"colors"
-			},
-			{
-				source:"gridlines",
-				target:"gridlines"
-			},
-			{
-				source:"max_width",
-				target:"max_width"
-			},
-			{
-				source:"resizable",
-				target:"resizable"
-			},
-			{
-				source:"scale_text",
-				target:"scale_text"
-			},
-			{
-				source: "legend_mark",
-				target: "legend.mark"
-			},
-			{
-				source: "legend_label",
-				target: "legend.label"
+				source:"start_value",
+				target:"start_value"
 			}
 		]
 	}
@@ -270,7 +122,7 @@ var bundle = (function (React,d3,webcharts) {
 	    this.raw_data = this.raw_data.filter(f => numMeasures.indexOf(f[config.measure_col]) > -1 );
 
 	    //Choose the start value for the Test filter
-	    this.controls.config.inputs[0].start = this.config.startValue || numMeasures[0]; 
+	    this.controls.config.inputs[0].start = this.config.start_value || numMeasures[0]; 
 
 	};
 
@@ -350,6 +202,9 @@ var bundle = (function (React,d3,webcharts) {
 		mergedSettings.x.label = mergedSettings.start_value;
 		mergedSettings.x.column = mergedSettings.value_col;
 		mergedSettings.marks[0].per[0] = mergedSettings.value_col;
+		controlInputs[0].value_col = mergedSettings.measure_col;
+		controlInputs[0].start = mergedSettings.start_value;
+		console.log(settings$$)
 		//create controls now
 		let controls = webcharts.createControls(element, {location: 'top', inputs: controlInputs});
 		//create chart
@@ -360,7 +215,7 @@ var bundle = (function (React,d3,webcharts) {
 		chart.on('draw', onDraw);
 		chart.on('resize', onResize);
 
-		let table = webCharts.createTable(element, {}).init([]);
+		let table = webcharts.createTable(element, {}).init([]);
 		chart.table = table;
 
 		return chart;
@@ -398,15 +253,33 @@ var bundle = (function (React,d3,webcharts) {
 
 	ReactHistogram.defaultProps = {data: [], controlInputs: [], id: 'id'}
 
+	function describeCode(props){
+	  var settings = this.createSettings(props);
+
+	  const code = `//uses d3 v.${d3.version}
+//uses webcharts v.${webcharts.version}
+
+var settings = ${JSON.stringify(settings, null, 2)};
+
+var myChart = histogram(dataElement, settings);
+
+d3.csv(dataPath, function(error, csv) {
+  myChart.init(data);
+});
+    `;
+	  return code;
+	}
+
 	class Renderer extends React.Component {
 	  constructor(props) {
 	    super(props);
 	    this.binding = binding;
+	    this.describeCode = describeCode.bind(this);
 	    this.state = {data: [], settings: {}, template: {}, loadMsg: 'Loading...'};
 	  }
 	  createSettings(props) {
-	    const shell = {};
-	    
+	    let shell = Object.assign({}, settings);
+	    console.log(shell)
 	    binding.dataMappings.forEach(e => {
 	      let chartVal = stringAccessor(props.dataMappings, e.source);
 	      if(chartVal ){
@@ -428,6 +301,7 @@ var bundle = (function (React,d3,webcharts) {
 	    });
 	    binding.chartProperties.forEach(e => {
 	      let chartVal = stringAccessor(props.chartProperties, e.source);
+
 	      if(chartVal !== undefined){
 	        stringAccessor(shell, e.target, chartVal);
 	      }
@@ -437,13 +311,17 @@ var bundle = (function (React,d3,webcharts) {
 	      } 
 	    });
 
-	    this.setState({settings: shell, loadMsg: ''});
+	    return shell;
 	  }
 	  componentWillMount() {
-	    this.createSettings(this.props);
+	    var settings = this.createSettings(this.props);
+	    this.setState({settings: settings});
+	    console.log(this.props)
 	  }
 	  componentWillReceiveProps(nextProps){
-	    this.createSettings(nextProps);
+	    var settings = this.createSettings(nextProps);
+	    this.setState({settings: settings});
+	    console.log(settings)
 	  }
 	  render() {
 	    return (

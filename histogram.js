@@ -90,7 +90,7 @@ var histogram = (function (webcharts,d3) {
 	    this.raw_data = this.raw_data.filter(f => numMeasures.indexOf(f[config.measure_col]) > -1 );
 
 	    //Choose the start value for the Test filter
-	    this.controls.config.inputs[0].start = this.config.startValue || numMeasures[0]; 
+	    this.controls.config.inputs[0].start = this.config.start_value || numMeasures[0]; 
 
 	};
 
@@ -171,7 +171,8 @@ var histogram = (function (webcharts,d3) {
 		mergedSettings.x.column = mergedSettings.value_col;
 		mergedSettings.marks[0].per[0] = mergedSettings.value_col;
 		controlInputs[0].value_col = mergedSettings.measure_col;
-		
+		controlInputs[0].start = mergedSettings.start_value;
+		console.log(settings$$)
 		//create controls now
 		let controls = webcharts.createControls(element, {location: 'top', inputs: controlInputs});
 		//create chart

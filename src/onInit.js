@@ -37,6 +37,6 @@ export default function onInit(){
     this.raw_data = this.raw_data.filter(f => numMeasures.indexOf(f[config.measure_col]) > -1 );
 
     //Choose the start value for the Test filter
-    this.controls.config.inputs[0].start = this.config.startValue || numMeasures[0]; 
+    this.controls.config.inputs[0].start = this.config.start_value || numMeasures[0]; 
 
 };

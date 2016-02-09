@@ -182,7 +182,7 @@ var histogram = (function (webcharts,d3) {
 		chart.on('draw', onDraw);
 		chart.on('resize', onResize);
 
-		let table = webCharts.createTable(element, {}).init([]);
+		let table = webcharts.createTable(element, {}).init([]);
 		chart.table = table;
 
 		return chart;

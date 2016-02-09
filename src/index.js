@@ -1,4 +1,4 @@
-import { createChart, createControls } from 'webcharts';
+import { createChart, createControls, createTable } from 'webcharts';
 import {  controlInputs } from './default-settings'
 import config from './default-settings';
 import onInit from './onInit';
@@ -26,7 +26,7 @@ export default function outlierExplorer(element, settings){
 	chart.on('draw', onDraw);
 	chart.on('resize', onResize);
 
-	let table = webCharts.createTable(element, {}).init([]);
+	let table = createTable(element, {}).init([]);
 	chart.table = table;
 
 	return chart;

@@ -5,6 +5,5 @@ module.exports = {
     webcharts: 'webCharts',
     d3: 'd3'
   },
-  dest: 'histogram.js',
   moduleName: 'histogram'
 }; 

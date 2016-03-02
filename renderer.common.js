@@ -9,7 +9,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 function _interopDefault(ex) {
-    return ex && typeof ex === 'object' && 'default' in ex ? ex['default'] : ex;
+    return 'default' in ex ? ex['default'] : ex;
 }
 
 var React = _interopDefault(require('react'));
@@ -290,7 +290,7 @@ ReactHistogram.defaultProps = { data: [], controlInputs: [], id: 'id' };
 function describeCode(props) {
     var settings = this.createSettings(props);
 
-    var code = '//uses d3 v.' + d3.version + '\n//uses webcharts v.' + webcharts.version + '\n\nvar settings = ' + JSON.stringify(settings, null, 2) + ';\n\nvar myChart = histogram(dataElement, settings);\n\nd3.csv(dataPath, function(error, csv) {\n  myChart.init(data);\n});\n    ';
+    var code = '//uses d3 v.' + d3.version + '\n//uses webcharts v.' + webcharts.version + '\n\nvar settings = ' + JSON.stringify(settings, null, 2) + ';\n\nvar myChart = histogram(dataElement, settings);\n\nd3.csv(dataPath, function(error, csv) {\n  myChart.init(csv);\n});\n    ';
     return code;
 }
 

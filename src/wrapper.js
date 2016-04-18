@@ -1,25 +1,25 @@
 import { createChart, createControls, createTable } from 'webcharts';
-import {  controlInputs } from './default-settings'
+import { controlInputs, syncControlInputs, syncSettings } from './default-settings'
 import config from './default-settings';
 import onInit from './onInit';
 import onLayout from './onLayout';
 import onDataTransform from './onDataTransform';
 import onDraw from './onDraw';
 import onResize from './onResize';
-import './object-assign';
+import './util/object-assign';
 
-export default function outlierExplorer(element, settings){
+export default function safetyHistogram(element, settings){
+	
 	//merge user's settings with defaults
 	let mergedSettings = Object.assign({}, config, settings);
-	//set some options based on the start_value
-	mergedSettings.x.label = mergedSettings.start_value;
-	mergedSettings.x.column = mergedSettings.value_col;
-	mergedSettings.marks[0].per[0] = mergedSettings.value_col;
-	controlInputs[0].value_col = mergedSettings.measure_col;
-	controlInputs[0].start = mergedSettings.start_value;
+
+	//keep settings in sync with the data mappings
+	mergedSettings = syncSettings(mergedSettings);
 	
-	//create controls now
+	//keep control inputs in sync and create controls object
+	let syncedControlInputs = syncControlInputs(controlInputs, mergedSettings);
 	let controls = createControls(element, {location: 'top', inputs: controlInputs});
+	
 	//create chart
 	let chart = createChart(element, mergedSettings, controls);
 	chart.on('init', onInit);

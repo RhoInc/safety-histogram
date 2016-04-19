@@ -1,26 +1,27 @@
 import React from 'react';
 import stringAccessor from './string-accessor';
-import binding from '../binding';
-import reactTemplate from './reactTemplate';
-import { version as d3_version } from 'd3';
+import binding from './binding';
+import ReactChart from './ReactChart';
+import defaultSettings from '../src/default-settings';
+import { version  as d3_version } from 'd3';
 import { version as wc_version } from 'webcharts';
 
 function describeCode(props){
   var settings = this.createSettings(props);
+
   const code = `//uses d3 v.${d3_version}
 //uses webcharts v.${wc_version}
 
 var settings = ${JSON.stringify(settings, null, 2)};
 
-var myChart = aeTimelines(dataElement, settings);
+var myChart = histogram(dataElement, settings);
 
 d3.csv(dataPath, function(error, csv) {
   myChart.init(csv);
 });
-  `;
+    `;
   return code;
 }
-
 
 export default class Renderer extends React.Component {
   constructor(props) {
@@ -30,15 +31,7 @@ export default class Renderer extends React.Component {
     this.state = {data: [], settings: {}, template: {}, loadMsg: 'Loading...'};
   }
   createSettings(props) {
-    const shell = {
-      legend: {
-        mark: 'circle',
-        order: null,
-        label: null
-      },
-      colors: ['#66bd63', '#fdae61', '#d73027', '#6e016b'],
-      color_by: 'AESEV'
-    };
+    let shell = Object.assign({}, defaultSettings);
 
     binding.dataMappings.forEach(e => {
       let chartVal = stringAccessor(props.dataMappings, e.source);
@@ -57,17 +50,18 @@ export default class Renderer extends React.Component {
         else{
           stringAccessor(shell, e.target, null);
         }
-      }
+      } 
     });
     binding.chartProperties.forEach(e => {
       let chartVal = stringAccessor(props.chartProperties, e.source);
+
       if(chartVal !== undefined){
         stringAccessor(shell, e.target, chartVal);
       }
       else{
         let defaultVal = stringAccessor(props.template.chartProperties, e.source+'.default');
         stringAccessor(shell, e.target, defaultVal);
-      }
+      } 
     });
 
     return shell;
@@ -82,9 +76,9 @@ export default class Renderer extends React.Component {
   }
   render() {
     return (
-      React.createElement(reactTemplate, {
+      React.createElement(ReactChart, {
         id: this.props.id,
-        settings: this.state.settings,
+        settings: this.state.settings, 
         controlInputs: this.props.template.controls,
         data: this.props.data
       })

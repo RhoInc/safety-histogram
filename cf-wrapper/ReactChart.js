@@ -1,8 +1,8 @@
 import React from 'react';
 import { select } from 'd3';
-import mainChart from '../../wrapper';
+import mainChart from '../src/index';
 
-export default class ReactYourProjectName extends React.Component {
+export default class ReactHistogram extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {};
@@ -32,4 +32,4 @@ export default class ReactYourProjectName extends React.Component {
 	}
 }
 
-ReactYourProjectName.defaultProps = {data: [], controlInputs: [], id: 'id'}
+ReactHistogram.defaultProps = {data: [], controlInputs: [], id: 'id'}

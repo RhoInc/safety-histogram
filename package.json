@@ -1,16 +1,16 @@
 {
-  "name": "safety-histogram",
-  "version": "1.1.0",
-  "description": "Histogram showing distribution of lab measures, vital signs and other related measures in clinical trials.",
-  "main": ".build/safetyHistogram.js",
+  "name": "se-histogram",
+  "version": "0.0.0",
+  "description": "histogram for safety explorer",
+  "main": "renderer.common.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev-watch": "cd test && node watcher.js",
-    "build": "rollup -c ./scripts/rollup.wrapper.config.js | babel > ./build/safetyHistogram.js",
-    "build-react": "rollup -c ./scripts/rollup.react.config.js | babel > ./build/safetyHistogram-react.js"
+    "build": "rollup -c | babel > index.js",
+    "build-renderer": "rollup -c renderer.rollup.config.js | babel > renderer.common.js"
   },
-  "author": "Rho Inc",
-  "license": "MIT",
+  "author": "Rho, Inc.",
+  "license": "ISC",
   "dependencies": {
     "d3": "^3.5.14",
     "react": "^0.14.7",

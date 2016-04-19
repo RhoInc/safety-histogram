@@ -1,29 +1,28 @@
 "use strict";
 
-var safetyHistogram = (function (webcharts, d3) {
+var histogram = (function (webcharts, d3) {
 	'use strict';
 
+	var value_col = "STRESN";
 	var settings = {
 		//Addition settings for this template
 		id_col: "USUBJID",
 		time_col: "VISITN",
 		measure_col: "TEST",
-		value_col: "STRESN",
+		value_col: value_col,
 		unit_col: "STRESU",
-		sex_col: "SEX",
-		race_col: "RACE",
 		normal_col_low: "STNRLO",
 		normal_col_high: "STNRHI",
 		start_value: null,
 		rotateX: true,
 		missingValues: ["NA", ""],
-
 		//Standard webcharts settings
 		x: {
 			"label": null,
 			"type": "linear",
+			"column": value_col,
 			"bin": 25,
-			"behavior": 'flex',
+			behavior: 'flex',
 			"format": '.1f'
 		},
 		y: {
@@ -34,7 +33,7 @@ var safetyHistogram = (function (webcharts, d3) {
 			"domain": [0, null]
 		},
 		marks: [{
-			"per": [],
+			"per": [value_col],
 			"type": "bar",
 			"summarizeY": "count",
 			"summarizeX": "mean",
@@ -48,28 +47,7 @@ var safetyHistogram = (function (webcharts, d3) {
 		"max_width": "800"
 	};
 
-	// Replicate settings in multiple places in the settings object
-	function syncSettings(settings) {
-		settings.x.label = settings.start_value;
-		settings.x.column = settings.value_col;
-		settings.marks[0].per[0] = settings.value_col;
-
-		return settings;
-	}
-
-	// Default Control objects
-	var controlInputs = [{ label: "Lab Test", type: "subsetter", value_col: "TEST", start: null }, { label: "Sex", type: "subsetter", value_col: "SEX" }, { label: "Race", type: "subsetter", value_col: "RACE" }, { label: "Visit", type: "subsetter", value_col: "VISITN" }];
-
-	// Map values from settings to control inputs
-	function syncControlInputs(controlInputs, settings) {
-		controlInputs[0].value_col = settings.measure_col;
-		controlInputs[0].start = settings.start_value;
-		controlInputs[1].value_col = settings.sex_col;
-		controlInputs[2].value_col = settings.race_col;
-		controlInputs[3].value_col = settings.time_col;
-
-		return controlInputs;
-	}
+	var controlInputs = [{ label: "Lab Test", type: "subsetter", value_col: "TEST", start: null }, { label: "Sex", type: "subsetter", value_col: "SEX" }, { label: "Race", type: "subsetter", value_col: "RACE" }, { label: "Visit", type: "subsetter", value_col: "VISIT" }];
 
 	function onInit() {
 		var _this = this;
@@ -201,18 +179,18 @@ var safetyHistogram = (function (webcharts, d3) {
 		})();
 	}
 
-	function safetyHistogram(element, settings$$) {
-
+	function outlierExplorer(element, settings$$) {
 		//merge user's settings with defaults
 		var mergedSettings = Object.assign({}, settings, settings$$);
+		//set some options based on the start_value
+		mergedSettings.x.label = mergedSettings.start_value;
+		mergedSettings.x.column = mergedSettings.value_col;
+		mergedSettings.marks[0].per[0] = mergedSettings.value_col;
+		controlInputs[0].value_col = mergedSettings.measure_col;
+		controlInputs[0].start = mergedSettings.start_value;
 
-		//keep settings in sync with the data mappings
-		mergedSettings = syncSettings(mergedSettings);
-
-		//keep control inputs in sync and create controls object
-		var syncedControlInputs = syncControlInputs(controlInputs, mergedSettings);
+		//create controls now
 		var controls = webcharts.createControls(element, { location: 'top', inputs: controlInputs });
-
 		//create chart
 		var chart = webcharts.createChart(element, mergedSettings, controls);
 		chart.on('init', onInit);
@@ -227,6 +205,6 @@ var safetyHistogram = (function (webcharts, d3) {
 		return chart;
 	}
 
-	return safetyHistogram;
+	return outlierExplorer;
 })(webCharts, d3);
 

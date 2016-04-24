@@ -2,7 +2,7 @@
   "name": "safety-histogram",
   "version": "1.1.0",
   "description": "Histogram showing distribution of lab measures, vital signs and other related measures in clinical trials.",
-  "main": ".build/safetyHistogram.js",
+  "main": "./build/safetyHistogram.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev-watch": "cd test && node watcher.js",

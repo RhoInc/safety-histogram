@@ -1,6 +1,56 @@
 
 export default {
 	dataMappings : [
+	//custom settings
+	{
+		source: 'id_col',
+		target: 'id_col'
+	},
+	{
+		source: 'time_col',
+		target: 'time_col'
+	},
+	{
+		source: 'measure_col',
+		target: 'measure_col'
+	},
+	{
+		source: 'value_col',
+		target: 'value_col'
+	},
+	{
+		source: 'unit_col',
+		target: 'unit_col'
+	},
+	{
+		source: 'sex_col',
+		target: 'sex_col'
+	},
+	{
+		source: 'race_col',
+		target: 'race_col'
+	},
+	{
+		source: 'normal_col_low',
+		target: 'normal_col_low'
+	},
+	{
+		source: 'normal_col_high',
+		target: 'normal_col_high'
+	},
+	{
+		source: 'start_value',
+		target: 'start_value'
+	},
+	{
+		source: 'rotate_x',
+		target: 'rotateX'
+	},
+	{
+		source: 'missing_values',
+		target: 'missingValues'
+	},
+	// webcharts settings
 		{
 			source:"x",
 			target:"x.column"

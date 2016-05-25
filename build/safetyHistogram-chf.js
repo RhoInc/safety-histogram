@@ -597,11 +597,11 @@
 	  const code =
 	`// uses d3 v.${d3.version}
 // uses webcharts v.${webcharts.version}
-// uses ae-timelines v.1.1.0
+// uses safety-histogram v.1.2.0
 
 var settings = ${JSON.stringify(settings, null, 2)};
 
-var myChart = aeTimelines(dataElement, settings);
+var myChart = safetyHistogram(dataElement, settings);
 
 d3.csv(dataPath, function(error, csv) {
   myChart.init(csv);

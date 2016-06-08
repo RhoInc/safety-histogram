@@ -1,5 +1,5 @@
 {
-  "name": "safety-histogram",
+  "name": "se-histogram",
   "version": "0.0.0",
   "description": "histogram for safety explorer",
   "main": "renderer.common.js",

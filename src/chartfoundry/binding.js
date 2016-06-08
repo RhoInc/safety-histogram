@@ -1,6 +1,56 @@
 
 export default {
 	dataMappings : [
+	//custom settings
+	{
+		source: 'id_col',
+		target: 'id_col'
+	},
+	{
+		source: 'time_col',
+		target: 'time_col'
+	},
+	{
+		source: 'measure_col',
+		target: 'measure_col'
+	},
+	{
+		source: 'value_col',
+		target: 'value_col'
+	},
+	{
+		source: 'unit_col',
+		target: 'unit_col'
+	},
+	{
+		source: 'sex_col',
+		target: 'sex_col'
+	},
+	{
+		source: 'race_col',
+		target: 'race_col'
+	},
+	{
+		source: 'normal_col_low',
+		target: 'normal_col_low'
+	},
+	{
+		source: 'normal_col_high',
+		target: 'normal_col_high'
+	},
+	{
+		source: 'start_value',
+		target: 'start_value'
+	},
+	{
+		source: 'rotate_x',
+		target: 'rotateX'
+	},
+	{
+		source: 'missing_values',
+		target: 'missingValues'
+	},
+	// webcharts settings
 		{
 			source:"x",
 			target:"x.column"
@@ -36,6 +86,18 @@ export default {
 		{
 			source:"subset",
 			target:"marks.0.values"
+		},
+		{
+			source:"group2",
+			target:"marks.1.per"
+		},
+		{
+			source:"subgroup2",
+			target:"marks.1.split"
+		},
+		{
+			source:"subset2",
+			target:"marks.1.values"
 		},
 		{
 			source:"color_by",
@@ -97,6 +159,10 @@ export default {
 			target:"y.sort"
 		},
 		{
+			source:"y_bin",
+			target:"y.bin"
+		},
+		{
 			source:"y_behavior",
 			target:"y.behavior"
 		},
@@ -121,6 +187,46 @@ export default {
 			target:"marks.0.attributes.fill-opacity"
 		},
 		{
+			source:"marks_tooltip",
+			target:"marks.0.tooltip"
+		},
+		{
+			source:"marks_text",
+			target:"marks.0.text"
+		},
+		{
+			source:"marks2_type",
+			target:"marks.1.type"
+		},
+		{
+			source:"marks2_summarizeX",
+			target:"marks.1.summarizeX"
+		},
+		{
+			source:"marks2_summarizeY",
+			target:"marks.1.summarizeY"
+		},
+		{
+			source:"marks2_arrange",
+			target:"marks.1.arrange"
+		},
+		{
+			source:"marks2_fill_opacity",
+			target:"marks.1.attributes.fill-opacity"
+		},
+		{
+			source:"marks2_tooltip",
+			target:"marks.1.tooltip"
+		},
+		{
+			source:"marks2_text",
+			target:"marks.1.text"
+		},
+		{
+			source:"transitions",
+			target:"transitions"
+		},
+		{
 			source:"aspect_ratio",
 			target:"aspect"
 		},
@@ -141,6 +247,30 @@ export default {
 			target:"max_width"
 		},
 		{
+			source:"width",
+			target:"width"
+		},
+		{
+			source:"height",
+			target:"height"
+		},
+		{
+			source:"margin_top",
+			target:"margin.top"
+		},
+		{
+			source:"margin_bottom",
+			target:"margin.bottom"
+		},
+		{
+			source:"margin_left",
+			target:"margin.left"
+		},
+		{
+			source:"margin_right",
+			target:"margin.right"
+		},
+		{
 			source:"resizable",
 			target:"resizable"
 		},
@@ -155,6 +285,10 @@ export default {
 		{
 			source: "legend_label",
 			target: "legend.label"
+		},
+		{
+			source: "legend_location",
+			target: "legend.location"
 		}
 	]
 }

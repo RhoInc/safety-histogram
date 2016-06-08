@@ -15,7 +15,8 @@ const settings = {
 
     //Standard webcharts settings
     x:{
-        "label":null,
+        "column":null, //set in syncSettings()
+        "label":null, //set in syncSettings()
         "type":"linear",
         "bin":25, 
         "behavior":'flex', 
@@ -30,7 +31,7 @@ const settings = {
     },
     marks:[
         {   
-            "per":[],
+            "per":[], //set in syncSettings()
             "type":"bar",
             "summarizeY":"count",
             "summarizeX":"mean",
@@ -64,11 +65,18 @@ export const controlInputs = [
 
 // Map values from settings to control inputs
 export function syncControlInputs(controlInputs, settings){
-	controlInputs[0].value_col = settings.measure_col;
-	controlInputs[0].start = settings.start_value;   
-    controlInputs[1].value_col = settings.sex_col;    
-    controlInputs[2].value_col = settings.race_col;
-    controlInputs[3].value_col = settings.time_col;
+    var labTestControl = controlInputs.filter(function(d){return d.label=="Lab Test"})[0] 
+	labTestControl.value_col = settings.measure_col;
+	labTestControl.start = settings.start_value;   
+
+    var sexControl = controlInputs.filter(function(d){return d.label=="Sex"})[0] 
+    sexControl.value_col = settings.sex_col;    
+
+    var raceControl = controlInputs.filter(function(d){return d.label=="Race"})[0] 
+    raceControl.value_col = settings.race_col;
+
+    var visitControl = controlInputs.filter(function(d){return d.label=="Visit"})[0] 
+    visitControl.value_col = settings.time_col;
  
 	return controlInputs
 }

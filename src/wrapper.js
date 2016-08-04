@@ -15,11 +15,11 @@ export default function safetyHistogram(element, settings){
 
 	//keep settings in sync with the data mappings
 	mergedSettings = syncSettings(mergedSettings);
-	
+
 	//keep control inputs in sync and create controls object
 	let syncedControlInputs = syncControlInputs(mergedSettings);
 	let controls = createControls(element, {location: 'top', inputs: syncedControlInputs});
-	
+
 	//create chart
 	let chart = createChart(element, mergedSettings, controls);
 	chart.on('init', onInit);

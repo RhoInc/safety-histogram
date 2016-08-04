@@ -56,7 +56,7 @@ export function syncSettings(settings) {
 // Map values from settings to control inputs
 export function syncControlInputs(settings) {
     var controlInputs = [{
-            label: "Lab Test",
+            label: "Measure",
             type: "subsetter",
             value_col: settings.measure_col,
             start: null}]

@@ -1,6 +1,6 @@
 "use strict";
 
-var safetyHistogram = (function (webcharts, d3) {
+var safetyHistogram = (function (webcharts, d3$1) {
 	'use strict';
 
 	var settings = {
@@ -55,7 +55,7 @@ var safetyHistogram = (function (webcharts, d3) {
 	// Map values from settings to control inputs
 	function syncControlInputs(settings) {
 		var controlInputs = [{
-			label: "Lab Test",
+			label: "Measure",
 			type: "subsetter",
 			value_col: settings.measure_col,
 			start: null }].concat(settings.filters.map(function (d) {
@@ -71,8 +71,13 @@ var safetyHistogram = (function (webcharts, d3) {
 	function onInit() {
 		var _this = this;
 
+		var columns = d3.keys(this.raw_data[0]);
+		this.controls.config.inputs = this.controls.config.inputs.filter(function (d) {
+			return columns.indexOf(d.value_col) > -1;
+		});
+
 		var config = this.config;
-		var allMeasures = d3.set(this.raw_data.map(function (m) {
+		var allMeasures = d3$1.set(this.raw_data.map(function (m) {
 			return m[config.measure_col];
 		})).values();
 
@@ -143,7 +148,7 @@ var safetyHistogram = (function (webcharts, d3) {
 		var myTable = this.table;
 
 		//Show table of values in a bar on click
-		var cleanF = d3.format(".3f");
+		var cleanF = d3$1.format(".3f");
 		var myBars = this.svg.selectAll('.bar');
 
 		var note = this.wrap.select('.annote');
@@ -153,7 +158,7 @@ var safetyHistogram = (function (webcharts, d3) {
 
 			myTable.draw(d.values.raw);
 			myBars.attr('fill-opacity', 0.5);
-			d3.select(this).attr('fill-opacity', 1);
+			d3$1.select(this).attr('fill-opacity', 1);
 		})
 		//Show # of values + range of a bar on mouseover
 		.on('mouseover', function (d) {

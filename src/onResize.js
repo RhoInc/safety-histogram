@@ -2,8 +2,12 @@ import { select, format } from 'd3';
 
 export default function onResize(){
     const config = this.config;
-    const units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
-    const measure = this.filtered_data[0] ? this.filtered_data[0][this.config.measure_col] : this.raw_data[0][this.config.measure_col];
+    const measure = this.filtered_data[0] ?
+        this.filtered_data[0][this.config.measure_col] :
+        this.raw_data[0][this.config.measure_col];
+    const units = this.filtered_data[0] ?
+        this.filtered_data[0][this.config.unit_col] :
+        this.raw_data[0][this.config.unit_col];
 
     //pointer to the linked table
     var myTable = this.table;

@@ -5,13 +5,11 @@ var safetyHistogram = (function (webcharts, d3) {
 
 	var settings = {
 		//Addition settings for this template
-		id_col: "USUBJID",
-		time_col: "VISITN",
-		measure_col: "TEST",
 		value_col: "STRESN",
+		measure_col: "TEST",
 		unit_col: "STRESU",
-		sex_col: "SEX",
-		race_col: "RACE",
+		filters: [{ value_col: "SITE", label: 'Site' }, { value_col: "VISITN", label: 'Visit' }, { value_col: "SEX", label: 'Sex' }, { value_col: "RACE", label: 'Race' }],
+		id_col: "USUBJID",
 		normal_col_low: "STNRLO",
 		normal_col_high: "STNRHI",
 		start_value: null,
@@ -28,7 +26,7 @@ var safetyHistogram = (function (webcharts, d3) {
 			"format": '.1f'
 		},
 		y: {
-			"label": "# of Measures",
+			"label": "# of Observations",
 			"type": "linear",
 			"behavior": 'flex',
 			"column": "",
@@ -41,10 +39,6 @@ var safetyHistogram = (function (webcharts, d3) {
 			"summarizeX": "mean",
 			"attributes": { "fill-opacity": 0.75 }
 		}],
-		"legend": {
-			"mark": "square",
-			"label": "cohort"
-		},
 		"aspect": 1.66,
 		"max_width": "800"
 	};
@@ -58,31 +52,18 @@ var safetyHistogram = (function (webcharts, d3) {
 		return settings;
 	}
 
-	// Default Control objects
-	var controlInputs = [{ label: "Lab Test", type: "subsetter", value_col: "TEST", start: null }, { label: "Sex", type: "subsetter", value_col: "SEX" }, { label: "Race", type: "subsetter", value_col: "RACE" }, { label: "Visit", type: "subsetter", value_col: "VISITN" }];
-
 	// Map values from settings to control inputs
-	function syncControlInputs(controlInputs, settings) {
-		var labTestControl = controlInputs.filter(function (d) {
-			return d.label == "Lab Test";
-		})[0];
-		labTestControl.value_col = settings.measure_col;
-		labTestControl.start = settings.start_value;
-
-		var sexControl = controlInputs.filter(function (d) {
-			return d.label == "Sex";
-		})[0];
-		sexControl.value_col = settings.sex_col;
-
-		var raceControl = controlInputs.filter(function (d) {
-			return d.label == "Race";
-		})[0];
-		raceControl.value_col = settings.race_col;
-
-		var visitControl = controlInputs.filter(function (d) {
-			return d.label == "Visit";
-		})[0];
-		visitControl.value_col = settings.time_col;
+	function syncControlInputs(settings) {
+		var controlInputs = [{
+			label: "Lab Test",
+			type: "subsetter",
+			value_col: settings.measure_col,
+			start: null }].concat(settings.filters.map(function (d) {
+			return {
+				label: d.label,
+				type: "subsetter",
+				value_col: d.value_col };
+		}));
 
 		return controlInputs;
 	}
@@ -95,7 +76,7 @@ var safetyHistogram = (function (webcharts, d3) {
 			return m[config.measure_col];
 		})).values();
 
-		// "All" variable for non-grouped comparisons
+		//"All" variable for non-grouped comparisons
 		this.raw_data.forEach(function (e) {
 			return e[config.measure_col] = e[config.measure_col].trim();
 		});
@@ -105,7 +86,7 @@ var safetyHistogram = (function (webcharts, d3) {
 			return config.missingValues.indexOf(f[config.value_col]) === -1;
 		});
 
-		//warning for non-numeric endpoints
+		//Warning for non-numeric endpoints
 		var catMeasures = allMeasures.filter(function (f) {
 			var measureVals = _this.raw_data.filter(function (d) {
 				return d[config.measure_col] === f;
@@ -117,7 +98,7 @@ var safetyHistogram = (function (webcharts, d3) {
 			console.warn(catMeasures.length + " non-numeric endpoints have been removed: " + catMeasures.join(", "));
 		}
 
-		//delete non-numeric endpoints
+		//Delete non-numeric endpoints
 		var numMeasures = allMeasures.filter(function (f) {
 			var measureVals = _this.raw_data.filter(function (d) {
 				return d[config.measure_col] === f;
@@ -140,8 +121,9 @@ var safetyHistogram = (function (webcharts, d3) {
 	}
 
 	function onDataTransform() {
-		var units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
 		var measure = this.filtered_data[0] ? this.filtered_data[0][this.config.measure_col] : this.raw_data[0][this.config.measure_col];
+		var units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
+
 		//Customize the x-axis label
 		this.config.x.label = measure + " level (" + units + ")";
 
@@ -154,8 +136,8 @@ var safetyHistogram = (function (webcharts, d3) {
 
 	function onResize() {
 		var config = this.config;
-		var units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
 		var measure = this.filtered_data[0] ? this.filtered_data[0][this.config.measure_col] : this.raw_data[0][this.config.measure_col];
+		var units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
 
 		//pointer to the linked table
 		var myTable = this.table;
@@ -226,8 +208,8 @@ var safetyHistogram = (function (webcharts, d3) {
 		mergedSettings = syncSettings(mergedSettings);
 
 		//keep control inputs in sync and create controls object
-		var syncedControlInputs = syncControlInputs(controlInputs, mergedSettings);
-		var controls = webcharts.createControls(element, { location: 'top', inputs: controlInputs });
+		var syncedControlInputs = syncControlInputs(mergedSettings);
+		var controls = webcharts.createControls(element, { location: 'top', inputs: syncedControlInputs });
 
 		//create chart
 		var chart = webcharts.createChart(element, mergedSettings, controls);

@@ -1,5 +1,5 @@
 import { createChart, createControls, createTable } from 'webcharts';
-import { controlInputs, syncControlInputs, syncSettings } from './default-settings'
+import { syncControlInputs, syncSettings } from './default-settings'
 import config from './default-settings';
 import onInit from './onInit';
 import onLayout from './onLayout';
@@ -17,8 +17,8 @@ export default function safetyHistogram(element, settings){
 	mergedSettings = syncSettings(mergedSettings);
 	
 	//keep control inputs in sync and create controls object
-	let syncedControlInputs = syncControlInputs(controlInputs, mergedSettings);
-	let controls = createControls(element, {location: 'top', inputs: controlInputs});
+	let syncedControlInputs = syncControlInputs(mergedSettings);
+	let controls = createControls(element, {location: 'top', inputs: syncedControlInputs});
 	
 	//create chart
 	let chart = createChart(element, mergedSettings, controls);

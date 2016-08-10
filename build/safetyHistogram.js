@@ -125,6 +125,29 @@ var safetyHistogram = (function (webcharts, d3$1) {
         this.wrap.insert('p', '.wc-chart').attr('class', 'annote').text('Click a bar for details.');
     }
 
+    function onPreprocess() {
+        //Capture currently selected filters.
+        var filterSettings = [];
+        var filters = d3.selectAll('.wc-controls .changer').each(function (d) {
+            filterSettings.push({ value_col: d.value_col,
+                value: d3.select(this).selectAll('option').filter(function (d1) {
+                    return d3.select(this).property('selected');
+                }).property('value') });
+        });
+        //Filter data based on currently selected filters.
+        var filtered_data = this.raw_data.filter(function (d) {
+            var match = true;
+            filterSettings.forEach(function (d1) {
+                if (match === true) match = d[d1.value_col] === d1.value || d1.value === 'All';
+            });
+            return match;
+        });
+        //Set x domain based on currently filtered data.
+        this.config.x.domain = d3.extent(filtered_data, function (d) {
+            return +d[settings.value_col];
+        });
+    }
+
     function onDataTransform() {
         var measure = this.filtered_data[0] ? this.filtered_data[0][this.config.measure_col] : this.raw_data[0][this.config.measure_col];
         var units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
@@ -140,6 +163,7 @@ var safetyHistogram = (function (webcharts, d3$1) {
     function onDraw() {}
 
     function onResize() {
+        var chart = this;
         var config = this.config;
         var measure = this.filtered_data[0] ? this.filtered_data[0][this.config.measure_col] : this.raw_data[0][this.config.measure_col];
         var units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
@@ -177,22 +201,48 @@ var safetyHistogram = (function (webcharts, d3$1) {
 
         //Add normal ranges.
         if (this.raw_data[0][settings.normal_col_low] && this.raw_data[0][settings.normal_col_high]) {
-            var normalRange = [d3.median(this.filtered_data, function (d) {
-                return d[settings.normal_col_low];
-            }), d3.median(this.filtered_data, function (d) {
-                return d[settings.normal_col_high];
-            })];
-
+            //Capture distinct normal ranges in filtered data.
+            var normalRanges = d3.nest().key(function (d) {
+                return d[settings.normal_col_low] + "," + d[settings.normal_col_high];
+            }) // set key to comma-delimited normal range
+            .rollup(function (d) {
+                return d.length;
+            }).entries(this.filtered_data);
+            //Sort normal ranges so larger normal ranges plot beneath smaller normal ranges.
+            normalRanges.sort(function (a, b) {
+                var a_lo = a.key.split(',')[0];
+                var a_hi = a.key.split(',')[1];
+                var b_lo = b.key.split(',')[0];
+                var b_hi = b.key.split(',')[1];
+                return a_lo <= b_lo && a_hi >= b_hi ? 2 : // lesser minimum and greater maximum
+                a_lo >= b_lo && a_hi <= b_hi ? -2 : // greater minimum and lesser maximum
+                a_lo <= b_lo && a_hi <= b_hi ? 1 : // lesser minimum and lesser maximum
+                a_lo >= b_lo && a_hi >= b_hi ? -1 : // greater minimum and greater maximum
+                1;
+            });
+            //Add divs to chart for each normal range.
             var canvas = d3.select('.bar-supergroup');
-            canvas.select('#normalRange').remove();
-            canvas.insert('rect', ':first-child').attr({ id: 'normalRange',
-                x: Math.max(0, this.x(normalRange[0])),
-                y: 0,
-                width: Math.min(this.plot_width - this.x(normalRange[0]), this.x(normalRange[1]) - this.x(normalRange[0])),
-                height: this.plot_height }).style({ stroke: '#fc8d62',
-                fill: '#fc8d62',
-                'fill-opacity': .25,
-                'stroke-opacity': .25 }).append('title').text(measure + " normal range: " + normalRange[0] + "-" + normalRange[1] + " " + units);
+            canvas.selectAll('.normalRange').remove();
+            canvas.selectAll('.normalRange rect').data(normalRanges).enter().insert('rect', ':first-child').attr({ 'class': 'normalRange',
+                'x': function x(d) {
+                    return chart.x(+d.key.split(',')[0]);
+                }, // set x to range low
+                'y': 0,
+                'width': function width(d) {
+                    return Math.min(chart.plot_width - chart.x(+d.key.split(',')[0]), // chart width - range low
+                    chart.x(+d.key.split(',')[1]) - chart.x(+d.key.split(',')[0]));
+                }, // range high - range low
+                'height': this.plot_height }).style({ 'stroke': '#fc8d62',
+                'fill': '#fc8d62',
+                'fill-opacity': function fillOpacity(d) {
+                    return d.values / chart.filtered_data.length * .75;
+                }, // opacity as a function of fraction of records with the given normal range
+                'stroke-opacity': function strokeOpacity(d) {
+                    return d.values / chart.filtered_data.length * .75;
+                } }) // opacity as a function of fraction of records with the given normal range
+            .append('title').text(function (d) {
+                return 'Normal range: ' + d.key.split(',')[0] + "-" + d.key.split(',')[1] + " " + units + ' (' + d3.format('%')(d.values / chart.filtered_data.length) + ' of records)';
+            });
         }
     }
 
@@ -236,6 +286,7 @@ var safetyHistogram = (function (webcharts, d3$1) {
         var chart = webcharts.createChart(element, mergedSettings, controls);
         chart.on('init', onInit);
         chart.on('layout', onLayout);
+        chart.on('preprocess', onPreprocess);
         chart.on('datatransform', onDataTransform);
         chart.on('draw', onDraw);
         chart.on('resize', onResize);

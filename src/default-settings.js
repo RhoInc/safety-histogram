@@ -1,72 +1,91 @@
-const settings = {
-    //Addition settings for this template
-    value_col: "STRESN",
-    measure_col: "TEST",
-    unit_col: "STRESU",
+const config = {
+  //Default template settings
+    value_col: 'STRESN',
+    measure_col: 'TEST',
+    unit_col: 'STRESU',
+    normal_col_low: 'STNRLO',
+    normal_col_high: 'STNRHI',
+    id_col: 'USUBJID',
     filters: [
-        {value_col: "SITE", label: 'Site'},
-        {value_col: "VISITN", label: 'Visit'},
-        {value_col: "SEX", label: 'Sex'},
-        {value_col: "RACE", label: 'Race'}],
-    id_col: "USUBJID",
-    normal_col_low: "STNRLO",
-    normal_col_high: "STNRHI",
+        {value_col: 'SITE', label: 'Site'},
+        {value_col: 'VISITN', label: 'Visit'},
+        {value_col: 'SEX', label: 'Sex'},
+        {value_col: 'RACE', label: 'Race'}],
+    detail_cols: null,
     start_value: null,
     rotateX: true,
-    missingValues: ["NA",""],
+    missingValues: ['','NA','N/A'],
 
-    //Standard webcharts settings
+  //Standard webcharts settings
     x:{
-        "column":null, //set in syncSettings()
-        "label":null, //set in syncSettings()
-        "type":"linear",
-        "bin":25, 
-        "behavior":'flex', 
-        "format":'.1f'
+        'column':null, // set in syncSettings()
+        'label':null, // set in syncSettings()
+        'type':'linear',
+        'bin':25,
+        'behavior':'flex',
+        'format':'.1f'
     },
     y:{
-        "label":"# of Observations",
-        "type":"linear",
-        "behavior": 'flex',
-        "column":"",
-        "domain":[0,null]
+        'label':'# of Observations',
+        'type':'linear',
+        'behavior': 'flex',
+        'column':'',
+        'domain':[0,null]
     },
     marks:[
-        {   
-            "per":[], //set in syncSettings()
-            "type":"bar",
-            "summarizeY":"count",
-            "summarizeX":"mean",
-            "attributes":{"fill-opacity":0.75}
+        {
+            'per':[], // set in syncSettings()
+            'type':'bar',
+            'summarizeY':'count',
+            'summarizeX':'mean',
+            'attributes':{'fill-opacity':0.75}
         }
     ],
-    "aspect":1.66,
-    "max_width":"800"
+    'aspect':1.66,
+    'max_width':'800'
 };
 
-// Replicate settings in multiple places in the settings object
+//Replicate settings in multiple places in the settings object
 export function syncSettings(settings) {
-	settings.x.label = settings.start_value;
-	settings.x.column = settings.value_col;
-	settings.marks[0].per[0] = settings.value_col;
+    settings.x.label = settings.start_value;
+    settings.x.column = settings.value_col;
+    settings.marks[0].per[0] = settings.value_col;
 
-	return settings;
+  //Set [ settings.detail_cols ] to columns specified in default template settings.
+    if (settings.detail_cols === null) {
+        settings.detail_cols = [settings.id_col];
+        settings.filters.forEach(d => settings.detail_cols.push(d.value_col));
+        settings.detail_cols.push
+            (settings.measure_col
+            ,settings.value_col
+            ,settings.unit_col
+            ,settings.normal_col_low
+            ,settings.normal_col_high);
+    }
+
+    return settings;
 }
 
-// Map values from settings to control inputs
+//Map values from settings to control inputs
 export function syncControlInputs(settings) {
-    var controlInputs = [{
-            label: "Measure",
-            type: "subsetter",
-            value_col: settings.measure_col,
-            start: null}]
-        .concat(settings.filters.map(function(d) {
-            return {
-                label: d.label,
-                type: "subsetter",
-                value_col: d.value_col}; }));
+    var measureFilter =
+        {type: 'subsetter'
+        ,value_col: settings.measure_col
+        ,label: 'Measure'
+        ,start: null};
 
-	return controlInputs
+    if (settings.filters && settings.filters.length > 0) {
+        var otherFilters = settings.filters
+            .map(d => {
+                return {
+                    type: 'subsetter',
+                    value_col: d.value_col,
+                    label: (d.label && /^\s*$/.test(d.label) === false) ?
+                        d.label :
+                        d.value_col}; });
+        return [measureFilter].concat(otherFilters);
+    } else
+        return [measureFilter];
 }
 
-export default settings
+export default config

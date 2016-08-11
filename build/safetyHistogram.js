@@ -1,85 +1,101 @@
-"use strict";
+'use strict';
 
 var safetyHistogram = (function (webcharts, d3$1) {
     'use strict';
 
-    var settings$1 = {
-        //Addition settings for this template
-        value_col: "STRESN",
-        measure_col: "TEST",
-        unit_col: "STRESU",
-        filters: [{ value_col: "SITE", label: 'Site' }, { value_col: "VISITN", label: 'Visit' }, { value_col: "SEX", label: 'Sex' }, { value_col: "RACE", label: 'Race' }],
-        id_col: "USUBJID",
-        normal_col_low: "STNRLO",
-        normal_col_high: "STNRHI",
+    var config = {
+        //Default template settings
+        value_col: 'STRESN',
+        measure_col: 'TEST',
+        unit_col: 'STRESU',
+        normal_col_low: 'STNRLO',
+        normal_col_high: 'STNRHI',
+        id_col: 'USUBJID',
+        filters: [{ value_col: 'SITE', label: 'Site' }, { value_col: 'VISITN', label: 'Visit' }, { value_col: 'SEX', label: 'Sex' }, { value_col: 'RACE', label: 'Race' }],
+        detail_cols: null,
         start_value: null,
         rotateX: true,
-        missingValues: ["NA", ""],
+        missingValues: ['', 'NA', 'N/A'],
 
         //Standard webcharts settings
         x: {
-            "column": null, //set in syncSettings()
-            "label": null, //set in syncSettings()
-            "type": "linear",
-            "bin": 25,
-            "behavior": 'flex',
-            "format": '.1f'
+            'column': null, // set in syncSettings()
+            'label': null, // set in syncSettings()
+            'type': 'linear',
+            'bin': 25,
+            'behavior': 'flex',
+            'format': '.1f'
         },
         y: {
-            "label": "# of Observations",
-            "type": "linear",
-            "behavior": 'flex',
-            "column": "",
-            "domain": [0, null]
+            'label': '# of Observations',
+            'type': 'linear',
+            'behavior': 'flex',
+            'column': '',
+            'domain': [0, null]
         },
         marks: [{
-            "per": [], //set in syncSettings()
-            "type": "bar",
-            "summarizeY": "count",
-            "summarizeX": "mean",
-            "attributes": { "fill-opacity": 0.75 }
+            'per': [], // set in syncSettings()
+            'type': 'bar',
+            'summarizeY': 'count',
+            'summarizeX': 'mean',
+            'attributes': { 'fill-opacity': 0.75 }
         }],
-        "aspect": 1.66,
-        "max_width": "800"
+        'aspect': 1.66,
+        'max_width': '800'
     };
 
-    // Replicate settings in multiple places in the settings object
+    //Replicate settings in multiple places in the settings object
     function syncSettings(settings) {
         settings.x.label = settings.start_value;
         settings.x.column = settings.value_col;
         settings.marks[0].per[0] = settings.value_col;
 
+        //Set [ settings.detail_cols ] to columns specified in default template settings.
+        if (settings.detail_cols === null) {
+            settings.detail_cols = [settings.id_col];
+            settings.filters.forEach(function (d) {
+                return settings.detail_cols.push(d.value_col);
+            });
+            settings.detail_cols.push(settings.measure_col, settings.value_col, settings.unit_col, settings.normal_col_low, settings.normal_col_high);
+        }
+
         return settings;
     }
 
-    // Map values from settings to control inputs
+    //Map values from settings to control inputs
     function syncControlInputs(settings) {
-        var controlInputs = [{
-            label: "Measure",
-            type: "subsetter",
+        var measureFilter = { type: 'subsetter',
             value_col: settings.measure_col,
-            start: null }].concat(settings.filters.map(function (d) {
-            return {
-                label: d.label,
-                type: "subsetter",
-                value_col: d.value_col };
-        }));
+            label: 'Measure',
+            start: null };
 
-        return controlInputs;
+        if (settings.filters && settings.filters.length > 0) {
+            var otherFilters = settings.filters.map(function (d) {
+                return {
+                    type: 'subsetter',
+                    value_col: d.value_col,
+                    label: d.label && /^\s*$/.test(d.label) === false ? d.label : d.value_col };
+            });
+            return [measureFilter].concat(otherFilters);
+        } else return [measureFilter];
     }
 
     function onInit() {
         var _this = this;
 
-        var columns = d3.keys(this.raw_data[0]);
-        this.controls.config.inputs = this.controls.config.inputs.filter(function (d) {
-            return columns.indexOf(d.value_col) > -1;
-        });
-
         var config = this.config;
         var allMeasures = d3$1.set(this.raw_data.map(function (m) {
             return m[config.measure_col];
         })).values();
+
+        //Remove filters whose [ value_col ] does not appear in the data.
+        var columns = d3.keys(this.raw_data[0]);
+        this.controls.config.inputs = this.controls.config.inputs.filter(function (d) {
+            return columns.indexOf(d.value_col) > -1;
+        });
+        this.table.config.cols = this.table.config.cols.filter(function (d) {
+            return columns.indexOf(d) > -1;
+        });
 
         //"All" variable for non-grouped comparisons
         this.raw_data.forEach(function (e) {
@@ -121,8 +137,16 @@ var safetyHistogram = (function (webcharts, d3$1) {
     };
 
     function onLayout() {
-        //add div for note
+        //Add footnote.
         this.wrap.insert('p', '.wc-chart').attr('class', 'annote').text('Click a bar for details.');
+
+        //Add control to hide or display normal range(s).
+        var normalRange = d3.select('.wc-controls').append('div').attr({ 'id': 'NRcheckbox' }).append('input').attr({ 'type': 'checkbox' });
+        var NRcheckbox = document.getElementById('NRcheckbox');
+        NRcheckbox.innerHTML = NRcheckbox.innerHTML + 'Normal range';
+        d3.select('#NRcheckbox input').on('change', function () {
+            d3.selectAll('.normalRange').attr('visibility', d3.select(this).property('checked') ? 'visible' : 'hidden');
+        });
     }
 
     function onPreprocess() {
@@ -176,13 +200,13 @@ var safetyHistogram = (function (webcharts, d3$1) {
         var footnote = this.wrap.select('.annote');
 
         bins.style('cursor', 'pointer').on('click', function (d) {
-            footnote.classed('tableTitle', true).text("Table displays " + d.values.raw.length + " records with " + measure + " values from " + cleanF(d.rangeLow) + " to " + cleanF(d.rangeHigh) + " " + units + ".");
+            footnote.classed('tableTitle', true).text('Table displays ' + d.values.raw.length + ' records with ' + measure + ' values from ' + cleanF(d.rangeLow) + ' to ' + cleanF(d.rangeHigh) + ' ' + units + '. Click outside a bar to remove details.');
             listing.draw(d.values.raw);
             bins.attr('fill-opacity', 0.5);
             d3$1.select(this).attr('fill-opacity', 1);
         }).on('mouseover', function (d) {
             if (footnote.classed('tableTitle') === false) {
-                footnote.text(d.values.raw.length + " records with " + measure + " values from " + cleanF(d.rangeLow) + " to " + cleanF(d.rangeHigh) + " " + units + ".");
+                footnote.text(d.values.raw.length + ' records with ' + measure + ' values from ' + cleanF(d.rangeLow) + ' to ' + cleanF(d.rangeHigh) + ' ' + units + '.');
             }
         }).on('mouseout', function (d) {
             if (footnote.classed('tableTitle') === false) {
@@ -190,24 +214,18 @@ var safetyHistogram = (function (webcharts, d3$1) {
             }
         });
 
-        this.svg.select('.overlay').on('click', function () {
-            listing.draw([]);
-            bins.attr('fill-opacity', 0.75);
-
-            if (footnote.classed('tableTitle')) {
-                footnote.classed('tableTitle', false).text('Click a bar for details.');
-            }
-        });
-
-        //Add normal ranges.
+        //Visualize normal ranges.
         if (this.raw_data[0][settings.normal_col_low] && this.raw_data[0][settings.normal_col_high]) {
             //Capture distinct normal ranges in filtered data.
             var normalRanges = d3.nest().key(function (d) {
-                return d[settings.normal_col_low] + "," + d[settings.normal_col_high];
+                return d[settings.normal_col_low] + ',' + d[settings.normal_col_high];
             }) // set key to comma-delimited normal range
             .rollup(function (d) {
                 return d.length;
             }).entries(this.filtered_data);
+            var currentRange = d3.extent(this.filtered_data, function (d) {
+                return +d[settings.value_col];
+            });
             //Sort normal ranges so larger normal ranges plot beneath smaller normal ranges.
             normalRanges.sort(function (a, b) {
                 var a_lo = a.key.split(',')[0];
@@ -220,30 +238,44 @@ var safetyHistogram = (function (webcharts, d3$1) {
                 a_lo >= b_lo && a_hi >= b_hi ? -1 : // greater minimum and greater maximum
                 1;
             });
+            //Determine whether normal range checkbox is checked.
+            var displayNormalRange = d3.select('.wc-controls div input[type=checkbox]').property('checked');
             //Add divs to chart for each normal range.
             var canvas = d3.select('.bar-supergroup');
             canvas.selectAll('.normalRange').remove();
             canvas.selectAll('.normalRange rect').data(normalRanges).enter().insert('rect', ':first-child').attr({ 'class': 'normalRange',
                 'x': function x(d) {
-                    return chart.x(+d.key.split(',')[0]);
+                    return chart.x(Math.max(+d.key.split(',')[0], currentRange[0]));
                 }, // set x to range low
                 'y': 0,
                 'width': function width(d) {
-                    return Math.min(chart.plot_width - chart.x(+d.key.split(',')[0]), // chart width - range low
-                    chart.x(+d.key.split(',')[1]) - chart.x(+d.key.split(',')[0]));
+                    return Math.min(chart.plot_width - chart.x(Math.max(+d.key.split(',')[0], currentRange[0])), // chart width - range low
+
+                    chart.x(+d.key.split(',')[1]) - chart.x(Math.max(+d.key.split(',')[0], currentRange[0])));
                 }, // range high - range low
-                'height': this.plot_height }).style({ 'stroke': '#fc8d62',
-                'fill': '#fc8d62',
-                'fill-opacity': function fillOpacity(d) {
-                    return d.values / chart.filtered_data.length * .75;
-                }, // opacity as a function of fraction of records with the given normal range
+
+                'height': this.plot_height,
+                'visibility': displayNormalRange ? 'visible' : 'hidden' }).style({ 'stroke': 'black',
+                'fill': 'black',
                 'stroke-opacity': function strokeOpacity(d) {
                     return d.values / chart.filtered_data.length * .75;
+                }, // opacity as a function of fraction of records with the given normal range
+                'fill-opacity': function fillOpacity(d) {
+                    return d.values / chart.filtered_data.length * .5;
                 } }) // opacity as a function of fraction of records with the given normal range
             .append('title').text(function (d) {
                 return 'Normal range: ' + d.key.split(',')[0] + "-" + d.key.split(',')[1] + " " + units + ' (' + d3.format('%')(d.values / chart.filtered_data.length) + ' of records)';
             });
         }
+
+        d3.selectAll('.overlay, .normalRange').on('click', function () {
+            listing.draw([]);
+            bins.attr('fill-opacity', 0.75);
+
+            if (footnote.classed('tableTitle')) {
+                footnote.classed('tableTitle', false).text('Click a bar for details.');
+            }
+        });
     }
 
     if (typeof Object.assign != 'function') {
@@ -271,18 +303,17 @@ var safetyHistogram = (function (webcharts, d3$1) {
     }
 
     function safetyHistogram(element, settings) {
+        //Merge user's settings with default settings.
+        var mergedSettings = Object.assign({}, config, settings);
 
-        //merge user's settings with defaults
-        var mergedSettings = Object.assign({}, settings$1, settings);
-
-        //keep settings in sync with the data mappings
+        //Keep settings in sync with the data mappings.
         mergedSettings = syncSettings(mergedSettings);
 
-        //keep control inputs in sync and create controls object
+        //Keep control inputs in sync and create controls object.
         var syncedControlInputs = syncControlInputs(mergedSettings);
         var controls = webcharts.createControls(element, { location: 'top', inputs: syncedControlInputs });
 
-        //create chart
+        //Define chart
         var chart = webcharts.createChart(element, mergedSettings, controls);
         chart.on('init', onInit);
         chart.on('layout', onLayout);
@@ -291,7 +322,7 @@ var safetyHistogram = (function (webcharts, d3$1) {
         chart.on('draw', onDraw);
         chart.on('resize', onResize);
 
-        var table = webcharts.createTable(element, {}).init([]);
+        var table = webcharts.createTable(element, mergedSettings.detail_cols && mergedSettings.detail_cols.length > 0 ? { cols: mergedSettings.detail_cols } : null).init([]);
         chart.table = table;
 
         return chart;

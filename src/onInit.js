@@ -2,12 +2,17 @@ import { dataOps } from 'webcharts';
 import { set } from 'd3';
 
 export default function onInit(){
-    var columns = d3.keys(this.raw_data[0]);
-    this.controls.config.inputs = this.controls.config.inputs.filter(function(d) {
-        return columns.indexOf(d.value_col) > -1; });
-
     const config = this.config;
     const allMeasures = set(this.raw_data.map(m => m[config.measure_col])).values();
+
+  //Remove filters whose [ value_col ] does not appear in the data.
+    var columns = d3.keys(this.raw_data[0]);
+    this.controls.config.inputs = this.controls.config.inputs
+        .filter(function(d) {
+            return columns.indexOf(d.value_col) > -1; });
+    this.table.config.cols = this.table.config.cols
+        .filter(function(d) {
+            return columns.indexOf(d) > -1; });
 
   //"All" variable for non-grouped comparisons
     this.raw_data.forEach(e => e[config.measure_col] = e[config.measure_col].trim() );

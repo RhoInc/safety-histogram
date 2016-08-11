@@ -1,4 +1,10 @@
 export default function onLayout() {
+  //Add population count.
+    d3.select('.wc-controls')
+        .append('span')
+        .attr(
+            {'id': 'populationCount'});
+
   //Add footnote.
     this.wrap
         .insert('p', '.wc-chart')
@@ -8,10 +14,10 @@ export default function onLayout() {
   //Add control to hide or display normal range(s).
     var normalRange = d3.select('.wc-controls')
         .append('div')
-        .attr(  {'id': 'NRcheckbox'})
+        .attr('float', 'right')
+        .attr('id', 'NRcheckbox')
             .append('input')
-            .attr(
-                {'type': 'checkbox'});
+            .attr('type', 'checkbox');
     var NRcheckbox = document.getElementById('NRcheckbox');
     NRcheckbox.innerHTML = NRcheckbox.innerHTML + 'Normal range';
     d3.select('#NRcheckbox input').on('change', function () {

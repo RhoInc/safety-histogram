@@ -137,11 +137,14 @@ var safetyHistogram = (function (webcharts, d3$1) {
     };
 
     function onLayout() {
+        //Add population count.
+        d3.select('.wc-controls').append('span').attr({ 'id': 'populationCount' });
+
         //Add footnote.
         this.wrap.insert('p', '.wc-chart').attr('class', 'annote').text('Click a bar for details.');
 
         //Add control to hide or display normal range(s).
-        var normalRange = d3.select('.wc-controls').append('div').attr({ 'id': 'NRcheckbox' }).append('input').attr({ 'type': 'checkbox' });
+        var normalRange = d3.select('.wc-controls').append('div').attr('float', 'right').attr('id', 'NRcheckbox').append('input').attr('type', 'checkbox');
         var NRcheckbox = document.getElementById('NRcheckbox');
         NRcheckbox.innerHTML = NRcheckbox.innerHTML + 'Normal range';
         d3.select('#NRcheckbox input').on('change', function () {
@@ -184,7 +187,37 @@ var safetyHistogram = (function (webcharts, d3$1) {
         this.svg.selectAll('.bar').attr('opacity', 1);
     }
 
-    function onDraw() {}
+    // Takes a webcharts object creates a text annotation giving the
+    // number and percentage of observations shown in the current view
+    // inputs:
+    // chart - a webcharts chart object
+    // id_col - a column name in the raw data set (chart.raw_data) representing the observation of interest
+    // id_unit - a text string to label the units in the annotation (default = "participants")
+    // selector - css selector for the annotation
+    function updateSubjectCount(chart, id_col, selector, id_unit) {
+        //count the number of unique ids in the data set
+        var totalObs = d3.set(chart.raw_data.map(function (d) {
+            return d[id_col];
+        })).values().length;
+
+        //count the number of unique ids in the current chart and calculate the percentage
+        var currentObs = d3.set(chart.filtered_data.map(function (d) {
+            return d[id_col];
+        })).values().length;
+        var percentage = d3.format('0.1%')(currentObs / totalObs);
+
+        //clear the annotation
+        var annotation = d3.select(selector);
+        d3.select(selector).selectAll("*").remove();
+
+        //update the annotation
+        var units = id_unit ? " " + id_unit : " participant(s)";
+        annotation.text('\n' + currentObs + " of " + totalObs + units + " shown (" + percentage + ")");
+    }
+
+    function onDraw() {
+        updateSubjectCount(this, this.config.id_col, '#populationCount');
+    }
 
     function onResize() {
         var chart = this;
@@ -239,7 +272,7 @@ var safetyHistogram = (function (webcharts, d3$1) {
                 1;
             });
             //Determine whether normal range checkbox is checked.
-            var displayNormalRange = d3.select('.wc-controls div input[type=checkbox]').property('checked');
+            var displayNormalRange = d3.select('#NRcheckbox input').property('checked');
             //Add divs to chart for each normal range.
             var canvas = d3.select('.bar-supergroup');
             canvas.selectAll('.normalRange').remove();

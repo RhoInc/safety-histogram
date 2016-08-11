@@ -54,7 +54,7 @@ export default function onResize() {
                     a_lo >= b_lo && a_hi >= b_hi ? -1 : // greater minimum and greater maximum 
                         1;});
       //Determine whether normal range checkbox is checked.
-        var displayNormalRange = d3.select('.wc-controls div input[type=checkbox]')
+        var displayNormalRange = d3.select('#NRcheckbox input')
             .property('checked')
       //Add divs to chart for each normal range.
         var canvas = d3.select('.bar-supergroup');

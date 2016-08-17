@@ -1,84 +1,91 @@
-const settings = {
-    //Addition settings for this template
-    id_col: "USUBJID",
-    time_col: "VISITN",
-    measure_col: "TEST",
-    value_col: "STRESN",
-    unit_col: "STRESU",
-    sex_col:"SEX",
-    race_col:"RACE",
-    normal_col_low: "STNRLO",
-    normal_col_high: "STNRHI",
+const config = {
+  //Default template settings
+    value_col: 'STRESN',
+    measure_col: 'TEST',
+    unit_col: 'STRESU',
+    normal_col_low: 'STNRLO',
+    normal_col_high: 'STNRHI',
+    id_col: 'USUBJID',
+    filters: [
+        {value_col: 'SITE', label: 'Site'},
+        {value_col: 'VISITN', label: 'Visit'},
+        {value_col: 'SEX', label: 'Sex'},
+        {value_col: 'RACE', label: 'Race'}],
+    detail_cols: null,
     start_value: null,
     rotateX: true,
-    missingValues: ["NA",""],
+    missingValues: ['','NA','N/A'],
 
-    //Standard webcharts settings
+  //Standard webcharts settings
     x:{
-        "column":null, //set in syncSettings()
-        "label":null, //set in syncSettings()
-        "type":"linear",
-        "bin":25, 
-        "behavior":'flex', 
-        "format":'.1f'
+        'column':null, // set in syncSettings()
+        'label':null, // set in syncSettings()
+        'type':'linear',
+        'bin':25,
+        'behavior':'flex',
+        'format':'.1f'
     },
     y:{
-        "label":"# of Measures",
-        "type":"linear",
-        "behavior": 'flex',
-        "column":"",
-        "domain":[0,null]
+        'label':'# of Observations',
+        'type':'linear',
+        'behavior': 'flex',
+        'column':'',
+        'domain':[0,null]
     },
     marks:[
-        {   
-            "per":[], //set in syncSettings()
-            "type":"bar",
-            "summarizeY":"count",
-            "summarizeX":"mean",
-            "attributes":{"fill-opacity":0.75}
+        {
+            'per':[], // set in syncSettings()
+            'type':'bar',
+            'summarizeY':'count',
+            'summarizeX':'mean',
+            'attributes':{'fill-opacity':0.75}
         }
     ],
-    "legend":{
-        "mark":"square",
-        "label":"cohort"
-    },
-    "aspect":1.66,
-    "max_width":"800"
+    'aspect':1.66,
+    'max_width':'800'
 };
 
-// Replicate settings in multiple places in the settings object
-export function syncSettings(settings){
-	settings.x.label = settings.start_value;
-	settings.x.column = settings.value_col;
-	settings.marks[0].per[0] = settings.value_col;
-	
-	return settings;
+//Replicate settings in multiple places in the settings object
+export function syncSettings(settings) {
+    settings.x.label = settings.start_value;
+    settings.x.column = settings.value_col;
+    settings.marks[0].per[0] = settings.value_col;
+
+  //Set [ settings.detail_cols ] to columns specified in default template settings.
+    if (settings.detail_cols === null) {
+        settings.detail_cols = [settings.id_col];
+        settings.filters.forEach(d => settings.detail_cols.push(d.value_col));
+        settings.detail_cols.push
+            (settings.measure_col
+            ,settings.value_col
+            ,settings.unit_col
+            ,settings.normal_col_low
+            ,settings.normal_col_high);
+    }
+
+    return settings;
 }
 
-// Default Control objects
-export const controlInputs = [ 
-	{label: "Lab Test", type: "subsetter", value_col: "TEST", start: null},
-    {label: "Sex", type: "subsetter", value_col: "SEX"},
-    {label: "Race", type: "subsetter", value_col: "RACE"},
-    {label: "Visit", type: "subsetter", value_col: "VISITN"}
-];
+//Map values from settings to control inputs
+export function syncControlInputs(settings) {
+    var measureFilter =
+        {type: 'subsetter'
+        ,value_col: settings.measure_col
+        ,label: 'Measure'
+        ,start: null};
 
-// Map values from settings to control inputs
-export function syncControlInputs(controlInputs, settings){
-    var labTestControl = controlInputs.filter(function(d){return d.label=="Lab Test"})[0] 
-	labTestControl.value_col = settings.measure_col;
-	labTestControl.start = settings.start_value;   
-
-    var sexControl = controlInputs.filter(function(d){return d.label=="Sex"})[0] 
-    sexControl.value_col = settings.sex_col;    
-
-    var raceControl = controlInputs.filter(function(d){return d.label=="Race"})[0] 
-    raceControl.value_col = settings.race_col;
-
-    var visitControl = controlInputs.filter(function(d){return d.label=="Visit"})[0] 
-    visitControl.value_col = settings.time_col;
- 
-	return controlInputs
+    if (settings.filters && settings.filters.length > 0) {
+        var otherFilters = settings.filters
+            .map(d => {
+                return {
+                    type: 'subsetter',
+                    value_col: d.value_col,
+                    label: (d.label && /^\s*$/.test(d.label) === false) ?
+                        d.label :
+                        d.value_col}; });
+        return [measureFilter].concat(otherFilters);
+    } else
+        return [measureFilter];
 }
 
-export default settings
+export default config

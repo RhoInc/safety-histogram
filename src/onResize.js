@@ -23,6 +23,33 @@ export default function onResize() {
                 .classed('tableTitle',true)
                 .text(`Table displays ${d.values.raw.length} records with ${measure} values from ${cleanF(d.rangeLow)} to ${cleanF(d.rangeHigh)} ${units}. Click outside a bar to remove details.`);
             listing.draw(d.values.raw);
+            d3.select('.listing table')
+                .style(
+                    {'border-collapse': 'separate'
+                    ,'background': '#fff'
+                    ,'border-radius': '5px'
+                    ,'margin': '50px auto'});
+            d3.select('.wc-chart thead')
+                .style('border-radius', '5px');
+            d3.selectAll('.wc-chart thead th')
+                .style(
+                    {'font-size': '16px'
+                    ,'font-weight': '400'
+                    ,'color': '#111'
+                    ,'text-align': 'left'
+                    ,'padding': '10px'
+                    ,'background': '#bdbdbd'
+                    ,'border-top': '1px solid #858d99'
+                    ,'border-bottom': '1px solid #858d99'});
+            d3.selectAll('.wc-chart tbody tr td')
+                .style(
+                    {'font-weight': '400'
+                    ,'color': '#5f6062'
+                    ,'font-size': '13px'
+                    ,'padding': '20px 20px 20px 20px'
+                    ,'border-bottom': '1px solid #e0e0e0'});
+            d3.selectAll('tbody tr:nth-child(2n)')
+                .style('background', '#f0f3f5');
             bins.attr('fill-opacity', 0.5);
             select(this).attr('fill-opacity', 1); })
         .on('mouseover' ,function(d) {

@@ -1,6 +1,6 @@
 {
   "name": "safety-histogram",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Histogram showing distribution of lab measures, vital signs and other related measures in clinical trials.",
   "keywords": [
       "labs",
@@ -16,7 +16,7 @@
   "homepage": "https://github.com/rhoinc/safety-histogram#readme",
   "license": "MIT",
   "author": "Rho, Inc.",
-  "main": "./build/safetyHistogram-chf.js",
+  "main": "./build/safetyHistogram.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/rhoinc/safety-histogram.git"

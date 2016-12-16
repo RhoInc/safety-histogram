@@ -11,6 +11,9 @@ export default function onDataTransform() {
 
   //Reset linked table
     this.table.draw([]);
+    this.wrap.select('.annote')
+    .classed('tableTitle', false)
+    .text('Click a bar for details.');
     this.svg.selectAll('.bar')
         .attr('opacity', 1);
 }

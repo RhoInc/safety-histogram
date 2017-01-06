@@ -509,16 +509,16 @@
 	    });
 
 	    //Visualize normal ranges.
-	    if (this.raw_data[0][settings.normal_col_low] && this.raw_data[0][settings.normal_col_high]) {
+	    if (this.raw_data[0][chart.config.normal_col_low] && this.raw_data[0][chart.config.normal_col_high]) {
 	        //Capture distinct normal ranges in filtered data.
 	        var normalRanges = d3.nest().key(function (d) {
-	            return d[settings.normal_col_low] + ',' + d[settings.normal_col_high];
+	            return d[chart.config.normal_col_low] + ',' + d[chart.config.normal_col_high];
 	        }) // set key to comma-delimited normal range
 	        .rollup(function (d) {
 	            return d.length;
 	        }).entries(this.filtered_data);
 	        var currentRange = d3.extent(this.filtered_data, function (d) {
-	            return +d[settings.value_col];
+	            return +d[chart.config.value_col];
 	        });
 	        //Sort normal ranges so larger normal ranges plot beneath smaller normal ranges.
 	        normalRanges.sort(function (a, b) {

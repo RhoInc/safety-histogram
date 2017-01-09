@@ -1,3 +1,4 @@
+
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('react'), require('d3'), require('webcharts')) :
 	typeof define === 'function' && define.amd ? define(['react', 'd3', 'webcharts'], factory) :
@@ -911,3 +912,4 @@
 	return Renderer;
 
 }));
+

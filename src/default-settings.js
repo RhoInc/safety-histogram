@@ -6,11 +6,7 @@ const config = {
     normal_col_low: 'STNRLO',
     normal_col_high: 'STNRHI',
     id_col: 'USUBJID',
-    filters: [
-        {value_col: 'SITE', label: 'Site'},
-        {value_col: 'VISITN', label: 'Visit'},
-        {value_col: 'SEX', label: 'Sex'},
-        {value_col: 'RACE', label: 'Race'}],
+    filters: [],
     detail_cols: null,
     start_value: null,
     rotateX: true,

@@ -167,6 +167,7 @@ var safetyHistogram = function (webcharts, d3$1) {
 
         //Reset linked table
         this.table.draw([]);
+        this.wrap.select('.annote').classed('tableTitle', false).text('Click a bar for details.');
         this.svg.selectAll('.bar').attr('opacity', 1);
     }
 

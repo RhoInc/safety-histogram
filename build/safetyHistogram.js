@@ -137,6 +137,7 @@ var safetyHistogram = function (webcharts, d3$1) {
     }
 
     function onPreprocess() {
+        var chart = this;
         //Capture currently selected filters.
         var filterSettings = [];
         var filters = d3.selectAll('.wc-controls .changer').each(function (d) {
@@ -154,7 +155,7 @@ var safetyHistogram = function (webcharts, d3$1) {
             return match;
         });
         //Set x domain based on currently filtered data.
-        this.config.x.domain = d3.extent(filtered_data, d => +d[settings.value_col]);
+        this.config.x.domain = d3.extent(filtered_data, d => +d[chart.config.value_col]);
     }
 
     function onDataTransform() {

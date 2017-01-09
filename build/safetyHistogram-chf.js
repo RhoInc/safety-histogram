@@ -395,6 +395,7 @@
 	}
 
 	function onPreprocess() {
+	    var chart = this;
 	    //Capture currently selected filters.
 	    var filterSettings = [];
 	    var filters = d3.selectAll('.wc-controls .changer').each(function (d) {
@@ -413,7 +414,7 @@
 	    });
 	    //Set x domain based on currently filtered data.
 	    this.config.x.domain = d3.extent(filtered_data, function (d) {
-	        return +d[settings.value_col];
+	        return +d[chart.config.value_col];
 	    });
 	}
 

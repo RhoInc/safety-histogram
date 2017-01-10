@@ -1,4 +1,3 @@
-
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('react'), require('d3'), require('webcharts')) :
 	typeof define === 'function' && define.amd ? define(['react', 'd3', 'webcharts'], factory) :
@@ -254,7 +253,7 @@
 	    normal_col_low: 'STNRLO',
 	    normal_col_high: 'STNRHI',
 	    id_col: 'USUBJID',
-	    filters: [{ value_col: 'SITE', label: 'Site' }, { value_col: 'VISITN', label: 'Visit' }, { value_col: 'SEX', label: 'Sex' }, { value_col: 'RACE', label: 'Race' }],
+	    filters: [],
 	    detail_cols: null,
 	    start_value: null,
 	    rotateX: true,
@@ -428,6 +427,7 @@
 
 	    //Reset linked table
 	    this.table.draw([]);
+	    this.wrap.select('.annote').classed('tableTitle', false).text('Click a bar for details.');
 	    this.svg.selectAll('.bar').attr('opacity', 1);
 	}
 
@@ -912,4 +912,3 @@
 	return Renderer;
 
 }));
-

@@ -1,6 +1,6 @@
 {
   "name": "safety-histogram",
-  "version": "2.0.0",
+  "version": "1.3.0",
   "description": "Histogram showing distribution of lab measures, vital signs and other related measures in clinical trials.",
   "keywords": [
       "labs",

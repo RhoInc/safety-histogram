@@ -251,7 +251,7 @@ var safetyHistogram = function (webcharts, d3$1) {
         });
 
         //Visualize normal ranges.
-        if (this.raw_data[0][chart.config.normal_col_low] && this.raw_data[0][chart.config.normal_col_high]) {
+        if (this.raw_data[0].hasOwnProperty(chart.config.normal_col_low) && this.raw_data[0].hasOwnProperty(chart.config.normal_col_high)) {
             //Capture distinct normal ranges in filtered data.
             var normalRanges = d3.nest().key(d => `${ d[chart.config.normal_col_low] },${ d[chart.config.normal_col_high] }`) // set key to comma-delimited normal range
             .rollup(d => d.length).entries(this.filtered_data);

@@ -1,4 +1,4 @@
-const config = {
+const defaultSettings = {
   //Default template settings
     value_col: 'STRESN',
     measure_col: 'TEST',
@@ -6,10 +6,9 @@ const config = {
     normal_col_low: 'STNRLO',
     normal_col_high: 'STNRHI',
     id_col: 'USUBJID',
-    filters: [],
-    detail_cols: null,
+    filters: null,
+    details: null,
     start_value: null,
-    rotateX: true,
     missingValues: ['','NA','N/A'],
 
   //Standard webcharts settings
@@ -37,8 +36,7 @@ const config = {
             'attributes':{'fill-opacity':0.75}
         }
     ],
-    'aspect':1.66,
-    'max_width':'800'
+    aspect: 3
 };
 
 //Replicate settings in multiple places in the settings object
@@ -47,16 +45,38 @@ export function syncSettings(settings) {
     settings.x.column = settings.value_col;
     settings.marks[0].per[0] = settings.value_col;
 
-  //Set [ settings.detail_cols ] to columns specified in default template settings.
-    if (settings.detail_cols === null) {
-        settings.detail_cols = [settings.id_col];
-        settings.filters.forEach(d => settings.detail_cols.push(d.value_col));
-        settings.detail_cols.push
-            (settings.measure_col
-            ,settings.value_col
-            ,settings.unit_col
-            ,settings.normal_col_low
-            ,settings.normal_col_high);
+  //Define default details.
+    let defaultDetails = [{value_col: settings.id_col, label: 'Subject Identifier'}];
+    if (settings.filters)
+        settings.filters.forEach(d => defaultDetails.push(
+            {value_col: d.value_col ? d.value_col : d
+            ,label: d.label ? d.label : d.value_col ? d.value_col : d}));
+    defaultDetails.push({value_col: settings.value_col, label: 'Result'});
+    if (settings.normal_col_low)
+        defaultDetails.push({value_col: settings.normal_col_low, label: 'Lower Limit of Normal'});
+    if (settings.normal_col_high)
+        defaultDetails.push({value_col: settings.normal_col_high, label: 'Upper Limit of Normal'});
+
+  //If [settings.details] is not specified:
+    if (!settings.details)
+        settings.details = defaultDetails;
+  //If [settings.details] is specified:
+    else {
+      //Allow user to specify an array of columns or an array of objects with a column property
+      //and optionally a column label.
+        settings.details = settings.details
+            .map(d => {
+                return {
+                    value_col: d.value_col ? d.value_col : d,
+                    label: d.label ? d.label : d.value_col ? d.value_col : d}; });
+
+      //Add default details to settings.details.
+        defaultDetails
+            .reverse()
+            .forEach(defaultDetail => {
+                if (settings.details.map(d => d.value_col).indexOf(defaultDetail.value_col) === -1)
+                    settings.details.unshift(defaultDetail);
+            });
     }
 
     return settings;
@@ -84,4 +104,4 @@ export function syncControlInputs(settings) {
         return [measureFilter];
 }
 
-export default config
+export default defaultSettings;

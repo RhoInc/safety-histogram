@@ -1,7 +1,32 @@
 var safetyHistogram = function (webcharts, d3$1) {
     'use strict';
 
-    const config = {
+    if (typeof Object.assign != 'function') {
+        (function () {
+            Object.assign = function (target) {
+                'use strict';
+
+                if (target === undefined || target === null) {
+                    throw new TypeError('Cannot convert undefined or null to object');
+                }
+
+                var output = Object(target);
+                for (var index = 1; index < arguments.length; index++) {
+                    var source = arguments[index];
+                    if (source !== undefined && source !== null) {
+                        for (var nextKey in source) {
+                            if (source.hasOwnProperty(nextKey)) {
+                                output[nextKey] = source[nextKey];
+                            }
+                        }
+                    }
+                }
+                return output;
+            };
+        })();
+    }
+
+    var defaultSettings = {
         //Default template settings
         value_col: 'STRESN',
         measure_col: 'TEST',
@@ -9,10 +34,9 @@ var safetyHistogram = function (webcharts, d3$1) {
         normal_col_low: 'STNRLO',
         normal_col_high: 'STNRHI',
         id_col: 'USUBJID',
-        filters: [],
-        detail_cols: null,
+        filters: null,
+        details: null,
         start_value: null,
-        rotateX: true,
         missingValues: ['', 'NA', 'N/A'],
 
         //Standard webcharts settings
@@ -38,8 +62,7 @@ var safetyHistogram = function (webcharts, d3$1) {
             'summarizeX': 'mean',
             'attributes': { 'fill-opacity': 0.75 }
         }],
-        'aspect': 1.66,
-        'max_width': '800'
+        aspect: 3
     };
 
     //Replicate settings in multiple places in the settings object
@@ -48,12 +71,35 @@ var safetyHistogram = function (webcharts, d3$1) {
         settings.x.column = settings.value_col;
         settings.marks[0].per[0] = settings.value_col;
 
-        //Set [ settings.detail_cols ] to columns specified in default template settings.
-        if (settings.detail_cols === null) {
-            settings.detail_cols = [settings.id_col];
-            settings.filters.forEach(d => settings.detail_cols.push(d.value_col));
-            settings.detail_cols.push(settings.measure_col, settings.value_col, settings.unit_col, settings.normal_col_low, settings.normal_col_high);
-        }
+        //Define default details.
+        var defaultDetails = [{ value_col: settings.id_col, label: 'Subject Identifier' }];
+        if (settings.filters) settings.filters.forEach(function (d) {
+            return defaultDetails.push({ value_col: d.value_col ? d.value_col : d,
+                label: d.label ? d.label : d.value_col ? d.value_col : d });
+        });
+        defaultDetails.push({ value_col: settings.value_col, label: 'Result' });
+        if (settings.normal_col_low) defaultDetails.push({ value_col: settings.normal_col_low, label: 'Lower Limit of Normal' });
+        if (settings.normal_col_high) defaultDetails.push({ value_col: settings.normal_col_high, label: 'Upper Limit of Normal' });
+
+        //If [settings.details] is not specified:
+        if (!settings.details) settings.details = defaultDetails;
+        //If [settings.details] is specified:
+        else {
+                //Allow user to specify an array of columns or an array of objects with a column property
+                //and optionally a column label.
+                settings.details = settings.details.map(function (d) {
+                    return {
+                        value_col: d.value_col ? d.value_col : d,
+                        label: d.label ? d.label : d.value_col ? d.value_col : d };
+                });
+
+                //Add default details to settings.details.
+                defaultDetails.reverse().forEach(function (defaultDetail) {
+                    if (settings.details.map(function (d) {
+                        return d.value_col;
+                    }).indexOf(defaultDetail.value_col) === -1) settings.details.unshift(defaultDetail);
+                });
+            }
 
         return settings;
     }
@@ -66,7 +112,7 @@ var safetyHistogram = function (webcharts, d3$1) {
             start: null };
 
         if (settings.filters && settings.filters.length > 0) {
-            var otherFilters = settings.filters.map(d => {
+            var otherFilters = settings.filters.map(function (d) {
                 return {
                     type: 'subsetter',
                     value_col: d.value_col,
@@ -77,8 +123,12 @@ var safetyHistogram = function (webcharts, d3$1) {
     }
 
     function onInit() {
-        const config = this.config;
-        const allMeasures = d3$1.set(this.raw_data.map(m => m[config.measure_col])).values();
+        var _this = this;
+
+        var config = this.config;
+        var allMeasures = d3$1.set(this.raw_data.map(function (m) {
+            return m[config.measure_col];
+        })).values();
 
         //Remove filters whose [ value_col ] does not appear in the data.
         var columns = d3.keys(this.raw_data[0]);
@@ -90,16 +140,20 @@ var safetyHistogram = function (webcharts, d3$1) {
         });
 
         //"All" variable for non-grouped comparisons
-        this.raw_data.forEach(e => e[config.measure_col] = e[config.measure_col].trim());
+        this.raw_data.forEach(function (e) {
+            return e[config.measure_col] = e[config.measure_col].trim();
+        });
 
         //Drop missing values
-        this.raw_data = this.raw_data.filter(f => {
+        this.raw_data = this.raw_data.filter(function (f) {
             return config.missingValues.indexOf(f[config.value_col]) === -1;
         });
 
         //Warning for non-numeric endpoints
-        var catMeasures = allMeasures.filter(f => {
-            var measureVals = this.raw_data.filter(d => d[config.measure_col] === f);
+        var catMeasures = allMeasures.filter(function (f) {
+            var measureVals = _this.raw_data.filter(function (d) {
+                return d[config.measure_col] === f;
+            });
 
             return webcharts.dataOps.getValType(measureVals, config.value_col) !== "continuous";
         });
@@ -108,13 +162,17 @@ var safetyHistogram = function (webcharts, d3$1) {
         }
 
         //Delete non-numeric endpoints
-        var numMeasures = allMeasures.filter(f => {
-            var measureVals = this.raw_data.filter(d => d[config.measure_col] === f);
+        var numMeasures = allMeasures.filter(function (f) {
+            var measureVals = _this.raw_data.filter(function (d) {
+                return d[config.measure_col] === f;
+            });
 
             return webcharts.dataOps.getValType(measureVals, config.value_col) === "continuous";
         });
 
-        this.raw_data = this.raw_data.filter(f => numMeasures.indexOf(f[config.measure_col]) > -1);
+        this.raw_data = this.raw_data.filter(function (f) {
+            return numMeasures.indexOf(f[config.measure_col]) > -1;
+        });
 
         //Choose the start value for the Test filter
         this.controls.config.inputs[0].start = this.config.start_value || numMeasures[0];
@@ -147,20 +205,22 @@ var safetyHistogram = function (webcharts, d3$1) {
                 }).property('value') });
         });
         //Filter data based on currently selected filters.
-        var filtered_data = this.raw_data.filter(d => {
+        var filtered_data = this.raw_data.filter(function (d) {
             var match = true;
-            filterSettings.forEach(d1 => {
+            filterSettings.forEach(function (d1) {
                 if (match === true) match = d[d1.value_col] === d1.value || d1.value === 'All';
             });
             return match;
         });
         //Set x domain based on currently filtered data.
-        this.config.x.domain = d3.extent(filtered_data, d => +d[chart.config.value_col]);
+        this.config.x.domain = d3.extent(filtered_data, function (d) {
+            return +d[chart.config.value_col];
+        });
     }
 
     function onDataTransform() {
-        const measure = this.filtered_data[0] ? this.filtered_data[0][this.config.measure_col] : this.raw_data[0][this.config.measure_col];
-        const units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
+        var measure = this.filtered_data[0] ? this.filtered_data[0][this.config.measure_col] : this.raw_data[0][this.config.measure_col];
+        var units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
 
         //Customize the x-axis label
         this.config.x.label = measure + " level (" + units + ")";
@@ -204,12 +264,18 @@ var safetyHistogram = function (webcharts, d3$1) {
     }
 
     function onResize() {
-        const chart = this;
-        const config = this.config;
-        const measure = this.filtered_data[0] ? this.filtered_data[0][this.config.measure_col] : this.raw_data[0][this.config.measure_col];
-        const units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
+        var chart = this;
+        var config = this.config;
+        var measure = this.filtered_data[0] ? this.filtered_data[0][this.config.measure_col] : this.raw_data[0][this.config.measure_col];
+        var units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
 
         var listing = this.table;
+        listing.config.cols = this.config.details.map(function (detail) {
+            return detail.value_col;
+        });
+        listing.config.headers = this.config.details.map(function (detail) {
+            return detail.label;
+        });
 
         //Display data listing on bin click.
         var cleanF = d3$1.format('.3f');
@@ -217,7 +283,7 @@ var safetyHistogram = function (webcharts, d3$1) {
         var footnote = this.wrap.select('.annote');
 
         bins.style('cursor', 'pointer').on('click', function (d) {
-            footnote.classed('tableTitle', true).text(`Table displays ${ d.values.raw.length } records with ${ measure } values from ${ cleanF(d.rangeLow) } to ${ cleanF(d.rangeHigh) } ${ units }. Click outside a bar to remove details.`);
+            footnote.classed('tableTitle', true).text('Table displays ' + d.values.raw.length + ' records with ' + measure + ' values from ' + cleanF(d.rangeLow) + ' to ' + cleanF(d.rangeHigh) + ' ' + units + '. Click outside a bar to remove details.');
             listing.draw(d.values.raw);
             d3.select('.listing table').style({ 'border-collapse': 'separate',
                 'background': '#fff',
@@ -242,7 +308,7 @@ var safetyHistogram = function (webcharts, d3$1) {
             d3$1.select(this).attr('fill-opacity', 1);
         }).on('mouseover', function (d) {
             if (footnote.classed('tableTitle') === false) {
-                footnote.text(`${ d.values.raw.length } records with ${ measure } values from ${ cleanF(d.rangeLow) } to ${ cleanF(d.rangeHigh) } ${ units }.`);
+                footnote.text(d.values.raw.length + ' records with ' + measure + ' values from ' + cleanF(d.rangeLow) + ' to ' + cleanF(d.rangeHigh) + ' ' + units + '.');
             }
         }).on('mouseout', function (d) {
             if (footnote.classed('tableTitle') === false) {
@@ -253,9 +319,15 @@ var safetyHistogram = function (webcharts, d3$1) {
         //Visualize normal ranges.
         if (this.raw_data[0].hasOwnProperty(chart.config.normal_col_low) && this.raw_data[0].hasOwnProperty(chart.config.normal_col_high)) {
             //Capture distinct normal ranges in filtered data.
-            var normalRanges = d3.nest().key(d => `${ d[chart.config.normal_col_low] },${ d[chart.config.normal_col_high] }`) // set key to comma-delimited normal range
-            .rollup(d => d.length).entries(this.filtered_data);
-            var currentRange = d3.extent(this.filtered_data, d => +d[chart.config.value_col]);
+            var normalRanges = d3.nest().key(function (d) {
+                return d[chart.config.normal_col_low] + ',' + d[chart.config.normal_col_high];
+            }) // set key to comma-delimited normal range
+            .rollup(function (d) {
+                return d.length;
+            }).entries(this.filtered_data);
+            var currentRange = d3.extent(this.filtered_data, function (d) {
+                return +d[chart.config.value_col];
+            });
             //Sort normal ranges so larger normal ranges plot beneath smaller normal ranges.
             normalRanges.sort(function (a, b) {
                 var a_lo = a.key.split(',')[0];
@@ -274,18 +346,28 @@ var safetyHistogram = function (webcharts, d3$1) {
             var canvas = d3.select('.bar-supergroup');
             canvas.selectAll('.normalRange').remove();
             canvas.selectAll('.normalRange rect').data(normalRanges).enter().insert('rect', ':first-child').attr({ 'class': 'normalRange',
-                'x': d => chart.x(Math.max(+d.key.split(',')[0], currentRange[0])) // set x to range low
+                'x': function x(d) {
+                    return chart.x(Math.max(+d.key.split(',')[0], currentRange[0]));
+                } // set x to range low
                 , 'y': 0,
-                'width': d => Math.min(chart.plot_width - chart.x(Math.max(+d.key.split(',')[0], currentRange[0])), // chart width - range low
+                'width': function width(d) {
+                    return Math.min(chart.plot_width - chart.x(Math.max(+d.key.split(',')[0], currentRange[0])), // chart width - range low
 
-                chart.x(+d.key.split(',')[1]) - chart.x(Math.max(+d.key.split(',')[0], currentRange[0]))) // range high - range low
+                    chart.x(+d.key.split(',')[1]) - chart.x(Math.max(+d.key.split(',')[0], currentRange[0])));
+                } // range high - range low
 
                 , 'height': this.plot_height,
                 'visibility': displayNormalRange ? 'visible' : 'hidden' }).style({ 'stroke': 'black',
                 'fill': 'black',
-                'stroke-opacity': d => d.values / chart.filtered_data.length * .75 // opacity as a function of fraction of records with the given normal range
-                , 'fill-opacity': d => d.values / chart.filtered_data.length * .5 }) // opacity as a function of fraction of records with the given normal range
-            .append('title').text(d => 'Normal range: ' + d.key.split(',')[0] + "-" + d.key.split(',')[1] + " " + units + ' (' + d3.format('%')(d.values / chart.filtered_data.length) + ' of records)');
+                'stroke-opacity': function strokeOpacity(d) {
+                    return d.values / chart.filtered_data.length * .75;
+                } // opacity as a function of fraction of records with the given normal range
+                , 'fill-opacity': function fillOpacity(d) {
+                    return d.values / chart.filtered_data.length * .5;
+                } }) // opacity as a function of fraction of records with the given normal range
+            .append('title').text(function (d) {
+                return 'Normal range: ' + d.key.split(',')[0] + "-" + d.key.split(',')[1] + " " + units + ' (' + d3.format('%')(d.values / chart.filtered_data.length) + ' of records)';
+            });
         }
 
         d3.selectAll('.overlay, .normalRange').on('click', function () {
@@ -298,44 +380,19 @@ var safetyHistogram = function (webcharts, d3$1) {
         });
     }
 
-    if (typeof Object.assign != 'function') {
-        (function () {
-            Object.assign = function (target) {
-                'use strict';
-
-                if (target === undefined || target === null) {
-                    throw new TypeError('Cannot convert undefined or null to object');
-                }
-
-                var output = Object(target);
-                for (var index = 1; index < arguments.length; index++) {
-                    var source = arguments[index];
-                    if (source !== undefined && source !== null) {
-                        for (var nextKey in source) {
-                            if (source.hasOwnProperty(nextKey)) {
-                                output[nextKey] = source[nextKey];
-                            }
-                        }
-                    }
-                }
-                return output;
-            };
-        })();
-    }
-
     function safetyHistogram(element, settings) {
         //Merge user's settings with default settings.
-        let mergedSettings = Object.assign({}, config, settings);
+        var mergedSettings = Object.assign({}, defaultSettings, settings);
 
         //Keep settings in sync with the data mappings.
         mergedSettings = syncSettings(mergedSettings);
 
         //Keep control inputs in sync and create controls object.
-        let syncedControlInputs = syncControlInputs(mergedSettings);
-        let controls = webcharts.createControls(element, { location: 'top', inputs: syncedControlInputs });
+        var syncedControlInputs = syncControlInputs(mergedSettings);
+        var controls = webcharts.createControls(element, { location: 'top', inputs: syncedControlInputs });
 
         //Define chart
-        let chart = webcharts.createChart(element, mergedSettings, controls);
+        var chart = webcharts.createChart(element, mergedSettings, controls);
         chart.on('init', onInit);
         chart.on('layout', onLayout);
         chart.on('preprocess', onPreprocess);
@@ -343,7 +400,7 @@ var safetyHistogram = function (webcharts, d3$1) {
         chart.on('draw', onDraw);
         chart.on('resize', onResize);
 
-        let table = webcharts.createTable(element, mergedSettings.detail_cols && mergedSettings.detail_cols.length > 0 ? { cols: mergedSettings.detail_cols } : null).init([]);
+        var table = webcharts.createTable(element, mergedSettings.detail_cols && mergedSettings.detail_cols.length > 0 ? { cols: mergedSettings.detail_cols } : null).init([]);
         chart.table = table;
 
         return chart;

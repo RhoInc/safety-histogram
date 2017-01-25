@@ -11,6 +11,8 @@ export default function onResize() {
         this.raw_data[0][this.config.unit_col];
 
     var listing = this.table;
+    listing.config.cols = this.config.details.map(detail => detail.value_col);
+    listing.config.headers = this.config.details.map(detail => detail.label);
 
   //Display data listing on bin click.
     var cleanF = format('.3f');

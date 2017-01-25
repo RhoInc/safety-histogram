@@ -1,7 +1,7 @@
 import { dataOps } from 'webcharts';
 import { set } from 'd3';
 
-export default function onInit(){
+export default function onInit() {
     const config = this.config;
     const allMeasures = set(this.raw_data.map(m => m[config.measure_col])).values();
 

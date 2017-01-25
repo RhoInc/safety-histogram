@@ -22,7 +22,7 @@
     "url": "https://github.com/rhoinc/safety-histogram.git"
   },
   "scripts": {
-    "build": "rollup -c ./scripts/rollup.wrapper.config.js | babel > ./build/safetyHistogram.js"  
+    "build": "rollup -c ./scripts/rollup.wrapper.config.js | babel > ./build/safetyHistogram.js"
     },
   "devDependencies": {
     "babel-cli": "^6.0.0",

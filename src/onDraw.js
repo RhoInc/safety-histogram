@@ -1,4 +1,4 @@
-import updateSubjectCount from './util/update-subject-count';
+import updateSubjectCount from './util/updateSubjectCount';
 
 export default function onDraw() {
     updateSubjectCount(this, this.config.id_col, '#populationCount');

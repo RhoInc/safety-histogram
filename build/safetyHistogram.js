@@ -218,7 +218,7 @@ var safetyHistogram = function (webcharts, d3$1) {
         var units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
 
         //Customize the x-axis label
-        this.config.x.label = measure + " level (" + units + ")";
+        this.config.x.label = measure + " (" + units + ")";
 
         //Reset linked table
         this.table.draw([]);

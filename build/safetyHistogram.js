@@ -73,9 +73,9 @@ var safetyHistogram = function (webcharts, d3$1) {
 
         //Define default details.
         var defaultDetails = [{ value_col: settings.id_col, label: 'Subject Identifier' }];
-        if (settings.filters) settings.filters.forEach(function (d) {
-            return defaultDetails.push({ value_col: d.value_col ? d.value_col : d,
-                label: d.label ? d.label : d.value_col ? d.value_col : d });
+        if (settings.filters) settings.filters.forEach(function (filter) {
+            return defaultDetails.push({ value_col: filter.value_col ? filter.value_col : filter,
+                label: filter.label ? filter.label : filter.value_col ? filter.value_col : filter });
         });
         defaultDetails.push({ value_col: settings.value_col, label: 'Result' });
         if (settings.normal_col_low) defaultDetails.push({ value_col: settings.normal_col_low, label: 'Lower Limit of Normal' });
@@ -87,18 +87,13 @@ var safetyHistogram = function (webcharts, d3$1) {
         else {
                 //Allow user to specify an array of columns or an array of objects with a column property
                 //and optionally a column label.
-                settings.details = settings.details.map(function (d) {
-                    return {
-                        value_col: d.value_col ? d.value_col : d,
-                        label: d.label ? d.label : d.value_col ? d.value_col : d };
-                });
-
-                //Add default details to settings.details.
-                defaultDetails.reverse().forEach(function (defaultDetail) {
-                    if (settings.details.map(function (d) {
+                settings.details.forEach(function (detail) {
+                    if (defaultDetails.map(function (d) {
                         return d.value_col;
-                    }).indexOf(defaultDetail.value_col) === -1) settings.details.unshift(defaultDetail);
+                    }).indexOf(detail.value_col ? detail.value_col : detail) === -1) defaultDetails.push({ value_col: detail.value_col ? detail.value_col : detail,
+                        label: detail.label ? detail.label : detail.value_col ? detail.value_col : detail });
                 });
+                settings.details = defaultDetails;
             }
 
         return settings;
@@ -109,14 +104,14 @@ var safetyHistogram = function (webcharts, d3$1) {
         var measureFilter = { type: 'subsetter',
             value_col: settings.measure_col,
             label: 'Measure',
-            start: null };
+            start: settings.start_value };
 
         if (settings.filters && settings.filters.length > 0) {
-            var otherFilters = settings.filters.map(function (d) {
-                return {
-                    type: 'subsetter',
-                    value_col: d.value_col,
-                    label: d.label && /^\s*$/.test(d.label) === false ? d.label : d.value_col };
+            var otherFilters = settings.filters.map(function (filter) {
+                filter = { type: 'subsetter',
+                    value_col: filter.value_col ? filter.value_col : filter,
+                    label: filter.label ? filter.label : filter.value_col ? filter.value_col : filter };
+                return filter;
             });
             return [measureFilter].concat(otherFilters);
         } else return [measureFilter];

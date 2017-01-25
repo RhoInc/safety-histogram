@@ -48,9 +48,9 @@ export function syncSettings(settings) {
   //Define default details.
     let defaultDetails = [{value_col: settings.id_col, label: 'Subject Identifier'}];
     if (settings.filters)
-        settings.filters.forEach(d => defaultDetails.push(
-            {value_col: d.value_col ? d.value_col : d
-            ,label: d.label ? d.label : d.value_col ? d.value_col : d}));
+        settings.filters.forEach(filter => defaultDetails.push(
+            {value_col: filter.value_col ? filter.value_col : filter
+            ,label: filter.label ? filter.label : filter.value_col ? filter.value_col : filter}));
     defaultDetails.push({value_col: settings.value_col, label: 'Result'});
     if (settings.normal_col_low)
         defaultDetails.push({value_col: settings.normal_col_low, label: 'Lower Limit of Normal'});
@@ -64,19 +64,14 @@ export function syncSettings(settings) {
     else {
       //Allow user to specify an array of columns or an array of objects with a column property
       //and optionally a column label.
-        settings.details = settings.details
-            .map(d => {
-                return {
-                    value_col: d.value_col ? d.value_col : d,
-                    label: d.label ? d.label : d.value_col ? d.value_col : d}; });
-
-      //Add default details to settings.details.
-        defaultDetails
-            .reverse()
-            .forEach(defaultDetail => {
-                if (settings.details.map(d => d.value_col).indexOf(defaultDetail.value_col) === -1)
-                    settings.details.unshift(defaultDetail);
+        settings.details
+            .forEach(detail => {
+                if (defaultDetails.map(d => d.value_col).indexOf(detail.value_col ? detail.value_col : detail) === -1)
+                    defaultDetails.push(
+                        {value_col: detail.value_col ? detail.value_col : detail
+                        ,label: detail.label ? detail.label : detail.value_col ? detail.value_col : detail});
             });
+        settings.details = defaultDetails;
     }
 
     return settings;
@@ -84,21 +79,21 @@ export function syncSettings(settings) {
 
 //Map values from settings to control inputs
 export function syncControlInputs(settings) {
-    var measureFilter =
+    const measureFilter =
         {type: 'subsetter'
         ,value_col: settings.measure_col
         ,label: 'Measure'
-        ,start: null};
+        ,start: settings.start_value};
 
     if (settings.filters && settings.filters.length > 0) {
-        var otherFilters = settings.filters
-            .map(d => {
-                return {
-                    type: 'subsetter',
-                    value_col: d.value_col,
-                    label: (d.label && /^\s*$/.test(d.label) === false) ?
-                        d.label :
-                        d.value_col}; });
+        let otherFilters = settings.filters
+            .map(filter => {
+                filter =
+                    {type: 'subsetter'
+                    ,value_col: filter.value_col ? filter.value_col : filter
+                    ,label: filter.label ? filter.label : filter.value_col ? filter.value_col : filter};
+                return filter;
+            });
         return [measureFilter].concat(otherFilters);
     } else
         return [measureFilter];

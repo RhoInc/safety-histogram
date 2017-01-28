@@ -3,6 +3,7 @@ const defaultSettings = {
     value_col: 'STRESN',
     measure_col: 'TEST',
     unit_col: 'STRESU',
+    normal_range: true,
     normal_col_low: 'STNRLO',
     normal_col_high: 'STNRHI',
     id_col: 'USUBJID',

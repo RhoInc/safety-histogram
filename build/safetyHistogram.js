@@ -72,6 +72,11 @@ var safetyHistogram = function (webcharts, d3$1) {
         settings.x.column = settings.value_col;
         settings.marks[0].per[0] = settings.value_col;
 
+        if (!settings.normal_range) {
+            settings.normal_col_low = null;
+            settings.normal_col_high = null;
+        }
+
         //Define default details.
         var defaultDetails = [{ value_col: settings.id_col, label: 'Subject Identifier' }];
         if (settings.filters) settings.filters.forEach(function (filter) {

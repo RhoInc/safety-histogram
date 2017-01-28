@@ -46,6 +46,11 @@ export function syncSettings(settings) {
     settings.x.column = settings.value_col;
     settings.marks[0].per[0] = settings.value_col;
 
+    if (!settings.normal_range) {
+        settings.normal_col_low = null;
+        settings.normal_col_high = null;
+    }
+
   //Define default details.
     let defaultDetails = [{value_col: settings.id_col, label: 'Subject Identifier'}];
     if (settings.filters)

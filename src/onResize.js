@@ -17,9 +17,17 @@ export default function onResize() {
 
     bins.style('cursor', 'pointer')
         .on('click', function(d) {
+          //Update footnote.
             footnote
-                .classed('tableTitle',true)
-                .text(`Table displays ${d.values.raw.length} records with ${context.filtered_data[0][config.measure_col]} values from ${cleanF(d.rangeLow)} to ${cleanF(d.rangeHigh)} ${context.filtered_data[0][config.unit_col]}. Click outside a bar to remove details.`);
+                .classed('tableTitle', true)
+                .text(`Table displays ${d.values.raw.length} records with ` +
+                    `${context.filtered_data[0][config.measure_col]} values from ` +
+                    `${cleanF(d.rangeLow)} to ${cleanF(d.rangeHigh)}` + (
+                        config.unit_col
+                            ? ` ${context.filtered_data[0][config.unit_col]}`
+                            : ``) + `. Click outside a bar to remove details.`);
+
+          //Draw listing.
             listing.draw(d.values.raw);
             listing.wrap.select('.listing table')
                 .style(
@@ -48,16 +56,27 @@ export default function onResize() {
                     ,'border-bottom': '1px solid #e0e0e0'});
             listing.wrap.selectAll('tbody tr:nth-child(2n)')
                 .style('background', '#f0f3f5');
+
+          //Reduce bin opacity and highlight selected bin.
             bins.attr('fill-opacity', 0.5);
-            select(this).attr('fill-opacity', 1); })
-        .on('mouseover' ,function(d) {
-            if (footnote.classed('tableTitle') === false) {
-                footnote.text(`${d.values.raw.length} records with ${context.filtered_data[0][config.measure_col]} values from ${cleanF(d.rangeLow)} to ${cleanF(d.rangeHigh)} ${context.filtered_data[0][config.unit_col]}.`);
-            } })
-        .on('mouseout',function(d) {
-            if (footnote.classed('tableTitle') === false) {
-                footnote.text('Click a bar for details.');
-            } });
+            select(this)
+                .attr('fill-opacity', 1);
+        })
+        .on('mouseover', d => {
+          //Update footnote.
+            if (footnote.classed('tableTitle') === false)
+                footnote
+                    .text(`${d.values.raw.length} records with ` +
+                        `${context.filtered_data[0][config.measure_col]} values from ` +
+                        `${cleanF(d.rangeLow)} to ${cleanF(d.rangeHigh)}` + (
+                            config.unit_col
+                                ? ` ${context.filtered_data[0][config.unit_col]}`
+                                : ``)); })
+        .on('mouseout', d => {
+          //Update footnote.
+            if (footnote.classed('tableTitle') === false)
+                footnote
+                    .text('Click a bar for details.'); });
 
   //Visualize normal ranges.
     if (config.normal_range)
@@ -69,10 +88,9 @@ export default function onResize() {
             listing.draw([]);
             bins.attr('fill-opacity', 0.75);
 
-            if (footnote.classed('tableTitle')) {
+            if (footnote.classed('tableTitle'))
                 footnote
                     .classed('tableTitle', false)
                     .text('Click a bar for details.');
-            }
         });
 }

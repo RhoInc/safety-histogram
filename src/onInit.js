@@ -1,13 +1,12 @@
-import { dataOps } from 'webcharts';
 import { set } from 'd3';
+import getValType from './util/getValType';
 
 export default function onInit() {
     let context = this;
     let config = this.config;
-    const allMeasures = set(this.raw_data.map(m => m[config.measure_col])).values();
 
   //Remove filters whose [ value_col ] does not appear in the data.
-    var columns = d3.keys(this.raw_data[0]);
+    const columns = d3.keys(this.raw_data[0]);
     this.controls.config.inputs = this.controls.config.inputs
         .filter(function(d) {
             return columns.indexOf(d.value_col) > -1; });
@@ -19,7 +18,7 @@ export default function onInit() {
     this.raw_data.forEach(e => e[config.measure_col] = e[config.measure_col].trim() );
 
   //Drop missing values.
-    this.populationCount = d3.set(
+    this.populationCount = set(
             this.raw_data
                 .map(d => d[config.id_col]))
         .values()
@@ -28,30 +27,24 @@ export default function onInit() {
         return config.missingValues.indexOf(f[config.value_col]) === -1;
     });
 
-  //Warning for non-numeric endpoints
-    var catMeasures = allMeasures
-        .filter(f => {
-            var measureVals = this.raw_data
-                .filter(d => d[config.measure_col] === f);
+  //Remove measures with any non-numeric results.
+    const allMeasures = set(this.raw_data.map(m => m[config.measure_col]))
+        .values();
+    const catMeasures = allMeasures
+        .filter(measure => {
+            const measureData = this.raw_data
+                .filter(d => d[config.measure_col] === measure);
+            const measureType = getValType(measureData, config.value_col);
 
-            return dataOps.getValType(measureVals, config.value_col) !== "continuous";
+            return measureType === 'categorical';
         });
-    if (catMeasures.length) {
-        console.warn(catMeasures.length + " non-numeric endpoints have been removed: "+catMeasures.join(", "));
-    }
-    
-  //Delete non-numeric endpoints
-    var numMeasures = allMeasures
-        .filter(f => {
-            var measureVals = this.raw_data
-                .filter(d => d[config.measure_col] === f );
-
-            return dataOps.getValType(measureVals, config.value_col) === "continuous";
-        });
-
+    const conMeasures = allMeasures
+        .filter(measure => catMeasures.indexOf(measure) === -1);
+    if (catMeasures.length)
+        console.warn(`${catMeasures.length} non-numeric endpoints have been removed: ${catMeasures.join(', ')}`);
     this.raw_data = this.raw_data
-        .filter(f => numMeasures.indexOf(f[config.measure_col]) > -1 );
+        .filter(d => catMeasures.indexOf(d[config.measure_col]) === -1);
 
-  //Choose the start value for the Test filter
-    this.controls.config.inputs[0].start = this.config.start_value || numMeasures[0]; 
+  //Define initial measure.
+    this.controls.config.inputs[0].start = this.config.start_value || conMeasures[0]; 
 };

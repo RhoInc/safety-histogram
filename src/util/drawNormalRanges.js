@@ -54,10 +54,11 @@ export default function drawNormalRanges(chart) {
                     ,'stroke-opacity': d => d.values/chart.filtered_data.length*.75 // opacity as a function of fraction of records with the given normal range
                     ,'fill-opacity': d => d.values/chart.filtered_data.length*.5}) // opacity as a function of fraction of records with the given normal range
                 .append('title')
-                .text(d => 'Normal range: ' +
-                    d.key.split(',')[0] + "-" +
-                    d.key.split(',')[1] + " " + chart.filtered_data[0][chart.config.unit_col] + ' (' +
-                    d3.format('%')(d.values/chart.filtered_data.length) + ' of records)');
+                .text(d => `Normal range: ${d.key.split(',')[0]}-${d.key.split(',')[1]}` + (
+                    chart.config.unit_col
+                        ? `${chart.filtered_data[0][chart.config.unit_col]}`
+                        : ``) +
+                    ` (${d3.format('%')(d.values/chart.filtered_data.length)} of records)`);
     } else
         chart.controls.wrap.select('#NRcheckbox').style('display', 'none');
 }

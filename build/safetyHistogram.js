@@ -31,6 +31,7 @@ var safetyHistogram = function (webcharts, d3$1) {
         value_col: 'STRESN',
         measure_col: 'TEST',
         unit_col: 'STRESU',
+        normal_range: true,
         normal_col_low: 'STNRLO',
         normal_col_high: 'STNRHI',
         id_col: 'USUBJID',
@@ -70,6 +71,11 @@ var safetyHistogram = function (webcharts, d3$1) {
         settings.x.label = settings.start_value;
         settings.x.column = settings.value_col;
         settings.marks[0].per[0] = settings.value_col;
+
+        if (!settings.normal_range) {
+            settings.normal_col_low = null;
+            settings.normal_col_high = null;
+        }
 
         //Define default details.
         var defaultDetails = [{ value_col: settings.id_col, label: 'Subject Identifier' }];
@@ -117,80 +123,90 @@ var safetyHistogram = function (webcharts, d3$1) {
         } else return [measureFilter];
     }
 
+    function getValType(data, variable) {
+        var values = d3.set(data.map(function (d) {
+            return d[variable];
+        })).values();
+        var numericValues = values.filter(function (value) {
+            return +value || +value === 0;
+        });
+
+        if (values.length === numericValues.length) return 'continuous';else return 'categorical';
+    }
+
     function onInit() {
         var _this = this;
 
+        var context = this;
         var config = this.config;
-        var allMeasures = d3$1.set(this.raw_data.map(function (m) {
-            return m[config.measure_col];
-        })).values();
 
         //Remove filters whose [ value_col ] does not appear in the data.
         var columns = d3.keys(this.raw_data[0]);
         this.controls.config.inputs = this.controls.config.inputs.filter(function (d) {
             return columns.indexOf(d.value_col) > -1;
         });
-        this.table.config.cols = this.table.config.cols.filter(function (d) {
+        this.listing.config.cols = this.listing.config.cols.filter(function (d) {
             return columns.indexOf(d) > -1;
         });
 
-        //"All" variable for non-grouped comparisons
+        //Remove whitespace from measure column values.
         this.raw_data.forEach(function (e) {
             return e[config.measure_col] = e[config.measure_col].trim();
         });
 
-        //Drop missing values
+        //Drop missing values.
+        this.populationCount = d3$1.set(this.raw_data.map(function (d) {
+            return d[config.id_col];
+        })).values().length;
         this.raw_data = this.raw_data.filter(function (f) {
             return config.missingValues.indexOf(f[config.value_col]) === -1;
         });
 
-        //Warning for non-numeric endpoints
-        var catMeasures = allMeasures.filter(function (f) {
-            var measureVals = _this.raw_data.filter(function (d) {
-                return d[config.measure_col] === f;
+        //Remove measures with any non-numeric results.
+        var allMeasures = d3$1.set(this.raw_data.map(function (m) {
+            return m[config.measure_col];
+        })).values();
+        var catMeasures = allMeasures.filter(function (measure) {
+            var measureData = _this.raw_data.filter(function (d) {
+                return d[config.measure_col] === measure;
             });
+            var measureType = getValType(measureData, config.value_col);
 
-            return webcharts.dataOps.getValType(measureVals, config.value_col) !== "continuous";
+            return measureType === 'categorical';
         });
-        if (catMeasures.length) {
-            console.warn(catMeasures.length + " non-numeric endpoints have been removed: " + catMeasures.join(", "));
-        }
-
-        //Delete non-numeric endpoints
-        var numMeasures = allMeasures.filter(function (f) {
-            var measureVals = _this.raw_data.filter(function (d) {
-                return d[config.measure_col] === f;
-            });
-
-            return webcharts.dataOps.getValType(measureVals, config.value_col) === "continuous";
+        var conMeasures = allMeasures.filter(function (measure) {
+            return catMeasures.indexOf(measure) === -1;
+        });
+        if (catMeasures.length) console.warn(catMeasures.length + ' non-numeric endpoints have been removed: ' + catMeasures.join(', '));
+        this.raw_data = this.raw_data.filter(function (d) {
+            return catMeasures.indexOf(d[config.measure_col]) === -1;
         });
 
-        this.raw_data = this.raw_data.filter(function (f) {
-            return numMeasures.indexOf(f[config.measure_col]) > -1;
-        });
-
-        //Choose the start value for the Test filter
-        this.controls.config.inputs[0].start = this.config.start_value || numMeasures[0];
+        //Define initial measure.
+        this.controls.config.inputs[0].start = this.config.start_value || conMeasures[0];
     };
 
     function onLayout() {
-        //Add population count.
-        d3.select('.wc-controls').append('div').attr('id', 'populationCount').style('font-style', 'italic');
+        var context = this;
+
+        //Add population count container.
+        this.controls.wrap.append('div').attr('id', 'populationCount').style('font-style', 'italic');
 
         //Add footnote.
         this.wrap.insert('p', '.wc-chart').attr('class', 'annote').text('Click a bar for details.');
 
         //Add control to hide or display normal range(s).
-        var normalRange = d3.select('.wc-controls').append('div').attr('id', 'NRcheckbox').style('margin', '.5em').append('input').attr('type', 'checkbox');
-        var NRcheckbox = document.getElementById('NRcheckbox');
-        NRcheckbox.innerHTML = NRcheckbox.innerHTML + 'Normal range';
-        d3.select('#NRcheckbox input').on('change', function () {
-            d3.selectAll('.normalRange').attr('visibility', d3.select(this).property('checked') ? 'visible' : 'hidden');
-        });
+        if (this.config.normal_range) {
+            var normalRange = this.controls.wrap.append('div').attr('id', 'NRcheckbox').style('margin', '.5em').text('Normal Range').append('input').attr('type', 'checkbox');
+            normalRange.on('change', function () {
+                context.wrap.selectAll('.normalRange').attr('visibility', d3.select(this).property('checked') ? 'visible' : 'hidden');
+            });
+        }
     }
 
     function onPreprocess() {
-        var chart = this;
+        var context = this;
+
         //Capture currently selected filters.
         var filterSettings = [];
         var filters = d3.selectAll('.wc-controls .changer').each(function (d) {
@@ -207,21 +223,20 @@ var safetyHistogram = function (webcharts, d3$1) {
             });
             return match;
         });
-        //Set x domain based on currently filtered data.
+        //Set x-domain based on currently filtered data.
         this.config.x.domain = d3.extent(filtered_data, function (d) {
-            return +d[chart.config.value_col];
+            return +d[context.config.value_col];
         });
     }
 
     function onDataTransform() {
-        var measure = this.filtered_data[0] ? this.filtered_data[0][this.config.measure_col] : this.raw_data[0][this.config.measure_col];
-        var units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
+        var context = this;
 
         //Customize the x-axis label
-        this.config.x.label = measure + " (" + units + ")";
+        if (this.filtered_data.length) this.config.x.label = '' + this.filtered_data[0][this.config.measure_col] + (this.config.unit_col ? ' (' + this.filtered_data[0][this.config.unit_col] + ')' : '');
 
         //Reset linked table
-        this.table.draw([]);
+        this.listing.draw([]);
         this.wrap.select('.annote').classed('tableTitle', false).text('Click a bar for details.');
         this.svg.selectAll('.bar').attr('opacity', 1);
     }
@@ -233,17 +248,12 @@ var safetyHistogram = function (webcharts, d3$1) {
     // id_col - a column name in the raw data set (chart.raw_data) representing the observation of interest
     // id_unit - a text string to label the units in the annotation (default = "participants")
     // selector - css selector for the annotation
-    function updateSubjectCount(chart, id_col, selector, id_unit) {
-        //count the number of unique ids in the data set
-        var totalObs = d3.set(chart.raw_data.map(function (d) {
-            return d[id_col];
-        })).values().length;
-
+    function updateSubjectCount(chart, selector, id_unit) {
         //count the number of unique ids in the current chart and calculate the percentage
         var currentObs = d3.set(chart.filtered_data.map(function (d) {
-            return d[id_col];
+            return d[chart.config.id_col];
         })).values().length;
-        var percentage = d3.format('0.1%')(currentObs / totalObs);
+        var percentage = d3.format('0.1%')(currentObs / chart.populationCount);
 
         //clear the annotation
         var annotation = d3.select(selector);
@@ -251,76 +261,39 @@ var safetyHistogram = function (webcharts, d3$1) {
 
         //update the annotation
         var units = id_unit ? " " + id_unit : " participant(s)";
-        annotation.text('\n' + currentObs + " of " + totalObs + units + " shown (" + percentage + ")");
+        annotation.text('\n' + currentObs + " of " + chart.populationCount + units + " shown (" + percentage + ")");
     }
 
     function onDraw() {
-        updateSubjectCount(this, this.config.id_col, '#populationCount');
+        var context = this;
+
+        //Annotate population count.
+        updateSubjectCount(this, '#populationCount');
+
+        //Update x-domain when all values are equal.
+        if (this.config.x.type === 'linear' && this.x_dom[0] === this.x_dom[1]) this.x_dom = [this.x_dom[0] - 1, this.x_dom[1] + 1];
     }
 
-    function onResize() {
-        var chart = this;
-        var config = this.config;
-        var measure = this.filtered_data[0] ? this.filtered_data[0][this.config.measure_col] : this.raw_data[0][this.config.measure_col];
-        var units = this.filtered_data[0] ? this.filtered_data[0][this.config.unit_col] : this.raw_data[0][this.config.unit_col];
+    function drawNormalRanges(chart) {
+        //Clear normal ranges.
+        var canvas = chart.wrap.select('.bar-supergroup');
+        canvas.selectAll('.normalRange').remove();
 
-        var listing = this.table;
-        listing.config.cols = this.config.details.map(function (detail) {
-            return detail.value_col;
-        });
-        listing.config.headers = this.config.details.map(function (detail) {
-            return detail.label;
-        });
+        //Check whether current measure has any normal ranges.
+        var normalRange = chart.filtered_data.filter(function (d) {
+            return (+d[chart.config.normal_col_low] || d[chart.config.normal_col_low].trim() === 0) && (+d[chart.config.normal_col_high] || d[chart.config.normal_col_high].trim() === 0);
+        }).length;
 
-        //Display data listing on bin click.
-        var cleanF = d3$1.format('.3f');
-        var bins = this.svg.selectAll('.bar');
-        var footnote = this.wrap.select('.annote');
-
-        bins.style('cursor', 'pointer').on('click', function (d) {
-            footnote.classed('tableTitle', true).text('Table displays ' + d.values.raw.length + ' records with ' + measure + ' values from ' + cleanF(d.rangeLow) + ' to ' + cleanF(d.rangeHigh) + ' ' + units + '. Click outside a bar to remove details.');
-            listing.draw(d.values.raw);
-            d3.select('.listing table').style({ 'border-collapse': 'separate',
-                'background': '#fff',
-                'border-radius': '5px',
-                'margin': '50px auto' });
-            d3.select('.wc-chart thead').style('border-radius', '5px');
-            d3.selectAll('.wc-chart thead th').style({ 'font-size': '16px',
-                'font-weight': '400',
-                'color': '#111',
-                'text-align': 'left',
-                'padding': '10px',
-                'background': '#bdbdbd',
-                'border-top': '1px solid #858d99',
-                'border-bottom': '1px solid #858d99' });
-            d3.selectAll('.wc-chart tbody tr td').style({ 'font-weight': '400',
-                'color': '#5f6062',
-                'font-size': '13px',
-                'padding': '20px 20px 20px 20px',
-                'border-bottom': '1px solid #e0e0e0' });
-            d3.selectAll('tbody tr:nth-child(2n)').style('background', '#f0f3f5');
-            bins.attr('fill-opacity', 0.5);
-            d3$1.select(this).attr('fill-opacity', 1);
-        }).on('mouseover', function (d) {
-            if (footnote.classed('tableTitle') === false) {
-                footnote.text(d.values.raw.length + ' records with ' + measure + ' values from ' + cleanF(d.rangeLow) + ' to ' + cleanF(d.rangeHigh) + ' ' + units + '.');
-            }
-        }).on('mouseout', function (d) {
-            if (footnote.classed('tableTitle') === false) {
-                footnote.text('Click a bar for details.');
-            }
-        });
-
-        //Visualize normal ranges.
-        if (this.raw_data[0].hasOwnProperty(chart.config.normal_col_low) && this.raw_data[0].hasOwnProperty(chart.config.normal_col_high)) {
+        if (normalRange) {
+            chart.controls.wrap.select('#NRcheckbox').style('display', 'block');
             //Capture distinct normal ranges in filtered data.
             var normalRanges = d3.nest().key(function (d) {
                 return d[chart.config.normal_col_low] + ',' + d[chart.config.normal_col_high];
             }) // set key to comma-delimited normal range
             .rollup(function (d) {
                 return d.length;
-            }).entries(this.filtered_data);
-            var currentRange = d3.extent(this.filtered_data, function (d) {
+            }).entries(chart.filtered_data);
+            var currentRange = d3.extent(chart.filtered_data, function (d) {
                 return +d[chart.config.value_col];
             });
             //Sort normal ranges so larger normal ranges plot beneath smaller normal ranges.
@@ -336,10 +309,8 @@ var safetyHistogram = function (webcharts, d3$1) {
                 1;
             });
             //Determine whether normal range checkbox is checked.
-            var displayNormalRange = d3.select('#NRcheckbox input').property('checked');
+            var displayNormalRange = chart.controls.wrap.select('#NRcheckbox input').property('checked');
             //Add divs to chart for each normal range.
-            var canvas = d3.select('.bar-supergroup');
-            canvas.selectAll('.normalRange').remove();
             canvas.selectAll('.normalRange rect').data(normalRanges).enter().insert('rect', ':first-child').attr({ 'class': 'normalRange',
                 'x': function x(d) {
                     return chart.x(Math.max(+d.key.split(',')[0], currentRange[0]));
@@ -351,7 +322,7 @@ var safetyHistogram = function (webcharts, d3$1) {
                     chart.x(+d.key.split(',')[1]) - chart.x(Math.max(+d.key.split(',')[0], currentRange[0])));
                 } // range high - range low
 
-                , 'height': this.plot_height,
+                , 'height': chart.plot_height,
                 'visibility': displayNormalRange ? 'visible' : 'hidden' }).style({ 'stroke': 'black',
                 'fill': 'black',
                 'stroke-opacity': function strokeOpacity(d) {
@@ -361,17 +332,75 @@ var safetyHistogram = function (webcharts, d3$1) {
                     return d.values / chart.filtered_data.length * .5;
                 } }) // opacity as a function of fraction of records with the given normal range
             .append('title').text(function (d) {
-                return 'Normal range: ' + d.key.split(',')[0] + "-" + d.key.split(',')[1] + " " + units + ' (' + d3.format('%')(d.values / chart.filtered_data.length) + ' of records)';
+                return 'Normal range: ' + d.key.split(',')[0] + '-' + d.key.split(',')[1] + (chart.config.unit_col ? '' + chart.filtered_data[0][chart.config.unit_col] : '') + (' (' + d3.format('%')(d.values / chart.filtered_data.length) + ' of records)');
             });
-        }
+        } else chart.controls.wrap.select('#NRcheckbox').style('display', 'none');
+    }
 
-        d3.selectAll('.overlay, .normalRange').on('click', function () {
+    function onResize() {
+        var context = this;
+        var config = this.config;
+
+        //Define listing columns and headers.
+        var listing = this.listing;
+        listing.config.cols = config.details.map(function (detail) {
+            return detail.value_col;
+        });
+        listing.config.headers = config.details.map(function (detail) {
+            return detail.label;
+        });
+
+        //Display data listing on bin click.
+        var cleanF = d3$1.format('.3f');
+        var bins = this.svg.selectAll('.bar');
+        var footnote = this.wrap.select('.annote');
+
+        bins.style('cursor', 'pointer').on('click', function (d) {
+            //Update footnote.
+            footnote.classed('tableTitle', true).text('Table displays ' + d.values.raw.length + ' records with ' + (context.filtered_data[0][config.measure_col] + ' values from ') + (cleanF(d.rangeLow) + ' to ' + cleanF(d.rangeHigh)) + (config.unit_col ? ' ' + context.filtered_data[0][config.unit_col] : '') + '. Click outside a bar to remove details.');
+
+            //Draw listing.
+            listing.draw(d.values.raw);
+            listing.wrap.select('.listing table').style({ 'border-collapse': 'separate',
+                'background': '#fff',
+                'border-radius': '5px',
+                'margin': '50px auto' });
+            listing.wrap.select('.wc-chart thead').style('border-radius', '5px');
+            listing.wrap.selectAll('.wc-chart thead th').style({ 'font-size': '16px',
+                'font-weight': '400',
+                'color': '#111',
+                'text-align': 'left',
+                'padding': '10px',
+                'background': '#bdbdbd',
+                'border-top': '1px solid #858d99',
+                'border-bottom': '1px solid #858d99' });
+            listing.wrap.selectAll('.wc-chart tbody tr td').style({ 'font-weight': '400',
+                'color': '#5f6062',
+                'font-size': '13px',
+                'padding': '20px 20px 20px 20px',
+                'border-bottom': '1px solid #e0e0e0' });
+            listing.wrap.selectAll('tbody tr:nth-child(2n)').style('background', '#f0f3f5');
+
+            //Reduce bin opacity and highlight selected bin.
+            bins.attr('fill-opacity', 0.5);
+            d3$1.select(this).attr('fill-opacity', 1);
+        }).on('mouseover', function (d) {
+            //Update footnote.
+            if (footnote.classed('tableTitle') === false) footnote.text(d.values.raw.length + ' records with ' + (context.filtered_data[0][config.measure_col] + ' values from ') + (cleanF(d.rangeLow) + ' to ' + cleanF(d.rangeHigh)) + (config.unit_col ? ' ' + context.filtered_data[0][config.unit_col] : ''));
+        }).on('mouseout', function (d) {
+            //Update footnote.
+            if (footnote.classed('tableTitle') === false) footnote.text('Click a bar for details.');
+        });
+
+        //Visualize normal ranges.
+        if (config.normal_range) drawNormalRanges(this);
+
+        //Clear listing when clicking outside bins.
+        this.wrap.selectAll('.overlay, .normalRange').on('click', function () {
             listing.draw([]);
             bins.attr('fill-opacity', 0.75);
 
-            if (footnote.classed('tableTitle')) {
-                footnote.classed('tableTitle', false).text('Click a bar for details.');
-            }
+            if (footnote.classed('tableTitle')) footnote.classed('tableTitle', false).text('Click a bar for details.');
         });
     }
 
@@ -395,8 +424,8 @@ var safetyHistogram = function (webcharts, d3$1) {
         chart.on('draw', onDraw);
         chart.on('resize', onResize);
 
-        var table = webcharts.createTable(element, mergedSettings.detail_cols && mergedSettings.detail_cols.length > 0 ? { cols: mergedSettings.detail_cols } : null).init([]);
-        chart.table = table;
+        var listing = webcharts.createTable(element, mergedSettings.detail_cols && mergedSettings.detail_cols.length > 0 ? { cols: mergedSettings.detail_cols } : null).init([]);
+        chart.listing = listing;
 
         return chart;
     }

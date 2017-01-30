@@ -3,6 +3,7 @@ const defaultSettings = {
     value_col: 'STRESN',
     measure_col: 'TEST',
     unit_col: 'STRESU',
+    normal_range: true,
     normal_col_low: 'STNRLO',
     normal_col_high: 'STNRHI',
     id_col: 'USUBJID',
@@ -44,6 +45,11 @@ export function syncSettings(settings) {
     settings.x.label = settings.start_value;
     settings.x.column = settings.value_col;
     settings.marks[0].per[0] = settings.value_col;
+
+    if (!settings.normal_range) {
+        settings.normal_col_low = null;
+        settings.normal_col_high = null;
+    }
 
   //Define default details.
     let defaultDetails = [{value_col: settings.id_col, label: 'Subject Identifier'}];

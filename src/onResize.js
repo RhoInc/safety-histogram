@@ -2,7 +2,7 @@ import { select, format } from 'd3';
 import drawNormalRanges from './util/drawNormalRanges';
 
 export default function onResize() {
-    let context = this;
+    let chart = this;
     let config = this.config;
 
   //Define listing columns and headers.
@@ -21,41 +21,14 @@ export default function onResize() {
             footnote
                 .classed('tableTitle', true)
                 .text(`Table displays ${d.values.raw.length} records with ` +
-                    `${context.filtered_data[0][config.measure_col]} values from ` +
+                    `${chart.filtered_data[0][config.measure_col]} values from ` +
                     `${cleanF(d.rangeLow)} to ${cleanF(d.rangeHigh)}` + (
                         config.unit_col
-                            ? ` ${context.filtered_data[0][config.unit_col]}`
+                            ? ` ${chart.filtered_data[0][config.unit_col]}`
                             : ``) + `. Click outside a bar to remove details.`);
 
           //Draw listing.
             listing.draw(d.values.raw);
-            listing.wrap.select('.listing table')
-                .style(
-                    {'border-collapse': 'separate'
-                    ,'background': '#fff'
-                    ,'border-radius': '5px'
-                    ,'margin': '50px auto'});
-            listing.wrap.select('.wc-chart thead')
-                .style('border-radius', '5px');
-            listing.wrap.selectAll('.wc-chart thead th')
-                .style(
-                    {'font-size': '16px'
-                    ,'font-weight': '400'
-                    ,'color': '#111'
-                    ,'text-align': 'left'
-                    ,'padding': '10px'
-                    ,'background': '#bdbdbd'
-                    ,'border-top': '1px solid #858d99'
-                    ,'border-bottom': '1px solid #858d99'});
-            listing.wrap.selectAll('.wc-chart tbody tr td')
-                .style(
-                    {'font-weight': '400'
-                    ,'color': '#5f6062'
-                    ,'font-size': '13px'
-                    ,'padding': '20px 20px 20px 20px'
-                    ,'border-bottom': '1px solid #e0e0e0'});
-            listing.wrap.selectAll('tbody tr:nth-child(2n)')
-                .style('background', '#f0f3f5');
 
           //Reduce bin opacity and highlight selected bin.
             bins.attr('fill-opacity', 0.5);
@@ -67,10 +40,10 @@ export default function onResize() {
             if (footnote.classed('tableTitle') === false)
                 footnote
                     .text(`${d.values.raw.length} records with ` +
-                        `${context.filtered_data[0][config.measure_col]} values from ` +
+                        `${chart.filtered_data[0][config.measure_col]} values from ` +
                         `${cleanF(d.rangeLow)} to ${cleanF(d.rangeHigh)}` + (
                             config.unit_col
-                                ? ` ${context.filtered_data[0][config.unit_col]}`
+                                ? ` ${chart.filtered_data[0][config.unit_col]}`
                                 : ``)); })
         .on('mouseout', d => {
           //Update footnote.
@@ -79,8 +52,28 @@ export default function onResize() {
                     .text('Click a bar for details.'); });
 
   //Visualize normal ranges.
-    if (config.normal_range)
-        drawNormalRanges(this);
+    const normalRangeControl = this.controls.wrap
+        .selectAll('.control-group')
+        .filter(d => d.label === 'Normal Range');
+    if (config.normal_range) {
+        if (chart.config.displayNormalRange)
+            drawNormalRanges(chart);
+        else
+            chart.wrap.selectAll('.normalRange').remove();
+
+        normalRangeControl.on('change', function () {
+            chart.config.displayNormalRange = d3.select(this)
+                .select('input')
+                .property('checked');
+
+            if (chart.config.displayNormalRange)
+                drawNormalRanges(chart);
+            else
+                chart.wrap.selectAll('.normalRange').remove();
+        });
+    } else
+        normalRangeControl
+            .style('display', 'none');
 
   //Clear listing when clicking outside bins.
     this.wrap.selectAll('.overlay, .normalRange')

@@ -37,7 +37,8 @@ const defaultSettings = {
             'attributes':{'fill-opacity':0.75}
         }
     ],
-    aspect: 3
+    aspect: 3,
+    displayNormalRange: false
 };
 
 //Replicate settings in multiple places in the settings object
@@ -85,11 +86,17 @@ export function syncSettings(settings) {
 
 //Map values from settings to control inputs
 export function syncControlInputs(settings) {
-    const measureFilter =
-        {type: 'subsetter'
-        ,value_col: settings.measure_col
-        ,label: 'Measure'
-        ,start: settings.start_value};
+    const defaultControls =
+        [
+            {type: 'subsetter'
+            ,label: 'Measure'
+            ,value_col: settings.measure_col
+            ,start: settings.start_value}
+        ,
+            {type: 'checkbox'
+            ,label: 'Normal Range'
+            ,option: 'displayNormalRange'}
+        ];
 
     if (settings.filters && settings.filters.length > 0) {
         let otherFilters = settings.filters
@@ -100,9 +107,9 @@ export function syncControlInputs(settings) {
                     ,label: filter.label ? filter.label : filter.value_col ? filter.value_col : filter};
                 return filter;
             });
-        return [measureFilter].concat(otherFilters);
+        return defaultControls.concat(otherFilters);
     } else
-        return [measureFilter];
+        return defaultControls;
 }
 
 export default defaultSettings;

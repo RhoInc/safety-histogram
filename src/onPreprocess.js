@@ -1,27 +1,39 @@
 export default function onPreprocess() {
-    let context = this;
+    const chart = this;
 
-  //Capture currently selected filters.
-    let filterSettings = [];
-    let filters = d3.selectAll('.wc-controls .changer')
-        .each(function(d) {
-            filterSettings.push(
-                {value_col: d.value_col
-                ,value:
-                    d3.select(this).selectAll('option')
-                        .filter(function(d1) {
-                            return d3.select(this).property('selected'); })
-                        .property('value')});
-        });
-  //Filter data based on currently selected filters.
-    let filtered_data = this.raw_data
-        .filter(d => {
-            let match = true;
-            filterSettings.forEach(d1 => {
-                if (match === true)
-                    match = d[d1.value_col] === d1.value || d1.value === 'All'; });
-            return match;
-        });
-  //Set x-domain based on currently filtered data.
-    this.config.x.domain = d3.extent(filtered_data, d => +d[context.config.value_col]);
+  //Filter raw data on currently selected measure.
+    const measure = this.filters
+        .filter(filter => filter.col === this.config.measure_col)[0]
+        .val;
+    this.measure_data = this.raw_data
+        .filter(d => d[this.config.measure_col] === measure);
+
+  //Set x-domain based on currently selected measure.
+    this.config.x.domain = d3.extent(this.measure_data, d => +d[chart.config.value_col]);
+
+  //Determine whether currently selected measure contains normal range data.
+    if (this.config.normal_range) {
+        const hasNormalRange = this.measure_data
+            .filter(d => (
+                +d[chart.config.normal_col_low ] || !!d[chart.config.normal_col_low ]) && (
+                +d[chart.config.normal_col_high] || !!d[chart.config.normal_col_high]))
+            .length > 0;
+        const normalRangeInput = this.controls.wrap
+            .selectAll('.control-group')
+            .filter(d => d.label === 'Normal Range')
+            .select('input');
+
+        if (!hasNormalRange)
+            normalRangeInput
+                .attr('title', 'This measure does not contain normal range data.')
+                .style('cursor', 'not-allowed')
+                .property('checked', false)
+                .property('disabled', true);
+        else
+            normalRangeInput
+                .attr('title', '')
+                .style('cursor', 'pointer')
+                .property('checked', this.config.displayNormalRange)
+                .property('disabled', false);
+    }
 }

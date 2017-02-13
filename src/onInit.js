@@ -9,7 +9,7 @@ export default function onInit() {
     const columns = d3.keys(this.raw_data[0]);
     this.controls.config.inputs = this.controls.config.inputs
         .filter(function(d) {
-            return columns.indexOf(d.value_col) > -1; });
+            return columns.indexOf(d.value_col) > -1 || !!d.option; });
     this.listing.config.cols = this.listing.config.cols
         .filter(function(d) {
             return columns.indexOf(d) > -1; });

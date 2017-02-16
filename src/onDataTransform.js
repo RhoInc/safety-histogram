@@ -1,16 +1,21 @@
 export default function onDataTransform() {
-    const measure = this.filtered_data[0] ?
-        this.filtered_data[0][this.config.measure_col] :
-        this.raw_data[0][this.config.measure_col];
-    const units = this.filtered_data[0] ?
-        this.filtered_data[0][this.config.unit_col] :
-        this.raw_data[0][this.config.unit_col];
+    let context = this;
 
   //Customize the x-axis label
-    this.config.x.label = measure + " level ("+units+")";
+    if (this.filtered_data.length)
+        this.config.x.label =
+            `${this.filtered_data[0][this.config.measure_col]}` + (
+                this.config.unit_col
+                    ? ` (${this.filtered_data[0][this.config.unit_col]})`
+                    : ``);
 
   //Reset linked table
-    this.table.draw([]);
-    this.svg.selectAll('.bar')
+    this.listing.draw([]);
+    this.wrap
+        .select('.annote')
+        .classed('tableTitle', false)
+        .text('Click a bar for details.');
+    this.svg
+        .selectAll('.bar')
         .attr('opacity', 1);
 }

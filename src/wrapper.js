@@ -1,17 +1,19 @@
+import './util/object-assign';
+import defaultSettings from './defaultSettings';
+import { syncSettings, syncControlInputs } from './defaultSettings'
+
 import { createChart, createControls, createTable } from 'webcharts';
-import { syncControlInputs, syncSettings } from './default-settings'
-import config from './default-settings';
+
 import onInit from './onInit';
 import onLayout from './onLayout';
 import onPreprocess from './onPreprocess';
 import onDataTransform from './onDataTransform';
 import onDraw from './onDraw';
 import onResize from './onResize';
-import './util/object-assign';
 
 export default function safetyHistogram(element, settings) {
   //Merge user's settings with default settings.
-    let mergedSettings = Object.assign({}, config, settings);
+    let mergedSettings = Object.assign({}, defaultSettings, settings);
 
   //Keep settings in sync with the data mappings.
     mergedSettings = syncSettings(mergedSettings);
@@ -29,13 +31,13 @@ export default function safetyHistogram(element, settings) {
     chart.on('draw', onDraw);
     chart.on('resize', onResize);
 
-    let table = createTable
+    let listing = createTable
         (element
         ,mergedSettings.detail_cols && mergedSettings.detail_cols.length > 0 ?
             {cols: mergedSettings.detail_cols} :
             null)
         .init([]);
-    chart.table = table;
+    chart.listing = listing;
 
     return chart;
 }

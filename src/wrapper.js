@@ -31,12 +31,10 @@ export default function safetyHistogram(element, settings) {
     chart.on('draw', onDraw);
     chart.on('resize', onResize);
 
-    let listing = createTable
-        (element
-        ,mergedSettings.detail_cols && mergedSettings.detail_cols.length > 0 ?
-            {cols: mergedSettings.detail_cols} :
-            null)
-        .init([]);
+    let tableSettings = mergedSettings.details && mergedSettings.details.length > 0 ?
+            {cols: mergedSettings.details.map(d=>d.value_col)} :
+            null
+    let listing = createTable(element,tableSettings).init([]);
     chart.listing = listing;
 
     return chart;

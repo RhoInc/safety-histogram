@@ -406,7 +406,10 @@ var safetyHistogram = function (webcharts, d3$1) {
         chart.on('draw', onDraw);
         chart.on('resize', onResize);
 
-        var listing = webcharts.createTable(element, mergedSettings.detail_cols && mergedSettings.detail_cols.length > 0 ? { cols: mergedSettings.detail_cols } : null).init([]);
+        var tableSettings = mergedSettings.details && mergedSettings.details.length > 0 ? { cols: mergedSettings.details.map(function (d) {
+                return d.value_col;
+            }) } : null;
+        var listing = webcharts.createTable(element, tableSettings).init([]);
         chart.listing = listing;
 
         return chart;

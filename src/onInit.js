@@ -44,6 +44,22 @@ export default function onInit() {
         console.warn(`${catMeasures.length} non-numeric endpoints have been removed: ${catMeasures.join(', ')}`);
     this.raw_data = this.raw_data
         .filter(d => catMeasures.indexOf(d[config.measure_col]) === -1);
+        
+  // Remove filters for variables with 0 or 1 levels
+  var chart = this;
+
+  this.controls.config.inputs = this.controls.config.inputs
+  .filter(function(d){
+    if(d.type!="subsetter"){
+        return true
+    } else {
+        var levels = d3.set(chart.raw_data.map(f=>f[d.value_col])).values()
+        if(levels.length < 2 ){
+            console.warn(d.value_col + " filter not shown since the variable has less than 2 levels")
+        }
+        return levels.length >=2    
+    }
+  })
 
   //Define initial measure.
     this.controls.config.inputs[0].start = this.config.start_value || conMeasures[0]; 

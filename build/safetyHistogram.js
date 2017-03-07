@@ -185,6 +185,23 @@ var safetyHistogram = function (webcharts, d3$1) {
             return catMeasures.indexOf(d[config.measure_col]) === -1;
         });
 
+        // Remove filters for variables with 0 or 1 levels
+        var chart = this;
+
+        this.controls.config.inputs = this.controls.config.inputs.filter(function (d) {
+            if (d.type != "subsetter") {
+                return true;
+            } else {
+                var levels = d3.set(chart.raw_data.map(function (f) {
+                    return f[d.value_col];
+                })).values();
+                if (levels.length < 2) {
+                    console.warn(d.value_col + " filter not shown since the variable has less than 2 levels");
+                }
+                return levels.length >= 2;
+            }
+        });
+
         //Define initial measure.
         this.controls.config.inputs[0].start = this.config.start_value || conMeasures[0];
     };

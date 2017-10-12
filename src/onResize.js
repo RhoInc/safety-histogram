@@ -27,8 +27,13 @@ export default function onResize() {
                             ? ` ${chart.filtered_data[0][config.unit_col]}`
                             : ``) + `. Click outside a bar to remove details.`);
 
+          //Set pagination
+          listing.config.activePage=0;
+          listing.config.startIndex = listing.config.activePage * listing.config.nRowsPerPage; // first row shown
+          listing.config.endIndex = listing.config.startIndex + listing.config.nRowsPerPage; // last row shown
+
           //Draw listing.
-            listing.draw(d.values.raw);
+          listing.draw(d.values.raw);
 
           //Reduce bin opacity and highlight selected bin.
             bins.attr('fill-opacity', 0.5);

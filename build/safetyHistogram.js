@@ -366,6 +366,11 @@ var safetyHistogram = function (webcharts, d3$1) {
             //Update footnote.
             footnote.classed('tableTitle', true).text('Table displays ' + d.values.raw.length + ' records with ' + (chart.filtered_data[0][config.measure_col] + ' values from ') + (cleanF(d.rangeLow) + ' to ' + cleanF(d.rangeHigh)) + (config.unit_col ? ' ' + chart.filtered_data[0][config.unit_col] : '') + '. Click outside a bar to remove details.');
 
+            //Set pagination
+            listing.config.activePage = 0;
+            listing.config.startIndex = listing.config.activePage * listing.config.nRowsPerPage; // first row shown
+            listing.config.endIndex = listing.config.startIndex + listing.config.nRowsPerPage; // last row shown
+
             //Draw listing.
             listing.draw(d.values.raw);
 

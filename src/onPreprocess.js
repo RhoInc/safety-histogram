@@ -1,23 +1,21 @@
 export default function onPreprocess() {
     const chart = this;
 
-  //Filter raw data on currently selected measure.
-    const measure = this.filters
-        .filter(filter => filter.col === this.config.measure_col)[0]
-        .val;
-    this.measure_data = this.raw_data
-        .filter(d => d[this.config.measure_col] === measure);
+    //Filter raw data on currently selected measure.
+    const measure = this.filters.filter(filter => filter.col === this.config.measure_col)[0].val;
+    this.measure_data = this.raw_data.filter(d => d[this.config.measure_col] === measure);
 
-  //Set x-domain based on currently selected measure.
+    //Set x-domain based on currently selected measure.
     this.config.x.domain = d3.extent(this.measure_data, d => +d[chart.config.value_col]);
 
-  //Determine whether currently selected measure contains normal range data.
+    //Determine whether currently selected measure contains normal range data.
     if (this.config.normal_range) {
-        const hasNormalRange = this.measure_data
-            .filter(d => (
-                +d[chart.config.normal_col_low ] || !!d[chart.config.normal_col_low ]) && (
-                +d[chart.config.normal_col_high] || !!d[chart.config.normal_col_high]))
-            .length > 0;
+        const hasNormalRange =
+            this.measure_data.filter(
+                d =>
+                    (+d[chart.config.normal_col_low] || !!d[chart.config.normal_col_low]) &&
+                    (+d[chart.config.normal_col_high] || !!d[chart.config.normal_col_high])
+            ).length > 0;
         const normalRangeInput = this.controls.wrap
             .selectAll('.control-group')
             .filter(d => d.label === 'Normal Range')

@@ -2,13 +2,31 @@ import { select, format } from 'd3';
 import drawNormalRanges from './util/drawNormalRanges';
 
 export default function onResize() {
-    let chart = this;
-    let config = this.config;
+    const chart = this,
+        config = this.config;
 
-    //Define listing columns and headers.
-    let listing = this.listing;
-    listing.config.cols = config.details.map(detail => detail.value_col);
-    listing.config.headers = config.details.map(detail => detail.label);
+    //Draw custom bin for single observation subsets.
+    this.svg.select('#custom-bin').remove();
+    if (this.current_data.length === 1) {
+        var datum = this.current_data[0];
+        this.svg
+            .append('g')
+            .classed('bar-group', true)
+            .attr('id', 'custom-bin')
+            .append('rect')
+            .data([datum])
+            .classed('wc-data-mark bar', true)
+            .attr({
+                y: 0,
+                height: this.plot_height,
+                'shape-rendering': 'crispEdges',
+                stroke: 'rgb(102,194,165)',
+                fill: 'rgb(102,194,165)',
+                'fill-opacity': '0.75',
+                width: this.x(datum.values.x * 1.01) - this.x(datum.values.x * 0.99),
+                x: this.x(datum.values.x * 0.99)
+            });
+    }
 
     //Display data listing on bin click.
     var cleanF = format('.3f');
@@ -18,6 +36,7 @@ export default function onResize() {
     bins
         .style('cursor', 'pointer')
         .on('click', function(d) {
+            chart.highlightedBin = d.key;
             //Update footnote.
             footnote
                 .classed('tableTitle', true)
@@ -30,7 +49,8 @@ export default function onResize() {
                 );
 
             //Draw listing.
-            listing.draw(d.values.raw);
+            chart.listing.draw(d.values.raw);
+            chart.listing.wrap.selectAll('*').style('display', null);
 
             //Reduce bin opacity and highlight selected bin.
             bins.attr('fill-opacity', 0.5);
@@ -72,10 +92,16 @@ export default function onResize() {
 
     //Clear listing when clicking outside bins.
     this.wrap.selectAll('.overlay, .normalRange').on('click', function() {
-        listing.draw([]);
+        delete chart.highlightedBin;
+        chart.listing.draw([]);
+        chart.listing.wrap.selectAll('*').style('display', 'none');
         bins.attr('fill-opacity', 0.75);
 
         if (footnote.classed('tableTitle'))
             footnote.classed('tableTitle', false).text('Click a bar for details.');
     });
+
+    //Keep highlighted bin highlighted on resize.
+    if (this.highlightedBin)
+        bins.attr('fill-opacity', d => (d.key !== this.highlightedBin ? 0.5 : 1));
 }

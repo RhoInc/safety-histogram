@@ -167,22 +167,6 @@
         } else return defaultControls;
     }
 
-    function getValType(data, variable) {
-        var values = d3
-            .set(
-                data.map(function(d) {
-                    return d[variable];
-                })
-            )
-            .values();
-        var numericValues = values.filter(function(value) {
-            return +value || +value === 0;
-        });
-
-        if (values.length === numericValues.length) return 'continuous';
-        else return 'categorical';
-    }
-
     function onInit() {
         var _this = this;
 
@@ -192,9 +176,6 @@
         var columns = d3.keys(this.raw_data[0]);
         this.controls.config.inputs = this.controls.config.inputs.filter(function(d) {
             return columns.indexOf(d.value_col) > -1 || !!d.option;
-        });
-        this.listing.config.cols = this.listing.config.cols.filter(function(d) {
-            return columns.indexOf(d) > -1;
         });
 
         //Remove whitespace from measure column values.
@@ -216,29 +197,39 @@
 
         //Remove measures with any non-numeric results.
         var allMeasures = d3$1
-            .set(
-                this.raw_data.map(function(m) {
-                    return m[config.measure_col];
-                })
-            )
-            .values();
-        var catMeasures = allMeasures.filter(function(measure) {
-            var measureData = _this.raw_data.filter(function(d) {
-                return d[config.measure_col] === measure;
-            });
-            var measureType = getValType(measureData, config.value_col);
+                .set(
+                    this.raw_data.map(function(m) {
+                        return m[config.measure_col];
+                    })
+                )
+                .values(),
+            catMeasures = allMeasures.filter(function(measure) {
+                var allObservations = _this.raw_data
+                        .filter(function(d) {
+                            return d[config.measure_col] === measure;
+                        })
+                        .map(function(d) {
+                            return d[config.value_col];
+                        }),
+                    numericObservations = allObservations.filter(function(d) {
+                        return /^-?[0-9.]+$/.test(d);
+                    });
 
-            return measureType === 'categorical';
-        });
-        var conMeasures = allMeasures.filter(function(measure) {
-            return catMeasures.indexOf(measure) === -1;
-        });
+                return numericObservations.length < allObservations.length;
+            }),
+            conMeasures = allMeasures.filter(function(measure) {
+                return catMeasures.indexOf(measure) === -1;
+            });
+
         if (catMeasures.length)
             console.warn(
                 catMeasures.length +
-                    ' non-numeric endpoints have been removed: ' +
+                    ' non-numeric endpoint' +
+                    (catMeasures.length > 1 ? 's have' : ' has') +
+                    ' been removed: ' +
                     catMeasures.join(', ')
             );
+
         this.raw_data = this.raw_data.filter(function(d) {
             return catMeasures.indexOf(d[config.measure_col]) === -1;
         });
@@ -340,14 +331,6 @@
                 (this.config.unit_col
                     ? ' (' + this.filtered_data[0][this.config.unit_col] + ')'
                     : '');
-
-        //Reset linked table
-        this.listing.draw([]);
-        this.wrap
-            .select('.annote')
-            .classed('tableTitle', false)
-            .text('Click a bar for details.');
-        this.svg.selectAll('.bar').attr('opacity', 1);
     }
 
     // Takes a webcharts object creates a text annotation giving the
@@ -394,7 +377,22 @@
 
         //Update x-domain when all values are equal.
         if (this.config.x.type === 'linear' && this.x_dom[0] === this.x_dom[1])
-            this.x_dom = [this.x_dom[0] - 1, this.x_dom[1] + 1];
+            this.x_dom = [
+                this.x_dom[0] - this.x_dom[0] * 0.05,
+                this.x_dom[1] + this.x_dom[1] * 0.05
+            ];
+
+        //Reset listing.
+        this.listing.draw([]);
+        this.listing.wrap.selectAll('*').style('display', 'none');
+        this.wrap
+            .select('.annote')
+            .classed('tableTitle', false)
+            .text('Click a bar for details.');
+
+        //Reset bar highlighting.
+        delete this.highlightedBin;
+        this.svg.selectAll('.bar').attr('opacity', 1);
     }
 
     function drawNormalRanges(chart) {
@@ -480,17 +478,33 @@
     }
 
     function onResize() {
-        var chart = this;
-        var config = this.config;
+        var _this = this;
 
-        //Define listing columns and headers.
-        var listing = this.listing;
-        listing.config.cols = config.details.map(function(detail) {
-            return detail.value_col;
-        });
-        listing.config.headers = config.details.map(function(detail) {
-            return detail.label;
-        });
+        var chart = this,
+            config = this.config;
+
+        //Draw custom bin for single observation subsets.
+        this.svg.select('#custom-bin').remove();
+        if (this.current_data.length === 1) {
+            var datum = this.current_data[0];
+            this.svg
+                .append('g')
+                .classed('bar-group', true)
+                .attr('id', 'custom-bin')
+                .append('rect')
+                .data([datum])
+                .classed('wc-data-mark bar', true)
+                .attr({
+                    y: 0,
+                    height: this.plot_height,
+                    'shape-rendering': 'crispEdges',
+                    stroke: 'rgb(102,194,165)',
+                    fill: 'rgb(102,194,165)',
+                    'fill-opacity': '0.75',
+                    width: this.x(datum.values.x * 1.01) - this.x(datum.values.x * 0.99),
+                    x: this.x(datum.values.x * 0.99)
+                });
+        }
 
         //Display data listing on bin click.
         var cleanF = d3$1.format('.3f');
@@ -500,6 +514,7 @@
         bins
             .style('cursor', 'pointer')
             .on('click', function(d) {
+                chart.highlightedBin = d.key;
                 //Update footnote.
                 footnote
                     .classed('tableTitle', true)
@@ -514,7 +529,8 @@
                     );
 
                 //Draw listing.
-                listing.draw(d.values.raw);
+                chart.listing.draw(d.values.raw);
+                chart.listing.wrap.selectAll('*').style('display', null);
 
                 //Reduce bin opacity and highlight selected bin.
                 bins.attr('fill-opacity', 0.5);
@@ -558,47 +574,55 @@
 
         //Clear listing when clicking outside bins.
         this.wrap.selectAll('.overlay, .normalRange').on('click', function() {
-            listing.draw([]);
+            delete chart.highlightedBin;
+            chart.listing.draw([]);
+            chart.listing.wrap.selectAll('*').style('display', 'none');
             bins.attr('fill-opacity', 0.75);
 
             if (footnote.classed('tableTitle'))
                 footnote.classed('tableTitle', false).text('Click a bar for details.');
         });
+
+        //Keep highlighted bin highlighted on resize.
+        if (this.highlightedBin)
+            bins.attr('fill-opacity', function(d) {
+                return d.key !== _this.highlightedBin ? 0.5 : 1;
+            });
     }
 
     function safetyHistogram(element, settings) {
-        //Merge user's settings with default settings.
-        var mergedSettings = Object.assign({}, defaultSettings, settings);
+        var mergedSettings = Object.assign({}, defaultSettings, settings),
+            syncedSettings = syncSettings(mergedSettings),
+            syncedControlInputs = syncControlInputs(syncedSettings),
+            controls = webcharts.createControls(element, {
+                location: 'top',
+                inputs: syncedControlInputs
+            }),
+            chart = webcharts.createChart(element, syncedSettings, controls),
+            listingSettings = {
+                cols: syncedSettings.details.map(function(detail) {
+                    return detail.value_col;
+                }),
+                headers: syncedSettings.details.map(function(detail) {
+                    return detail.label;
+                }),
+                searchable: syncedSettings.searchable,
+                sortable: syncedSettings.sortable,
+                pagination: syncedSettings.pagination,
+                exportable: syncedSettings.exportable
+            };
 
-        //Keep settings in sync with the data mappings.
-        mergedSettings = syncSettings(mergedSettings);
+        chart.listing = webcharts.createTable(element, listingSettings);
+        chart.listing.init([]);
+        chart.listing.wrap.selectAll('*').style('display', 'none');
 
-        //Keep control inputs in sync and create controls object.
-        var syncedControlInputs = syncControlInputs(mergedSettings);
-        var controls = webcharts.createControls(element, {
-            location: 'top',
-            inputs: syncedControlInputs
-        });
-
-        //Define chart
-        var chart = webcharts.createChart(element, mergedSettings, controls);
+        //Define callbacks.
         chart.on('init', onInit);
         chart.on('layout', onLayout);
         chart.on('preprocess', onPreprocess);
         chart.on('datatransform', onDataTransform);
         chart.on('draw', onDraw);
         chart.on('resize', onResize);
-
-        var tableSettings =
-            mergedSettings.details && mergedSettings.details.length > 0
-                ? {
-                      cols: mergedSettings.details.map(function(d) {
-                          return d.value_col;
-                      })
-                  }
-                : null;
-        var listing = webcharts.createTable(element, tableSettings).init([]);
-        chart.listing = listing;
 
         return chart;
     }

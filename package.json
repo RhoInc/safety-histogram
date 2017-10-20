@@ -1,7 +1,12 @@
 {
   "name": "safety-histogram",
-  "version": "2.0.1",
   "description": "Histogram showing distribution of lab measures, vital signs and other related measures in clinical trials.",
+  "version": "2.0.3",
+  "author": "Rho, Inc.",
+  "license": "MIT",
+  "homepage": "https://github.com/rhoinc/safety-histogram#readme",
+  "main": "./build/safetyHistogram.js",
+  "module": "./src/index.js",
   "keywords": [
       "labs",
       "vitals",
@@ -13,28 +18,32 @@
       "safety",
       "explorer"
   ],
-  "homepage": "https://github.com/rhoinc/safety-histogram#readme",
-  "license": "MIT",
-  "author": "Rho, Inc.",
-  "main": "./build/safetyHistogram.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/rhoinc/safety-histogram.git"
+  "dependencies": {
+    "d3": "^3",
+    "webcharts": "^1.9"
   },
   "scripts": {
-    "build": "rollup -c ./scripts/rollup.wrapper.config.js | babel > ./build/safetyHistogram.js"
-    },
-  "devDependencies": {
-    "babel-cli": "^6.0.0",
-    "babel-preset-es2015-rollup": "^1.1.1",
-    "rollup": "^0.25.1",
-    "rollup-plugin-babel": "^2.4.0"
+    "build": "npm run bundle && npm run format",
+    "bundle": "rollup -c",
+    "format": "npm run format-src && npm run format-build",
+    "format-src": "prettier --print-width=100 --tab-width=4 --single-quote --write src/**/*.js",
+    "format-build": "prettier --print-width=100 --tab-width=4 --single-quote --write build/safetyHistogram.js",
+    "watch": "rollup -c -w"
   },
-  "dependencies": {
-    "d3": "^3.5.14",
-    "webcharts": "^1.3.2"
+  "devDependencies": {
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-env": "^1.6.0",
+    "babel-register": "^6.26.0",
+    "prettier": "^1.7.4",
+    "rollup": "^0.50.0",
+    "rollup-plugin-babel": "^3.0.2",
+    "rollup-watch": "^4.3.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RhoInc/safety-histogram.git"
   },
   "bugs": {
-    "url": "https://github.com/rhoinc/safety-histogram/issues"
+    "url": "https://github.com/RhoInc/safety-histogram/issues"
   }
 }

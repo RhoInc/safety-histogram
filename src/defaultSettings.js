@@ -1,5 +1,5 @@
 const defaultSettings = {
-  //Default template settings
+    //Default template settings
     value_col: 'STRESN',
     measure_col: 'TEST',
     unit_col: 'STRESU',
@@ -10,31 +10,31 @@ const defaultSettings = {
     filters: null,
     details: null,
     start_value: null,
-    missingValues: ['','NA','N/A'],
+    missingValues: ['', 'NA', 'N/A'],
 
-  //Standard webcharts settings
-    x:{
-        'column':null, // set in syncSettings()
-        'label':null, // set in syncSettings()
-        'type':'linear',
-        'bin':25,
-        'behavior':'flex',
-        'format':'.1f'
+    //Standard webcharts settings
+    x: {
+        column: null, // set in syncSettings()
+        label: null, // set in syncSettings()
+        type: 'linear',
+        bin: 25,
+        behavior: 'flex',
+        format: '.1f'
     },
-    y:{
-        'label':'# of Observations',
-        'type':'linear',
-        'behavior': 'flex',
-        'column':'',
-        'domain':[0,null]
+    y: {
+        label: '# of Observations',
+        type: 'linear',
+        behavior: 'flex',
+        column: '',
+        domain: [0, null]
     },
-    marks:[
+    marks: [
         {
-            'per':[], // set in syncSettings()
-            'type':'bar',
-            'summarizeY':'count',
-            'summarizeX':'mean',
-            'attributes':{'fill-opacity':0.75}
+            per: [], // set in syncSettings()
+            type: 'bar',
+            summarizeY: 'count',
+            summarizeX: 'mean',
+            attributes: { 'fill-opacity': 0.75 }
         }
     ],
     aspect: 3,
@@ -52,32 +52,43 @@ export function syncSettings(settings) {
         settings.normal_col_high = null;
     }
 
-  //Define default details.
-    let defaultDetails = [{value_col: settings.id_col, label: 'Subject Identifier'}];
+    //Define default details.
+    let defaultDetails = [{ value_col: settings.id_col, label: 'Subject Identifier' }];
     if (settings.filters)
-        settings.filters.forEach(filter => defaultDetails.push(
-            {value_col: filter.value_col ? filter.value_col : filter
-            ,label: filter.label ? filter.label : filter.value_col ? filter.value_col : filter}));
-    defaultDetails.push({value_col: settings.value_col, label: 'Result'});
+        settings.filters.forEach(filter =>
+            defaultDetails.push({
+                value_col: filter.value_col ? filter.value_col : filter,
+                label: filter.label ? filter.label : filter.value_col ? filter.value_col : filter
+            })
+        );
+    defaultDetails.push({ value_col: settings.value_col, label: 'Result' });
     if (settings.normal_col_low)
-        defaultDetails.push({value_col: settings.normal_col_low, label: 'Lower Limit of Normal'});
+        defaultDetails.push({ value_col: settings.normal_col_low, label: 'Lower Limit of Normal' });
     if (settings.normal_col_high)
-        defaultDetails.push({value_col: settings.normal_col_high, label: 'Upper Limit of Normal'});
+        defaultDetails.push({
+            value_col: settings.normal_col_high,
+            label: 'Upper Limit of Normal'
+        });
 
-  //If [settings.details] is not specified:
-    if (!settings.details)
-        settings.details = defaultDetails;
-  //If [settings.details] is specified:
+    //If [settings.details] is not specified:
+    if (!settings.details) settings.details = defaultDetails;
     else {
-      //Allow user to specify an array of columns or an array of objects with a column property
-      //and optionally a column label.
-        settings.details
-            .forEach(detail => {
-                if (defaultDetails.map(d => d.value_col).indexOf(detail.value_col ? detail.value_col : detail) === -1)
-                    defaultDetails.push(
-                        {value_col: detail.value_col ? detail.value_col : detail
-                        ,label: detail.label ? detail.label : detail.value_col ? detail.value_col : detail});
-            });
+        //If [settings.details] is specified:
+        //Allow user to specify an array of columns or an array of objects with a column property
+        //and optionally a column label.
+        settings.details.forEach(detail => {
+            if (
+                defaultDetails
+                    .map(d => d.value_col)
+                    .indexOf(detail.value_col ? detail.value_col : detail) === -1
+            )
+                defaultDetails.push({
+                    value_col: detail.value_col ? detail.value_col : detail,
+                    label: detail.label
+                        ? detail.label
+                        : detail.value_col ? detail.value_col : detail
+                });
+        });
         settings.details = defaultDetails;
     }
 
@@ -86,30 +97,31 @@ export function syncSettings(settings) {
 
 //Map values from settings to control inputs
 export function syncControlInputs(settings) {
-    const defaultControls =
-        [
-            {type: 'subsetter'
-            ,label: 'Measure'
-            ,value_col: settings.measure_col
-            ,start: settings.start_value}
-        ,
-            {type: 'checkbox'
-            ,label: 'Normal Range'
-            ,option: 'displayNormalRange'}
-        ];
+    const defaultControls = [
+        {
+            type: 'subsetter',
+            label: 'Measure',
+            value_col: settings.measure_col,
+            start: settings.start_value
+        },
+        {
+            type: 'checkbox',
+            label: 'Normal Range',
+            option: 'displayNormalRange'
+        }
+    ];
 
     if (settings.filters && settings.filters.length > 0) {
-        let otherFilters = settings.filters
-            .map(filter => {
-                filter =
-                    {type: 'subsetter'
-                    ,value_col: filter.value_col ? filter.value_col : filter
-                    ,label: filter.label ? filter.label : filter.value_col ? filter.value_col : filter};
-                return filter;
-            });
+        let otherFilters = settings.filters.map(filter => {
+            filter = {
+                type: 'subsetter',
+                value_col: filter.value_col ? filter.value_col : filter,
+                label: filter.label ? filter.label : filter.value_col ? filter.value_col : filter
+            };
+            return filter;
+        });
         return defaultControls.concat(otherFilters);
-    } else
-        return defaultControls;
+    } else return defaultControls;
 }
 
 export default defaultSettings;

@@ -17,7 +17,7 @@ Users can:
 * Filter the histogram for selected criteria, and see an updated chart (optional)
 * Show or hide normal ranges for the selected measure (optional)
 
-![Example](https://user-images.githubusercontent.com/31038805/33951418-e515ce48-dffc-11e7-86b7-e43846ea5fcf.gif)
+![Example](https://user-images.githubusercontent.com/31038805/33951675-9edaeb42-dffd-11e7-8bed-71988d7092a2.gif)
 
 ## Typical Usage
 

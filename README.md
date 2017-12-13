@@ -1,4 +1,4 @@
-#Saftey Histogram
+# Saftey Histogram
 ## Overview
 ![alt tag](https://user-images.githubusercontent.com/31038805/33951165-3e6299dc-dffc-11e7-82c6-0ffd133f42ac.gif)
 

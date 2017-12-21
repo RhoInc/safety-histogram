@@ -1,8 +1,10 @@
 # Saftey Histogram
 
 ![alt tag](https://user-images.githubusercontent.com/31038805/33951165-3e6299dc-dffc-11e7-82c6-0ffd133f42ac.gif)
+
 ## Overview
-safety-histogram is a JavaScript library, built using Webcharts ([1](https://github.com/RhoInc/Webcharts), [2](https://github.com/RhoInc/webcharts-wrapper-boilerplate)), that creates an interactive histogram showing the distribution of lab measures, vital signs, and other measures related to safety in clinical trials. A typical chart created with safety-histogram looks like this: 
+
+Safety Histogram is a JavaScript library, built using Webcharts ([1](https://github.com/RhoInc/Webcharts), [2](https://github.com/RhoInc/webcharts-wrapper-boilerplate)), that creates an interactive histogram showing the distribution of lab measures, vital signs, and other measures related to safety in clinical trials. A typical chart created with safety-histogram looks like this: 
 
 ![Example](https://user-images.githubusercontent.com/31038805/33951675-9edaeb42-dffd-11e7-8bed-71988d7092a2.gif)
 

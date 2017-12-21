@@ -4,7 +4,7 @@
 ## Overview
 safety-histogram is a JavaScript library, built using Webcharts ([1](https://github.com/RhoInc/Webcharts), [2](https://github.com/RhoInc/webcharts-wrapper-boilerplate)), that creates an interactive histogram showing the distribution of lab measures, vital signs, and other measures related to safety in clinical trials. A typical chart created with safety-histogram looks like this: 
 
-
+![Example](https://user-images.githubusercontent.com/31038805/33951675-9edaeb42-dffd-11e7-8bed-71988d7092a2.gif)
 
 The chart uses [SDTM](http://www.cdisc.org/sdtm) data standards by default, but can be customized to use any data set that contains one record per person per measure. Full details about chart configuration are [here](Configuration).
 
@@ -17,7 +17,7 @@ Users can:
 * Filter the histogram for selected criteria, and see an updated chart (optional)
 * Show or hide normal ranges for the selected measure (optional)
 
-![Example](https://user-images.githubusercontent.com/31038805/33951675-9edaeb42-dffd-11e7-8bed-71988d7092a2.gif)
+
 
 ## Typical Usage
 

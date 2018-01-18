@@ -13,14 +13,16 @@ export function updateXDomain(chart) {
     var range = [xMinSelect.node().value, xMaxSelect.node().value].sort(function(a, b) {
         return a - b;
     });
-    console.log(range);
+
+    // add some padding if min = max
+    if (range[0] === range[1]) {
+        range = [+range[0] - +range[0] * 0.05, +range[1] + +range[1] * 0.05];
+        console.warn("Can't specify a 0 range, so some padding was added.");
+    }
+
     //update the select values if needed
     xMinSelect.node().value = range[0];
     xMaxSelect.node().value = range[1];
-    console.log(range);
-    
-    // add some padding if min = max
-    if (range[0] === range[1]) range = [range[0] - range[0] * 0.05, range[1] + range[1] * 0.05];
 
     //apply custom domain to the chart
     chart.config.x.domain = range;

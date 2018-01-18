@@ -150,8 +150,6 @@
                 label: 'Normal Range',
                 option: 'displayNormalRange'
             }
-            //{ type: 'number', label: 'Lower Limit', option: 'x.domain[0]', require: true },
-            //{ type: 'number', label: 'Upper Limit', option: 'x.domain[1]', require: true }
         ];
 
         if (settings.filters && settings.filters.length > 0) {
@@ -174,6 +172,7 @@
 
         var config = this.config;
 
+        this.super_raw_data = this.raw_data;
         //Remove filters whose [ value_col ] does not appear in the data.
         var columns = d3.keys(this.raw_data[0]);
         this.controls.config.inputs = this.controls.config.inputs.filter(function(d) {
@@ -282,13 +281,16 @@
         var range = [xMinSelect.node().value, xMaxSelect.node().value].sort(function(a, b) {
             return a - b;
         });
-        console.log(range);
+
+        // add some padding if min = max
+        if (range[0] === range[1]) {
+            range = [+range[0] - +range[0] * 0.05, +range[1] + +range[1] * 0.05];
+            console.warn("Can't specify a 0 range, so some padding was added.");
+        }
+
         //update the select values if needed
         xMinSelect.node().value = range[0];
         xMaxSelect.node().value = range[1];
-        console.log(range);
-        // add some padding if min = max
-        if (range[0] === range[1]) range = [range[0] - range[0] * 0.05, range[1] + range[1] * 0.05];
 
         //apply custom domain to the chart
         chart.config.x.domain = range;
@@ -300,24 +302,9 @@
             config = this.config;
 
         function updateLimits() {
-            console.log(chart);
-            console.log(chart.raw_data.length);
-            console.log(chart.filtered_data.length);
-            console.log(chart.measure_data.length);
-            //update the domain
+            //update the domain and re-draw
             updateXDomain(chart);
-
-            //draw the chart on the data from the selected range
-
-            var subRangeData = chart.filtered_data.filter(function(f) {
-                var v = chart.config.value_col;
-                return (f[v] >= chart.x_dom[0]) & (f[v] <= chart.x_dom[1]);
-            });
-
-            console.log(subRangeData.length);
-            chart.draw(subRangeData);
-
-            //add annotation about data that's been removed.
+            chart.draw();
         }
 
         /////////////////////////////////
@@ -342,7 +329,7 @@
                 .append('button')
                 .text('Reset Limits')
                 .on('click', function() {
-                    var measure_data = chart.raw_data.filter(function(d) {
+                    var measure_data = chart.super_raw_data.filter(function(d) {
                         return d[chart.config.measure_col] === chart.currentMeasure;
                     });
                     chart.config.x.domain = d3.extent(measure_data, function(d) {
@@ -431,7 +418,7 @@
         var measure = this.filters.filter(function(filter) {
             return filter.col === _this.config.measure_col;
         })[0].val;
-        this.measure_data = this.raw_data.filter(function(d) {
+        this.measure_data = this.super_raw_data.filter(function(d) {
             return d[_this.config.measure_col] === measure;
         });
 
@@ -512,6 +499,18 @@
                     .property('checked', this.config.displayNormalRange)
                     .property('disabled', false);
         }
+
+        //only draw the chart using data from the currently selected x-axis range
+        updateXDomain(chart);
+        console.log(this);
+        this.raw_data = this.super_raw_data
+            .filter(function(d) {
+                return d[chart.config.measure_col] === chart.currentMeasure;
+            })
+            .filter(function(f) {
+                var v = chart.config.value_col;
+                return (f[v] >= chart.x_dom[0]) & (f[v] <= chart.x_dom[1]);
+            });
     }
 
     function onDataTransform() {
@@ -567,11 +566,11 @@
         updateSubjectCount(this, '#populationCount');
 
         //Update x-domain when all values are equal.
-        //if (this.config.x.type === 'linear' && this.x_dom[0] === this.x_dom[1])
-        //  this.x_dom = [this.x_dom[0] - this.x_dom[0] * 0.05, this.x_dom[1] + this.x_dom[1] * 0.05];
-
-        //Update x-domain based on Control Inputs
-        //updateXDomain(this)
+        if (this.config.x.type === 'linear' && this.x_dom[0] === this.x_dom[1])
+            this.x_dom = [
+                this.x_dom[0] - this.x_dom[0] * 0.05,
+                this.x_dom[1] + this.x_dom[1] * 0.05
+            ];
 
         //Reset listing.
         this.listing.draw([]);
@@ -779,6 +778,8 @@
             bins.attr('fill-opacity', function(d) {
                 return d.key !== _this.highlightedBin ? 0.5 : 1;
             });
+
+        console.log(chart.x_dom);
     }
 
     function safetyHistogram(element, settings) {

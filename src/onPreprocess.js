@@ -1,10 +1,12 @@
+import { updateXDomain } from './util/updateXDomain';
+
 export default function onPreprocess() {
     const chart = this,
     config=this.config;
 
     //Filter raw data on currently selected measure.
     const measure = this.filters.filter(filter => filter.col === this.config.measure_col)[0].val;
-    this.measure_data = this.raw_data.filter(d => d[this.config.measure_col] === measure);
+    this.measure_data = this.super_raw_data.filter(d => d[this.config.measure_col] === measure);
 
     //Set x-domain based on currently selected measure.
     //this.config.x.domain = d3.extent(this.measure_data, d => +d[chart.config.value_col]);
@@ -68,4 +70,13 @@ export default function onPreprocess() {
                 .property('checked', this.config.displayNormalRange)
                 .property('disabled', false);
     }
+
+    //only draw the chart using data from the currently selected x-axis range
+    updateXDomain(chart)
+    this.raw_data = this.super_raw_data
+    .filter(d => d[chart.config.measure_col] === chart.currentMeasure)
+    .filter(function(f) {
+      var v = chart.config.value_col;
+      return ((f[v] >= chart.x_dom[0]) & (f[v] <= chart.x_dom[1]));
+    });
 }

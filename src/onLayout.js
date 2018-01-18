@@ -5,24 +5,9 @@ export default function onLayout() {
   config = this.config;
 
   function updateLimits() {
-
-    console.log(chart)
-    console.log(chart.raw_data.length)
-    console.log(chart.filtered_data.length)
-    console.log(chart.measure_data.length)
-    //update the domain
+    //update the domain and re-draw
     updateXDomain(chart);
-
-    //draw the chart on the data from the selected range
-    var subRangeData = chart.filtered_data.filter(function(f) {
-      var v = chart.config.value_col;
-      return (f[v] >= chart.x_dom[0]) & (f[v] <= chart.x_dom[1]);
-    });
-
-    console.log(subRangeData.length)
-    chart.draw(subRangeData);
-
-    //add annotation about data that's been removed.
+    chart.draw();
   }
 
   /////////////////////////////////
@@ -47,7 +32,7 @@ export default function onLayout() {
       .append('button')
       .text('Reset Limits')
       .on('click', function() {
-        const measure_data = chart.raw_data.filter(
+        const measure_data = chart.super_raw_data.filter(
           d => d[chart.config.measure_col] === chart.currentMeasure
         );
         chart.config.x.domain = d3.extent(

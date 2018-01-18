@@ -295,6 +295,8 @@
         //apply custom domain to the chart
         chart.config.x.domain = range;
         chart.x_dom = range;
+
+        //if the current range is the same as the full range, disable the reset reset button
     }
 
     function onLayout() {
@@ -502,7 +504,6 @@
 
         //only draw the chart using data from the currently selected x-axis range
         updateXDomain(chart);
-        console.log(this);
         this.raw_data = this.super_raw_data
             .filter(function(d) {
                 return d[chart.config.measure_col] === chart.currentMeasure;
@@ -511,6 +512,24 @@
                 var v = chart.config.value_col;
                 return (f[v] >= chart.x_dom[0]) & (f[v] <= chart.x_dom[1]);
             });
+
+        //disable the reset button if the full range is shown
+        var raw_range = d3
+            .extent(this.measure_data, function(d) {
+                return +d[config.value_col];
+            })
+            .map(function(f) {
+                return '' + f;
+            });
+        var full_range_covered =
+            (chart.x_dom[0] == raw_range[0]) & (chart.x_dom[1] == raw_range[1]);
+        chart.controls.wrap
+            .selectAll('.control-group')
+            .filter(function(f) {
+                return f.option === 'x.domain';
+            })
+            .select('button')
+            .property('disabled', full_range_covered);
     }
 
     function onDataTransform() {
@@ -778,8 +797,6 @@
             bins.attr('fill-opacity', function(d) {
                 return d.key !== _this.highlightedBin ? 0.5 : 1;
             });
-
-        console.log(chart.x_dom);
     }
 
     function safetyHistogram(element, settings) {

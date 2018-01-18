@@ -8,7 +8,7 @@ export default function onDraw() {
 
     //Update x-domain when all values are equal.
     if (this.config.x.type === 'linear' && this.x_dom[0] === this.x_dom[1])
-      this.x_dom = [this.x_dom[0] - this.x_dom[0] * 0.05, this.x_dom[1] + this.x_dom[1] * 0.05];
+        this.x_dom = [this.x_dom[0] - this.x_dom[0] * 0.05, this.x_dom[1] + this.x_dom[1] * 0.05];
 
     //Reset listing.
     this.listing.draw([]);

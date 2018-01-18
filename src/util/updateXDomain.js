@@ -27,4 +27,6 @@ export function updateXDomain(chart) {
     //apply custom domain to the chart
     chart.config.x.domain = range;
     chart.x_dom = range;
+
+    //if the current range is the same as the full range, disable the reset reset button
 }

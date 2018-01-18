@@ -104,6 +104,4 @@ export default function onResize() {
     //Keep highlighted bin highlighted on resize.
     if (this.highlightedBin)
         bins.attr('fill-opacity', d => (d.key !== this.highlightedBin ? 0.5 : 1));
-
-        console.log(chart.x_dom)
 }

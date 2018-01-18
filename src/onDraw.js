@@ -8,11 +8,11 @@ export default function onDraw() {
     updateSubjectCount(this, '#populationCount');
 
     //Update x-domain when all values are equal.
-    if (this.config.x.type === 'linear' && this.x_dom[0] === this.x_dom[1])
-        this.x_dom = [this.x_dom[0] - this.x_dom[0] * 0.05, this.x_dom[1] + this.x_dom[1] * 0.05];
+    //if (this.config.x.type === 'linear' && this.x_dom[0] === this.x_dom[1])
+    //  this.x_dom = [this.x_dom[0] - this.x_dom[0] * 0.05, this.x_dom[1] + this.x_dom[1] * 0.05];
 
     //Update x-domain based on Control Inputs
-    updateXDomain(this)
+    //updateXDomain(this)
 
     //Reset listing.
     this.listing.draw([]);

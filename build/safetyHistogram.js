@@ -149,9 +149,9 @@
                 type: 'checkbox',
                 label: 'Normal Range',
                 option: 'displayNormalRange'
-            },
-            { type: 'number', label: 'Lower Limit', option: 'x.domain[0]', require: true },
-            { type: 'number', label: 'Upper Limit', option: 'x.domain[1]', require: true }
+            }
+            //{ type: 'number', label: 'Lower Limit', option: 'x.domain[0]', require: true },
+            //{ type: 'number', label: 'Upper Limit', option: 'x.domain[1]', require: true }
         ];
 
         if (settings.filters && settings.filters.length > 0) {
@@ -263,10 +263,68 @@
         this.controls.config.inputs[0].start = this.config.start_value || conMeasures[0];
     }
 
-    function onLayout() {
-        var chart = this;
+    function updateXDomain(chart) {
+        var xMinSelect = chart.controls.wrap
+            .selectAll('.control-group')
+            .filter(function(f) {
+                return f.option === 'x.domain[0]';
+            })
+            .select('input');
 
-        //Add a button to reset the x-domain
+        var xMaxSelect = chart.controls.wrap
+            .selectAll('.control-group')
+            .filter(function(f) {
+                return f.option === 'x.domain[1]';
+            })
+            .select('input');
+
+        //switch the values if min > max
+        var range = [xMinSelect.node().value, xMaxSelect.node().value].sort(function(a, b) {
+            return a - b;
+        });
+        console.log(range);
+        //update the select values if needed
+        xMinSelect.node().value = range[0];
+        xMaxSelect.node().value = range[1];
+        console.log(range);
+        // add some padding if min = max
+        if (range[0] === range[1]) range = [range[0] - range[0] * 0.05, range[1] + range[1] * 0.05];
+
+        //apply custom domain to the chart
+        chart.config.x.domain = range;
+        chart.x_dom = range;
+    }
+
+    function onLayout() {
+        var chart = this,
+            config = this.config;
+
+        function updateLimits() {
+            console.log(chart);
+            console.log(chart.raw_data.length);
+            console.log(chart.filtered_data.length);
+            console.log(chart.measure_data.length);
+            //update the domain
+            updateXDomain(chart);
+
+            //draw the chart on the data from the selected range
+
+            var subRangeData = chart.filtered_data.filter(function(f) {
+                var v = chart.config.value_col;
+                return (f[v] >= chart.x_dom[0]) & (f[v] <= chart.x_dom[1]);
+            });
+
+            console.log(subRangeData.length);
+            chart.draw(subRangeData);
+
+            //add annotation about data that's been removed.
+        }
+
+        /////////////////////////////////
+        //Add controls for X-axis Limits
+        /////////////////////////////////
+
+        //x-domain reset button
         var resetContainer = this.controls.wrap
                 .insert('div', '.control-group:nth-child(3)')
                 .classed('control-group x-axis', true)
@@ -288,7 +346,7 @@
                         return d[chart.config.measure_col] === chart.currentMeasure;
                     });
                     chart.config.x.domain = d3.extent(measure_data, function(d) {
-                        return +d[chart.config.value_col];
+                        return +d[config.value_col];
                     }); //reset axis to full range
 
                     chart.controls.wrap
@@ -309,6 +367,38 @@
 
                     chart.draw();
                 });
+
+        //x-domain lower limit
+        var lowerLimitContainer = this.controls.wrap
+                .insert('div', '.control-group:nth-child(4)')
+                .classed('control-group x-axis', true)
+                .datum({
+                    type: 'number',
+                    option: 'x.domain[0]',
+                    label: 'Lower Limit'
+                }),
+            lowerLimitLabel = lowerLimitContainer
+                .append('span')
+                .attr('class', 'control-label')
+                .style('text-align', 'right')
+                .text('Lower Limit'),
+            lowerLimitControl = lowerLimitContainer.append('input').on('change', updateLimits);
+
+        //x-domain upper limit
+        var upperLimitContainer = this.controls.wrap
+                .insert('div', '.control-group:nth-child(5)')
+                .classed('control-group x-axis', true)
+                .datum({
+                    type: 'number',
+                    option: 'x.domain[1]',
+                    label: 'Upper Limit'
+                }),
+            upperLimitLabel = upperLimitContainer
+                .append('span')
+                .attr('class', 'control-label')
+                .style('text-align', 'right')
+                .text('Upper Limit'),
+            upperLimitControl = upperLimitContainer.append('input').on('change', updateLimits);
 
         //Add x-axis class to x-axis limit controls.
         this.controls.wrap
@@ -473,45 +563,15 @@
         );
     }
 
-    function updateXDomain(chart) {
-        var xMinSelect = chart.controls.wrap
-            .selectAll('.control-group')
-            .filter(function(f) {
-                return f.option === 'x.domain[0]';
-            })
-            .select('input');
-
-        var xMaxSelect = chart.controls.wrap
-            .selectAll('.control-group')
-            .filter(function(f) {
-                return f.option === 'x.domain[1]';
-            })
-            .select('input');
-
-        //switch the values if min > max
-        var range = [xMinSelect.node().value, xMaxSelect.node().value].sort(function(a, b) {
-            return a - b;
-        });
-        xMinSelect.node().value = range[0];
-        xMaxSelect.node().value = range[1];
-
-        //apply custom domain to the chart
-        chart.config.x.domain = range;
-        chart.x_dom = range;
-    }
-
     function onDraw() {
         updateSubjectCount(this, '#populationCount');
 
         //Update x-domain when all values are equal.
-        if (this.config.x.type === 'linear' && this.x_dom[0] === this.x_dom[1])
-            this.x_dom = [
-                this.x_dom[0] - this.x_dom[0] * 0.05,
-                this.x_dom[1] + this.x_dom[1] * 0.05
-            ];
+        //if (this.config.x.type === 'linear' && this.x_dom[0] === this.x_dom[1])
+        //  this.x_dom = [this.x_dom[0] - this.x_dom[0] * 0.05, this.x_dom[1] + this.x_dom[1] * 0.05];
 
         //Update x-domain based on Control Inputs
-        updateXDomain(this);
+        //updateXDomain(this)
 
         //Reset listing.
         this.listing.draw([]);

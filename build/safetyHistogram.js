@@ -278,13 +278,13 @@
             .select('input');
 
         //switch the values if min > max
-        var range = [xMinSelect.node().value, xMaxSelect.node().value].sort(function(a, b) {
+        var range = [+xMinSelect.node().value, +xMaxSelect.node().value].sort(function(a, b) {
             return a - b;
         });
 
         // add some padding if min = max
         if (range[0] === range[1]) {
-            range = [+range[0] - +range[0] * 0.05, +range[1] + +range[1] * 0.05];
+            range = [range[0] - range[0] * 0.05, range[1] + range[1] * 0.05];
             console.warn("Can't specify a 0 range, so some padding was added.");
         }
 
@@ -510,7 +510,7 @@
             })
             .filter(function(f) {
                 var v = chart.config.value_col;
-                return (f[v] >= chart.x_dom[0]) & (f[v] <= chart.x_dom[1]);
+                return +f[v] >= +chart.x_dom[0] && +f[v] <= +chart.x_dom[1];
             });
 
         //disable the reset button if the full range is shown
@@ -522,7 +522,7 @@
                 return '' + f;
             });
         var full_range_covered =
-            (chart.x_dom[0] == raw_range[0]) & (chart.x_dom[1] == raw_range[1]);
+            +chart.x_dom[0] == +raw_range[0] && +chart.x_dom[1] == +raw_range[1];
         chart.controls.wrap
             .selectAll('.control-group')
             .filter(function(f) {

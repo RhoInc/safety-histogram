@@ -77,12 +77,12 @@ export default function onPreprocess() {
         .filter(d => d[chart.config.measure_col] === chart.currentMeasure)
         .filter(function(f) {
             var v = chart.config.value_col;
-            return (f[v] >= chart.x_dom[0]) & (f[v] <= chart.x_dom[1]);
+            return +f[v] >= +chart.x_dom[0] && +f[v] <= +chart.x_dom[1];
         });
 
     //disable the reset button if the full range is shown
     const raw_range = d3.extent(this.measure_data, d => +d[config.value_col]).map(f => '' + f);
-    const full_range_covered = (chart.x_dom[0] == raw_range[0]) & (chart.x_dom[1] == raw_range[1]);
+    const full_range_covered = +chart.x_dom[0] == +raw_range[0] && +chart.x_dom[1] == +raw_range[1];
     chart.controls.wrap
         .selectAll('.control-group')
         .filter(f => f.option === 'x.domain')

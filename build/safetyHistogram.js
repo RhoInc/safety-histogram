@@ -172,6 +172,7 @@
 
         var config = this.config;
 
+        this.super_raw_data = this.raw_data;
         //Remove filters whose [ value_col ] does not appear in the data.
         var columns = d3.keys(this.raw_data[0]);
         this.controls.config.inputs = this.controls.config.inputs.filter(function(d) {
@@ -261,7 +262,142 @@
         this.controls.config.inputs[0].start = this.config.start_value || conMeasures[0];
     }
 
+    function updateXDomain(chart) {
+        var xMinSelect = chart.controls.wrap
+            .selectAll('.control-group')
+            .filter(function(f) {
+                return f.option === 'x.domain[0]';
+            })
+            .select('input');
+
+        var xMaxSelect = chart.controls.wrap
+            .selectAll('.control-group')
+            .filter(function(f) {
+                return f.option === 'x.domain[1]';
+            })
+            .select('input');
+
+        //switch the values if min > max
+        var range = [+xMinSelect.node().value, +xMaxSelect.node().value].sort(function(a, b) {
+            return a - b;
+        });
+
+        // add some padding if min = max
+        if (range[0] === range[1]) {
+            range = [range[0] - range[0] * 0.05, range[1] + range[1] * 0.05];
+            console.warn("Can't specify a 0 range, so some padding was added.");
+        }
+
+        //update the select values if needed
+        xMinSelect.node().value = range[0];
+        xMaxSelect.node().value = range[1];
+
+        //apply custom domain to the chart
+        chart.config.x.domain = range;
+        chart.x_dom = range;
+
+        //if the current range is the same as the full range, disable the reset reset button
+    }
+
     function onLayout() {
+        var chart = this,
+            config = this.config;
+
+        function updateLimits() {
+            //update the domain and re-draw
+            updateXDomain(chart);
+            chart.draw();
+        }
+
+        /////////////////////////////////
+        //Add controls for X-axis Limits
+        /////////////////////////////////
+
+        //x-domain reset button
+        var resetContainer = this.controls.wrap
+                .insert('div', '.control-group:nth-child(3)')
+                .classed('control-group x-axis', true)
+                .datum({
+                    type: 'button',
+                    option: 'x.domain',
+                    label: 'x-axis:'
+                }),
+            resetLabel = resetContainer
+                .append('span')
+                .attr('class', 'control-label')
+                .style('text-align', 'right')
+                .text('X-axis:'),
+            resetButton = resetContainer
+                .append('button')
+                .text('Reset Limits')
+                .on('click', function() {
+                    var measure_data = chart.super_raw_data.filter(function(d) {
+                        return d[chart.config.measure_col] === chart.currentMeasure;
+                    });
+                    chart.config.x.domain = d3.extent(measure_data, function(d) {
+                        return +d[config.value_col];
+                    }); //reset axis to full range
+
+                    chart.controls.wrap
+                        .selectAll('.control-group')
+                        .filter(function(f) {
+                            return f.option === 'x.domain[0]';
+                        })
+                        .select('input')
+                        .property('value', chart.config.x.domain[0]);
+
+                    chart.controls.wrap
+                        .selectAll('.control-group')
+                        .filter(function(f) {
+                            return f.option === 'x.domain[1]';
+                        })
+                        .select('input')
+                        .property('value', chart.config.x.domain[1]);
+
+                    chart.draw();
+                });
+
+        //x-domain lower limit
+        var lowerLimitContainer = this.controls.wrap
+                .insert('div', '.control-group:nth-child(4)')
+                .classed('control-group x-axis', true)
+                .datum({
+                    type: 'number',
+                    option: 'x.domain[0]',
+                    label: 'Lower Limit'
+                }),
+            lowerLimitLabel = lowerLimitContainer
+                .append('span')
+                .attr('class', 'control-label')
+                .style('text-align', 'right')
+                .text('Lower Limit'),
+            lowerLimitControl = lowerLimitContainer.append('input').on('change', updateLimits);
+
+        //x-domain upper limit
+        var upperLimitContainer = this.controls.wrap
+                .insert('div', '.control-group:nth-child(5)')
+                .classed('control-group x-axis', true)
+                .datum({
+                    type: 'number',
+                    option: 'x.domain[1]',
+                    label: 'Upper Limit'
+                }),
+            upperLimitLabel = upperLimitContainer
+                .append('span')
+                .attr('class', 'control-label')
+                .style('text-align', 'right')
+                .text('Upper Limit'),
+            upperLimitControl = upperLimitContainer.append('input').on('change', updateLimits);
+
+        //Add x-axis class to x-axis limit controls.
+        this.controls.wrap
+            .selectAll('.control-group')
+            .filter(function(d) {
+                return ['Lower Limit', 'Upper Limit'].indexOf(d.label) > -1;
+            })
+            .classed('x-axis', true);
+
+        //Add population count container.
         this.controls.wrap
             .append('div')
             .attr('id', 'populationCount')
@@ -277,20 +413,64 @@
     function onPreprocess() {
         var _this = this;
 
-        var chart = this;
+        var chart = this,
+            config = this.config;
 
         //Filter raw data on currently selected measure.
         var measure = this.filters.filter(function(filter) {
             return filter.col === _this.config.measure_col;
         })[0].val;
-        this.measure_data = this.raw_data.filter(function(d) {
+        this.measure_data = this.super_raw_data.filter(function(d) {
             return d[_this.config.measure_col] === measure;
         });
 
         //Set x-domain based on currently selected measure.
-        this.config.x.domain = d3.extent(this.measure_data, function(d) {
-            return +d[chart.config.value_col];
-        });
+        //this.config.x.domain = d3.extent(this.measure_data, d => +d[chart.config.value_col]);
+
+        //Check if the selected measure has changed.
+        var prevMeasure = this.currentMeasure;
+        this.currentMeasure = this.controls.wrap
+            .selectAll('.control-group')
+            .filter(function(d) {
+                return d.value_col && d.value_col === config.measure_col;
+            })
+            .select('option:checked')
+            .text();
+        var changedMeasureFlag = this.currentMeasure !== prevMeasure;
+
+        //Set x-axis domain.
+        if (changedMeasureFlag) {
+            //reset axis to full range when measure changes
+            this.config.x.domain = d3.extent(this.measure_data, function(d) {
+                return +d[config.value_col];
+            });
+            this.controls.wrap
+                .selectAll('.x-axis')
+                .property(
+                    'title',
+                    'Initial Limits: [' +
+                        this.config.x.domain[0] +
+                        ' - ' +
+                        this.config.x.domain[1] +
+                        ']'
+                );
+
+            //Set x-axis domain controls.
+            this.controls.wrap
+                .selectAll('.control-group')
+                .filter(function(f) {
+                    return f.option === 'x.domain[0]';
+                })
+                .select('input')
+                .property('value', this.config.x.domain[0]);
+            this.controls.wrap
+                .selectAll('.control-group')
+                .filter(function(f) {
+                    return f.option === 'x.domain[1]';
+                })
+                .select('input')
+                .property('value', this.config.x.domain[1]);
+        }
 
         //Determine whether currently selected measure contains normal range data.
         if (this.config.normal_range) {
@@ -321,6 +501,35 @@
                     .property('checked', this.config.displayNormalRange)
                     .property('disabled', false);
         }
+
+        //only draw the chart using data from the currently selected x-axis range
+        updateXDomain(chart);
+        this.raw_data = this.super_raw_data
+            .filter(function(d) {
+                return d[chart.config.measure_col] === chart.currentMeasure;
+            })
+            .filter(function(f) {
+                var v = chart.config.value_col;
+                return +f[v] >= +chart.x_dom[0] && +f[v] <= +chart.x_dom[1];
+            });
+
+        //disable the reset button if the full range is shown
+        var raw_range = d3
+            .extent(this.measure_data, function(d) {
+                return +d[config.value_col];
+            })
+            .map(function(f) {
+                return '' + f;
+            });
+        var full_range_covered =
+            +chart.x_dom[0] == +raw_range[0] && +chart.x_dom[1] == +raw_range[1];
+        chart.controls.wrap
+            .selectAll('.control-group')
+            .filter(function(f) {
+                return f.option === 'x.domain';
+            })
+            .select('button')
+            .property('disabled', full_range_covered);
     }
 
     function onDataTransform() {

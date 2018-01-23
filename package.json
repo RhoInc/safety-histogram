@@ -1,7 +1,7 @@
 {
   "name": "safety-histogram",
   "description": "Histogram showing distribution of lab measures, vital signs and other related measures in clinical trials.",
-  "version": "2.0.3",
+  "version": "2.1.0",
   "author": "Rho, Inc.",
   "license": "MIT",
   "homepage": "https://github.com/rhoinc/safety-histogram#readme",
@@ -26,7 +26,7 @@
     "build": "npm run bundle && npm run format",
     "bundle": "rollup -c",
     "format": "npm run format-src && npm run format-build",
-    "format-src": "prettier --print-width=100 --tab-width=4 --single-quote --write src/**/*.js",
+    "format-src": "prettier --print-width=100 --tab-width=4 --single-quote --write \"./src/**/*.js\"",
     "format-build": "prettier --print-width=100 --tab-width=4 --single-quote --write build/safetyHistogram.js",
     "watch": "rollup -c -w"
   },

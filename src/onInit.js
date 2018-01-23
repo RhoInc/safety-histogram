@@ -5,6 +5,7 @@ export default function onInit() {
     let context = this;
     let config = this.config;
 
+    this.super_raw_data = this.raw_data;
     //Remove filters whose [ value_col ] does not appear in the data.
     const columns = d3.keys(this.raw_data[0]);
     this.controls.config.inputs = this.controls.config.inputs.filter(function(d) {
@@ -34,9 +35,9 @@ export default function onInit() {
 
     if (catMeasures.length)
         console.warn(
-            `${catMeasures.length} non-numeric endpoint${catMeasures.length > 1
-                ? 's have'
-                : ' has'} been removed: ${catMeasures.join(', ')}`
+            `${catMeasures.length} non-numeric endpoint${
+                catMeasures.length > 1 ? 's have' : ' has'
+            } been removed: ${catMeasures.join(', ')}`
         );
 
     this.raw_data = this.raw_data.filter(d => catMeasures.indexOf(d[config.measure_col]) === -1);

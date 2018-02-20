@@ -1,0 +1,113 @@
+{"title": "settings"
+,"description": "JSON schema for the configuration of safety-histogram"
+,"overview": "The most straightforward way to customize the Safety Histogram is by using a configuration object whose properties describe the behavior and appearance of the chart. Since the Safety Histogram is a Webcharts `chart` object, many default Webcharts settings are set in the [defaultSettings.js file](https://github.com/RhoInc/safety-outlier-explorer/blob/master/src/defaultSettings.js) as [described below](#webcharts-settings). Refer to the [Webcharts documentation](https://github.com/RhoInc/Webcharts/wiki/Chart-Configuration) for more details on these settings.\nIn addition to the standard Webcharts settings several custom settings not available in the base Webcharts library have been added to the Safety Histogram to facilitate data mapping and other custom functionality. These custom settings are described in detail below. All defaults can be overwritten by users."
+,"version": "2.1.1"
+,"type": "object"
+,"properties":
+    {"value_col":
+        {"type": "string"
+        ,"title": "Result"
+        ,"description": "field in the data object containing numeric results; non-numeric values found in the data are removed with a notification thrown to the log"
+        ,"default": "STRESN"
+        }
+    ,"measure_col":
+        {"type": "string"
+        ,"title": "Measure"
+        ,"description": "measure variable name"
+        ,"default": "TEST"
+        }
+    ,"unit_col":
+        {"type": "string"
+        ,"title": "Unit"
+        ,"description": "measure unit variable name"
+        ,"default": "STRESU"
+        }
+    ,"normal_range":
+        {"type": "boolean"
+        ,"title": "Display normal range?"
+        ,"description": "indicates whether normal range is displayed initially"
+        ,"default": true
+        }
+    ,"normal_col_low":
+        {"type": "string"
+        ,"title": "Lower Limit of Normal"
+        ,"description": "LLN variable name"
+        ,"default": "STNRLO"
+        }
+    ,"normal_col_high":
+        {"type": "string"
+        ,"title": "Upper Limit of Normal"
+        ,"description": "ULN variable name"
+        ,"default": "STNRHI"
+        }
+    ,"id_col":
+        {"type": "string"
+        ,"title": "ID"
+        ,"description": "field in the data object containing the unique ID for the participant"
+        ,"default": "USUBJID"
+        }
+    ,"filters":
+        {"type": "array"
+        ,"title": "Filters"
+        ,"description": "an array of filter variables and associated metadata"
+        ,"items":
+            {"type": "object"
+            ,"properties":
+                {"value_col":
+                    {"type": "string"
+                    ,"title": "Variable name"
+                    }
+                ,"label":
+                    {"type": "string"
+                    ,"title": "Variable label"
+                    }
+                }
+            }
+        }
+    ,"details":
+        {"type": "array"
+        ,"title": "Participant details"
+        ,"description": "an array of ID-level variables and associated metadata"
+        ,"defaultObject":
+            [
+                { "value_col": "AGE" , "label": "Age"  },
+                { "value_col": "SEX" , "label": "Sex"  },
+                { "value_col": "RACE", "label": "Race" }
+            ]
+        ,"items":
+            {"type": "object"
+            ,"properties":
+                {"value_col":
+                    {"type": "string"
+                    ,"title": "Variable name"
+                    ,"default": "AGE"
+                    }
+                ,"label":
+                    {"type": "string"
+                    ,"title": "Variable label"
+                    ,"default": "Age"
+                    }
+                }
+            }
+        }
+    ,"start_value":
+        {"type": "string"
+        ,"title": "Initially Displayed Measure"
+        ,"description": "value of measure to display initially"
+        }
+    ,"missingValues":
+        {"type": "array"
+        ,"title": "Missing values"
+        ,"description": "a list of values that are interpreted as 'missing'"
+        ,"defaultObject":
+            [""
+            ,"NA"
+            ,"N/A"
+            ]
+        ,"items":
+            {"type": "string"
+            ,"default": ""
+            }
+        }
+    }
+}

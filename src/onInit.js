@@ -35,9 +35,9 @@ export default function onInit() {
 
     if (catMeasures.length)
         console.warn(
-            `${catMeasures.length} non-numeric endpoint${
-                catMeasures.length > 1 ? 's have' : ' has'
-            } been removed: ${catMeasures.join(', ')}`
+            `${catMeasures.length} non-numeric endpoint${catMeasures.length > 1
+                ? 's have'
+                : ' has'} been removed: ${catMeasures.join(', ')}`
         );
 
     this.raw_data = this.raw_data.filter(d => catMeasures.indexOf(d[config.measure_col]) === -1);

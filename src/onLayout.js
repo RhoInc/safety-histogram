@@ -1,4 +1,4 @@
-import { updateXDomain } from './util/updateXDomain';
+import updateXDomain from './onPreprocess/updateXDomain';
 
 export default function onLayout() {
     let chart = this,

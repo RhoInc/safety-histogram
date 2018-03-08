@@ -1,5 +1,5 @@
 import { set } from 'd3';
-import getValType from './util/getValType';
+import getValType from './onInit/getValType';
 
 export default function onInit() {
     let context = this;

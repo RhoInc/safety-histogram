@@ -1,4 +1,4 @@
-import updateSubjectCount from './util/updateSubjectCount';
+import updateSubjectCount from './onDraw/updateSubjectCount';
 
 export default function onDraw() {
     let context = this;

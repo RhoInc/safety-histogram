@@ -1,5 +1,5 @@
 import { select, format } from 'd3';
-import drawNormalRanges from './util/drawNormalRanges';
+import drawNormalRanges from './onResize/drawNormalRanges';
 
 export default function onResize() {
     const chart = this,

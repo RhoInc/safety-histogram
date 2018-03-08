@@ -1,3 +1,4 @@
+import { extent } from 'd3';
 import updateXDomain from './onPreprocess/updateXDomain';
 
 export default function onPreprocess() {
@@ -9,7 +10,7 @@ export default function onPreprocess() {
     this.measure_data = this.super_raw_data.filter(d => d[this.config.measure_col] === measure);
 
     //Set x-domain based on currently selected measure.
-    //this.config.x.domain = d3.extent(this.measure_data, d => +d[chart.config.value_col]);
+    //this.config.x.domain = extent(this.measure_data, d => +d[chart.config.value_col]);
 
     //Check if the selected measure has changed.
     const prevMeasure = this.currentMeasure;
@@ -23,7 +24,7 @@ export default function onPreprocess() {
     //Set x-axis domain.
     if (changedMeasureFlag) {
         //reset axis to full range when measure changes
-        this.config.x.domain = d3.extent(this.measure_data, d => +d[config.value_col]);
+        this.config.x.domain = extent(this.measure_data, d => +d[config.value_col]);
         this.controls.wrap
             .selectAll('.x-axis')
             .property(
@@ -81,7 +82,7 @@ export default function onPreprocess() {
         });
 
     //disable the reset button if the full range is shown
-    const raw_range = d3.extent(this.measure_data, d => +d[config.value_col]).map(f => '' + f);
+    const raw_range = extent(this.measure_data, d => +d[config.value_col]).map(f => '' + f);
     const full_range_covered = +chart.x_dom[0] == +raw_range[0] && +chart.x_dom[1] == +raw_range[1];
     chart.controls.wrap
         .selectAll('.control-group')

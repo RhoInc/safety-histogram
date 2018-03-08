@@ -9,7 +9,7 @@ export const rendererSpecificSettings = {
     filters: null,
     details: null,
     start_value: null,
-    missingValues: ['', 'NA', 'N/A'],
+    missingValues: ['', 'NA', 'N/A']
 };
 
 export const webchartsSettings = {

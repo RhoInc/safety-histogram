@@ -26,7 +26,7 @@ export default function onLayout() {
             }),
         resetLabel = resetContainer
             .append('span')
-            .attr('class', 'control-label')
+            .attr('class', 'wc-control-label')
             .style('text-align', 'right')
             .text('X-axis:'),
         resetButton = resetContainer
@@ -64,7 +64,7 @@ export default function onLayout() {
             }),
         lowerLimitLabel = lowerLimitContainer
             .append('span')
-            .attr('class', 'control-label')
+            .attr('class', 'wc-control-label')
             .style('text-align', 'right')
             .text('Lower Limit'),
         lowerLimitControl = lowerLimitContainer.append('input').on('change', updateLimits);
@@ -80,7 +80,7 @@ export default function onLayout() {
             }),
         upperLimitLabel = upperLimitContainer
             .append('span')
-            .attr('class', 'control-label')
+            .attr('class', 'wc-control-label')
             .style('text-align', 'right')
             .text('Upper Limit'),
         upperLimitControl = upperLimitContainer.append('input').on('change', updateLimits);

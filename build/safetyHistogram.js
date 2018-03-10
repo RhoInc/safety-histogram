@@ -151,19 +151,20 @@
 
     var webchartsSettings = {
         x: {
+            type: 'linear',
             column: null, // set in syncSettings()
             label: null, // set in syncSettings()
-            type: 'linear',
-            bin: 25,
-            behavior: 'flex',
-            format: '.1f'
+            domain: null, // set in preprocess callback
+            format: null, // set in preprocess callback
+            bin: 25
         },
         y: {
-            label: '# of Observations',
             type: 'linear',
-            behavior: 'flex',
-            column: '',
-            domain: [0, null]
+            column: null,
+            label: '# of Observations',
+            domain: [0, null],
+            format: '1d',
+            behavior: 'flex'
         },
         marks: [
             {
@@ -304,7 +305,11 @@
                     (nRemoved > 1 ? 's have' : ' has') +
                     ' been removed.'
             );
+
+        //Preserve cleaned data.
         this.raw_data = clean;
+        this.super_raw_data = this.raw_data;
+        this.initial_data = this.raw_data;
 
         //Attach array of continuous measures to chart object.
         this.measures = d3
@@ -366,8 +371,6 @@
     }
 
     function onInit() {
-        this.super_raw_data = this.raw_data;
-
         // 1. Count total participants prior to data cleaning.
         countParticipants.call(this);
 
@@ -532,40 +535,93 @@
             .text('Click a bar for details.');
     }
 
-    function onPreprocess() {
+    function getCurrentMeasure() {
         var _this = this;
 
-        var chart = this,
-            config = this.config;
-
-        //Filter raw data on currently selected measure.
-        var measure = this.filters.filter(function(filter) {
-            return filter.col === _this.config.measure_col;
-        })[0].val;
-        this.measure_data = this.super_raw_data.filter(function(d) {
-            return d[_this.config.measure_col] === measure;
-        });
-
-        //Set x-domain based on currently selected measure.
-        //this.config.x.domain = extent(this.measure_data, d => +d[chart.config.value_col]);
-
-        //Check if the selected measure has changed.
-        var prevMeasure = this.currentMeasure;
+        this.previousMeasure = this.currentMeasure;
         this.currentMeasure = this.controls.wrap
             .selectAll('.control-group')
             .filter(function(d) {
-                return d.value_col && d.value_col === config.measure_col;
+                return d.value_col && d.value_col === _this.config.measure_col;
             })
             .select('option:checked')
             .text();
-        var changedMeasureFlag = this.currentMeasure !== prevMeasure;
+    }
 
-        //Set x-axis domain.
-        if (changedMeasureFlag) {
-            //reset axis to full range when measure changes
-            this.config.x.domain = d3.extent(this.measure_data, function(d) {
-                return +d[config.value_col];
+    function defineMeasureData() {
+        var _this = this;
+
+        this.measure_data = this.initial_data.filter(function(d) {
+            return d[_this.config.measure_col] === _this.currentMeasure;
+        });
+        this.raw_data = this.measure_data;
+    }
+
+    function setXdomain() {
+        var _this = this;
+
+        // new measure
+        if (this.currentMeasure !== this.previousMeasure)
+            this.config.x.domain = d3.extent(
+                this.measure_data.map(function(d) {
+                    return +d[_this.config.x.column];
+                })
+            );
+        else if (this.config.x.domain[0] > this.config.x.domain[1])
+            // invalid domain
+            this.config.x.domain.reverse();
+        else if (this.config.x.domain[0] === this.config.x.domain[1])
+            // domain with zero range
+            this.config.x.domain = this.config.x.domain.map(function(d, i) {
+                return i === 0 ? d - d * 0.01 : d + d * 0.01;
             });
+    }
+
+    function setXaxisLabel() {
+        this.config.x.label =
+            this.currentMeasure +
+            (this.config.unit_col && this.measure_data[0][this.config.unit_col]
+                ? ' (' + this.measure_data[0][this.config.unit_col] + ')'
+                : '');
+    }
+
+    function setXprecision() {
+        var _this = this;
+
+        this.config.x.range = this.config.x.domain[1] - this.config.x.domain[0];
+        this.config.x.format =
+            this.config.x.range < 0.005
+                ? '.4f'
+                : this.config.x.range < 0.05
+                  ? '.3f'
+                  : this.config.x.range < 0.5 ? '.2f' : this.config.x.range < 5 ? '.1f' : '1f';
+        this.config.x.d3_format = d3.format(this.config.x.format);
+        this.config.x.formatted_domain = this.config.x.domain.map(function(d) {
+            return _this.config.x.d3_format(d);
+        });
+    }
+
+    function updateXaxisLimitControls() {
+        //Update x-axis limit controls.
+        this.controls.wrap
+            .selectAll('.control-group')
+            .filter(function(f) {
+                return f.option === 'x.domain[0]';
+            })
+            .select('input')
+            .property('value', this.config.x.formatted_domain[0]);
+        this.controls.wrap
+            .selectAll('.control-group')
+            .filter(function(f) {
+                return f.option === 'x.domain[1]';
+            })
+            .select('input')
+            .property('value', this.config.x.formatted_domain[1]);
+    }
+
+    function updateXaxisResetButton() {
+        //Update tooltip of x-axis domain reset button.
+        if (this.currentMeasure !== this.previousMeasure)
             this.controls.wrap
                 .selectAll('.x-axis')
                 .property(
@@ -576,83 +632,122 @@
                         this.config.x.domain[1] +
                         ']'
                 );
-
-            //Set x-axis domain controls.
-            this.controls.wrap
-                .selectAll('.control-group')
-                .filter(function(f) {
-                    return f.option === 'x.domain[0]';
-                })
-                .select('input')
-                .property('value', this.config.x.domain[0]);
-            this.controls.wrap
-                .selectAll('.control-group')
-                .filter(function(f) {
-                    return f.option === 'x.domain[1]';
-                })
-                .select('input')
-                .property('value', this.config.x.domain[1]);
-        }
-
-        //Determine whether currently selected measure contains normal range data.
-        if (this.config.normal_range) {
-            var hasNormalRange =
-                this.measure_data.filter(function(d) {
-                    return (
-                        (+d[chart.config.normal_col_low] || !!d[chart.config.normal_col_low]) &&
-                        (+d[chart.config.normal_col_high] || !!d[chart.config.normal_col_high])
-                    );
-                }).length > 0;
-            var normalRangeInput = this.controls.wrap
-                .selectAll('.control-group')
-                .filter(function(d) {
-                    return d.label === 'Normal Range';
-                })
-                .select('input');
-
-            if (!hasNormalRange)
-                normalRangeInput
-                    .attr('title', 'This measure does not contain normal range data.')
-                    .style('cursor', 'not-allowed')
-                    .property('checked', false)
-                    .property('disabled', true);
-            else
-                normalRangeInput
-                    .attr('title', '')
-                    .style('cursor', 'pointer')
-                    .property('checked', this.config.displayNormalRange)
-                    .property('disabled', false);
-        }
-
-        //only draw the chart using data from the currently selected x-axis range
-        updateXDomain(chart);
-        this.raw_data = this.super_raw_data
-            .filter(function(d) {
-                return d[chart.config.measure_col] === chart.currentMeasure;
-            })
-            .filter(function(f) {
-                var v = chart.config.value_col;
-                return +f[v] >= +chart.x_dom[0] && +f[v] <= +chart.x_dom[1];
-            });
-
-        //disable the reset button if the full range is shown
-        var raw_range = d3
-            .extent(this.measure_data, function(d) {
-                return +d[config.value_col];
-            })
-            .map(function(f) {
-                return '' + f;
-            });
-        var full_range_covered =
-            +chart.x_dom[0] == +raw_range[0] && +chart.x_dom[1] == +raw_range[1];
-        chart.controls.wrap
-            .selectAll('.control-group')
-            .filter(function(f) {
-                return f.option === 'x.domain';
-            })
-            .select('button')
-            .property('disabled', full_range_covered);
     }
+
+    function onPreprocess() {
+        // 1. Capture currently selected measure.
+        getCurrentMeasure.call(this);
+
+        // 2. Filter data on currently selected measure.
+        defineMeasureData.call(this);
+
+        // 3a Set x-domain given currently selected measure.
+        setXdomain.call(this);
+
+        // 3b Set x-axis label to current measure.
+        setXaxisLabel.call(this);
+
+        // 4a Define precision of measure.
+        setXprecision.call(this);
+
+        // 4b Update x-axis reset button when measure changes.
+        updateXaxisResetButton.call(this);
+
+        // 4c Update x-axis limit controls to match y-axis domain.
+        updateXaxisLimitControls.call(this);
+    }
+    //import { extent } from 'd3';
+    //import updateXDomain from './onPreprocess/updateXDomain';
+    //
+    //export default function onPreprocess() {
+    //    const chart = this,
+    //        config = this.config;
+    //
+    //    //Filter raw data on currently selected measure.
+    //    const measure = this.filters.filter(filter => filter.col === this.config.measure_col)[0].val;
+    //    this.measure_data = this.super_raw_data.filter(d => d[this.config.measure_col] === measure);
+    //
+    //    //Set x-domain based on currently selected measure.
+    //    //this.config.x.domain = extent(this.measure_data, d => +d[chart.config.value_col]);
+    //
+    //    //Check if the selected measure has changed.
+    //    const prevMeasure = this.currentMeasure;
+    //    this.currentMeasure = this.controls.wrap
+    //        .selectAll('.control-group')
+    //        .filter(d => d.value_col && d.value_col === config.measure_col)
+    //        .select('option:checked')
+    //        .text();
+    //    const changedMeasureFlag = this.currentMeasure !== prevMeasure;
+    //
+    //    //Set x-axis domain.
+    //    if (changedMeasureFlag) {
+    //        //reset axis to full range when measure changes
+    //        this.config.x.domain = extent(this.measure_data, d => +d[config.value_col]);
+    //        this.controls.wrap
+    //            .selectAll('.x-axis')
+    //            .property(
+    //                'title',
+    //                `Initial Limits: [${this.config.x.domain[0]} - ${this.config.x.domain[1]}]`
+    //            );
+    //
+    //        //Set x-axis domain controls.
+    //        this.controls.wrap
+    //            .selectAll('.control-group')
+    //            .filter(f => f.option === 'x.domain[0]')
+    //            .select('input')
+    //            .property('value', this.config.x.domain[0]);
+    //        this.controls.wrap
+    //            .selectAll('.control-group')
+    //            .filter(f => f.option === 'x.domain[1]')
+    //            .select('input')
+    //            .property('value', this.config.x.domain[1]);
+    //    }
+    //
+    //    //Determine whether currently selected measure contains normal range data.
+    //    if (this.config.normal_range) {
+    //        const hasNormalRange =
+    //            this.measure_data.filter(
+    //                d =>
+    //                    (+d[chart.config.normal_col_low] || !!d[chart.config.normal_col_low]) &&
+    //                    (+d[chart.config.normal_col_high] || !!d[chart.config.normal_col_high])
+    //            ).length > 0;
+    //        const normalRangeInput = this.controls.wrap
+    //            .selectAll('.control-group')
+    //            .filter(d => d.label === 'Normal Range')
+    //            .select('input');
+    //
+    //        if (!hasNormalRange)
+    //            normalRangeInput
+    //                .attr('title', 'This measure does not contain normal range data.')
+    //                .style('cursor', 'not-allowed')
+    //                .property('checked', false)
+    //                .property('disabled', true);
+    //        else
+    //            normalRangeInput
+    //                .attr('title', '')
+    //                .style('cursor', 'pointer')
+    //                .property('checked', this.config.displayNormalRange)
+    //                .property('disabled', false);
+    //    }
+    //
+    //    //only draw the chart using data from the currently selected x-axis range
+    //    updateXDomain(chart);
+    //    this.raw_data = this.super_raw_data
+    //        .filter(d => d[chart.config.measure_col] === chart.currentMeasure)
+    //        .filter(function(f) {
+    //            var v = chart.config.value_col;
+    //            return +f[v] >= +chart.x_dom[0] && +f[v] <= +chart.x_dom[1];
+    //        });
+    //
+    //    //disable the reset button if the full range is shown
+    //    const raw_range = extent(this.measure_data, d => +d[config.value_col]).map(f => '' + f);
+    //    const full_range_covered = +chart.x_dom[0] == +raw_range[0] && +chart.x_dom[1] == +raw_range[1];
+    //    chart.controls.wrap
+    //        .selectAll('.control-group')
+    //        .filter(f => f.option === 'x.domain')
+    //        .select('button')
+    //        .property('disabled', full_range_covered);
+    //}
 
     function updateXLabel() {
         if (this.filtered_data.length)

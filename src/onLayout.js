@@ -1,5 +1,5 @@
 import { extent } from 'd3';
-import updateXDomain from './onPreprocess/updateXDomain';
+import updateXDomain from './onLayout/updateXDomain';
 
 export default function onLayout() {
     let chart = this,

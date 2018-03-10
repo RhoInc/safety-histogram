@@ -19,19 +19,20 @@ export const rendererSpecificSettings = {
 
 export const webchartsSettings = {
     x: {
+        type: 'linear',
         column: null, // set in syncSettings()
         label: null, // set in syncSettings()
-        type: 'linear',
-        bin: 25,
-        behavior: 'flex',
-        format: '.1f'
+        domain: null, // set in preprocess callback
+        format: null, // set in preprocess callback
+        bin: 25
     },
     y: {
-        label: '# of Observations',
         type: 'linear',
-        behavior: 'flex',
-        column: '',
-        domain: [0, null]
+        column: null,
+        label: '# of Observations',
+        domain: [0, null],
+        format: '1d',
+        behavior: 'flex'
     },
     marks: [
         {

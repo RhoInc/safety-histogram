@@ -15,7 +15,11 @@ export default function cleanData() {
                 ? 's have'
                 : ' has'} been removed.`
         );
+
+    //Preserve cleaned data.
     this.raw_data = clean;
+    this.super_raw_data = this.raw_data;
+    this.initial_data = this.raw_data;
 
     //Attach array of continuous measures to chart object.
     this.measures = set(this.raw_data.map(d => d[this.config.measure_col]))

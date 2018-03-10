@@ -1,15 +1,20 @@
 export const rendererSpecificSettings = {
-    value_col: 'STRESN',
+    //required variables
+    id_col: 'USUBJID',
     measure_col: 'TEST',
     unit_col: 'STRESU',
-    normal_range: true,
+    value_col: 'STRESN',
     normal_col_low: 'STNRLO',
     normal_col_high: 'STNRHI',
-    id_col: 'USUBJID',
+
+    //optional variables
     filters: null,
     details: null,
+
+    //miscellaneous settings
+    missingValues: ['', 'NA', 'N/A'],
     start_value: null,
-    missingValues: ['', 'NA', 'N/A']
+    normal_range: true
 };
 
 export const webchartsSettings = {

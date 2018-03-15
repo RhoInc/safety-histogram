@@ -22,7 +22,7 @@ export const webchartsSettings = {
         type: 'linear',
         column: null, // set in syncSettings()
         label: null, // set in syncSettings()
-        domain: null, // set in preprocess callback
+        domain: [null,null], // set in preprocess callback
         format: null, // set in preprocess callback
         bin: 25
     },
@@ -116,18 +116,33 @@ export function syncControlInputs(settings) {
             type: 'checkbox',
             label: 'Normal Range',
             option: 'displayNormalRange'
-        }
+        },
+        {
+            type: 'number',
+            label: 'Lower Limit',
+            option: 'x.domain[0]',
+            require: true
+        },
+        {
+            type: 'number',
+            label: 'Upper Limit',
+            option: 'x.domain[1]',
+            require: true
+        },
     ];
 
-    if (settings.filters && settings.filters.length > 0) {
-        let otherFilters = settings.filters.map(filter => {
-            filter = {
-                type: 'subsetter',
-                value_col: filter.value_col ? filter.value_col : filter,
-                label: filter.label ? filter.label : filter.value_col ? filter.value_col : filter
-            };
-            return filter;
-        });
+    if (Array.isArray(settings.filters) && settings.filters.length > 0) {
+        const otherFilters = settings.filters
+            .map(filter => {
+                const filterObject = {
+                    type: 'subsetter',
+                    value_col: filter.value_col || filter,
+                    label: filter.label || filter.value_col || filter
+                };
+                return filterObject;
+            });
+
         return defaultControls.concat(otherFilters);
-    } else return defaultControls;
+    } else
+        return defaultControls;
 }

@@ -2,7 +2,7 @@ import { nest, extent, format } from 'd3';
 
 export default function drawNormalRanges(chart) {
     //Clear normal ranges.
-    let canvas = chart.wrap.select('.bar-supergroup');
+    let canvas = chart.svg;
     canvas.selectAll('.normalRange').remove();
 
     //Capture distinct normal ranges in filtered data.

@@ -144,7 +144,6 @@
         details: null,
 
         //miscellaneous settings
-        missingValues: ['', 'NA', 'N/A'],
         start_value: null,
         normal_range: true,
         displayNormalRange: false

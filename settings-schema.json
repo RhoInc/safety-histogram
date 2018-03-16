@@ -78,22 +78,6 @@
             "title": "Listing Variables",
             "type": "array"
         },
-        "missingValues": {
-            "defaultObject": [
-                "",
-                "NA",
-                "N/A"
-            ],
-            "description": "a list of values that are interpreted as 'missing'",
-            "items": {
-                "default": "",
-                "description": "a string that represents a missing value",
-                "title": "Missing Value",
-                "type": "string"
-            },
-            "title": "Missing Values",
-            "type": "array"
-        },
         "start_value": {
             "description": "the name of the initially displayed medical sign; defaults to the first measure in the data",
             "title": "Initial Medical Sign",

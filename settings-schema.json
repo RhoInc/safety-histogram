@@ -101,6 +101,12 @@
         },
         "normal_range": {
             "default": true,
+            "description": "a boolean that dictates whether the normal range control will be generated",
+            "title": "Generate Normal Range Control?",
+            "type": "boolean"
+        },
+        "displayNormalRange": {
+            "default": false,
             "description": "a boolean that dictates whether the normal range will be displayed initially",
             "title": "Display Normal Range?",
             "type": "boolean"

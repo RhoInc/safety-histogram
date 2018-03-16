@@ -445,29 +445,41 @@
             });
     }
 
-    function onLayout() {
-        //Add button to that reset x-domain.
-        addXdomainResetButton.call(this);
-
-        //Add x-axis class to x-axis limit controls.
+    function classXaxisLimitControls() {
         this.controls.wrap
             .selectAll('.control-group')
             .filter(function(d) {
                 return ['Lower Limit', 'Upper Limit'].indexOf(d.label) > -1;
             })
             .classed('x-axis', true);
+    }
 
-        //Add population count container.
+    function addPopulationCountContainer() {
         this.controls.wrap
             .append('div')
             .attr('id', 'populationCount')
             .style('font-style', 'italic');
+    }
 
-        //Add footnote.
+    function addFootnoteContainer() {
         this.wrap
             .insert('p', '.wc-chart')
             .attr('class', 'annote')
             .text('Click a bar for details.');
+    }
+
+    function onLayout() {
+        //Add button that resets x-domain.
+        addXdomainResetButton.call(this);
+
+        //Add x-axis class to x-axis limit controls.
+        classXaxisLimitControls.call(this);
+
+        //Add container for population count.
+        addPopulationCountContainer.call(this);
+
+        //Add container for footnote.
+        addFootnoteContainer.call(this);
     }
 
     function getCurrentMeasure() {
@@ -638,20 +650,12 @@
         );
     }
 
-    function onDraw() {
-        //Annotate population count.
-        updateParticipantCount(this, '#populationCount');
-
-        //Update x-domain when all values are equal.
-        if (this.config.x.type === 'linear' && this.x_dom[0] === this.x_dom[1])
-            this.x_dom = [
-                this.x_dom[0] - this.x_dom[0] * 0.05,
-                this.x_dom[1] + this.x_dom[1] * 0.05
-            ];
-
+    function resetRenderer() {
         //Reset listing.
         this.listing.draw([]);
         this.listing.wrap.selectAll('*').style('display', 'none');
+
+        //Reset footnote.
         this.wrap
             .select('.annote')
             .classed('tableTitle', false)
@@ -660,6 +664,18 @@
         //Reset bar highlighting.
         delete this.highlightedBin;
         this.svg.selectAll('.bar').attr('opacity', 1);
+    }
+
+    function onDraw() {
+        //Annotate population count.  This function is called on draw() so that it can access the
+        //filtered data, i.e. the data with the current filters applied.  However the filtered data is
+        //mark-specific, which could cause issues in other scenarios with mark-specific filters via the
+        //marks.[].values setting.  chart.filtered_data is set to the last mark data defined rather
+        //than the full data with filters applied, irrespective of the mark-specific filters.
+        updateParticipantCount(this, '#populationCount');
+
+        //Reset chart and listing.  Doesn't really need to be called on draw() but whatever.
+        resetRenderer.call(this);
     }
 
     function handleSingleObservation() {
@@ -870,6 +886,15 @@
             });
     }
 
+    function hideDuplicateXaxisTickLabels() {
+        this.svg.selectAll('.x.axis .tick').each(function(d, i) {
+            var tick = d3$1.select(this);
+            var value = +d;
+            var text = +tick.select('text').text();
+            tick.style('display', value === text ? 'block' : 'none');
+        });
+    }
+
     function onResize() {
         //Draw custom bin for single observation subsets.
         handleSingleObservation.call(this);
@@ -885,44 +910,57 @@
 
         //Keep highlighted bin highlighted on resize.
         maintainBinHighlighting.call(this);
+
+        //Hide duplicate x-axis tick labels (d3 sometimes draws more ticks than the precision allows).
+        hideDuplicateXaxisTickLabels.call(this);
     }
+
+    function onDestroy() {}
 
     //polyfills
     //settings
     //webcharts
     function safetyHistogram(element, settings) {
-        var mergedSettings = Object.assign({}, defaultSettings, settings),
-            syncedSettings = syncSettings(mergedSettings),
-            syncedControlInputs = syncControlInputs(syncedSettings),
-            controls = webcharts.createControls(element, {
-                location: 'top',
-                inputs: syncedControlInputs
-            }),
-            chart = webcharts.createChart(element, syncedSettings, controls),
-            listingSettings = {
-                cols: syncedSettings.details.map(function(detail) {
-                    return detail.value_col;
-                }),
-                headers: syncedSettings.details.map(function(detail) {
-                    return detail.label;
-                }),
-                searchable: syncedSettings.searchable,
-                sortable: syncedSettings.sortable,
-                pagination: syncedSettings.pagination,
-                exportable: syncedSettings.exportable
-            };
+        //Define chart.
+        var mergedSettings = Object.assign({}, defaultSettings, settings);
+        var syncedSettings = syncSettings(mergedSettings);
+        var syncedControlInputs = syncControlInputs(syncedSettings);
+        var controls = webcharts.createControls(element, {
+            location: 'top',
+            inputs: syncedControlInputs
+        });
+        var chart = webcharts.createChart(element, syncedSettings, controls);
 
-        chart.listing = webcharts.createTable(element, listingSettings);
-        chart.listing.init([]);
-        chart.listing.wrap.selectAll('*').style('display', 'none');
-
-        //Define callbacks.
+        //Define chart callbacks.
         chart.on('init', onInit);
         chart.on('layout', onLayout);
         chart.on('preprocess', onPreprocess);
         chart.on('datatransform', onDatatransform);
         chart.on('draw', onDraw);
         chart.on('resize', onResize);
+        chart.on('destroy', onDestroy);
+
+        //Define listing
+        var listingSettings = {
+            cols: syncedSettings.details.map(function(detail) {
+                return detail.value_col;
+            }),
+            headers: syncedSettings.details.map(function(detail) {
+                return detail.label;
+            }),
+            searchable: syncedSettings.searchable,
+            sortable: syncedSettings.sortable,
+            pagination: syncedSettings.pagination,
+            exportable: syncedSettings.exportable
+        };
+        var listing = webcharts.createTable(element, listingSettings);
+
+        //Attach listing to chart.
+        chart.listing = listing;
+
+        //Initialize listing and hide initially.
+        chart.listing.init([]);
+        chart.listing.wrap.selectAll('*').style('display', 'none');
 
         return chart;
     }

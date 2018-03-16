@@ -7,10 +7,7 @@ export default function setXdomain() {
         this.config.x.domain.reverse();
     else if (this.config.x.domain[0] === this.config.x.domain[1])
         // domain with zero range
-        this.config.x.domain = this.config.x.domain
-            .map((d,i) => (
-                i === 0
-                    ? d - d * 0.01
-                    : d + d * 0.01
-            ));
+        this.config.x.domain = this.config.x.domain.map(
+            (d, i) => (i === 0 ? d - d * 0.01 : d + d * 0.01)
+        );
 }

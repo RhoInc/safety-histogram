@@ -1,5 +1,5 @@
 import { select, format } from 'd3';
-import drawNormalRanges from './util/drawNormalRanges';
+import drawNormalRanges from './onResize/drawNormalRanges';
 
 export default function onResize() {
     const chart = this,
@@ -80,8 +80,7 @@ export default function onResize() {
         else chart.wrap.selectAll('.normalRange').remove();
 
         normalRangeControl.on('change', function() {
-            chart.config.displayNormalRange = d3
-                .select(this)
+            chart.config.displayNormalRange = select(this)
                 .select('input')
                 .property('checked');
 

@@ -1,7 +1,4 @@
-export default function onDataTransform() {
-    let context = this;
-
-    //Customize the x-axis label
+export default function updateXLabel() {
     if (this.filtered_data.length)
         this.config.x.label =
             `${this.filtered_data[0][this.config.measure_col]}` +

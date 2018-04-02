@@ -1,15 +1,16 @@
+import { nest, extent, format } from 'd3';
+
 export default function drawNormalRanges(chart) {
     //Clear normal ranges.
     let canvas = chart.wrap.select('.bar-supergroup');
     canvas.selectAll('.normalRange').remove();
 
     //Capture distinct normal ranges in filtered data.
-    var normalRanges = d3
-        .nest()
+    var normalRanges = nest()
         .key(d => `${d[chart.config.normal_col_low]},${d[chart.config.normal_col_high]}`) // set key to comma-delimited normal range
         .rollup(d => d.length)
         .entries(chart.filtered_data);
-    var currentRange = d3.extent(chart.filtered_data, d => +d[chart.config.value_col]);
+    var currentRange = extent(chart.filtered_data, d => +d[chart.config.value_col]);
     //Sort normal ranges so larger normal ranges plot beneath smaller normal ranges.
     normalRanges.sort(function(a, b) {
         var a_lo = a.key.split(',')[0];
@@ -57,6 +58,6 @@ export default function drawNormalRanges(chart) {
             d =>
                 `Normal range: ${d.key.split(',')[0]}-${d.key.split(',')[1]}` +
                 (chart.config.unit_col ? `${chart.filtered_data[0][chart.config.unit_col]}` : ``) +
-                ` (${d3.format('%')(d.values / chart.filtered_data.length)} of records)`
+                ` (${format('%')(d.values / chart.filtered_data.length)} of records)`
         );
 }

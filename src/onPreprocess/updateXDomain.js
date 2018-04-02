@@ -1,4 +1,4 @@
-export function updateXDomain(chart) {
+export default function updateXDomain(chart) {
     var xMinSelect = chart.controls.wrap
         .selectAll('.control-group')
         .filter(f => f.option === 'x.domain[0]')

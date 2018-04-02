@@ -1,18 +1,23 @@
-const defaultSettings = {
-    //Default template settings
-    value_col: 'STRESN',
+export const rendererSpecificSettings = {
+    //required variables
+    id_col: 'USUBJID',
     measure_col: 'TEST',
     unit_col: 'STRESU',
-    normal_range: true,
+    value_col: 'STRESN',
     normal_col_low: 'STNRLO',
     normal_col_high: 'STNRHI',
-    id_col: 'USUBJID',
+
+    //optional variables
     filters: null,
     details: null,
-    start_value: null,
-    missingValues: ['', 'NA', 'N/A'],
 
-    //Standard webcharts settings
+    //miscellaneous settings
+    missingValues: ['', 'NA', 'N/A'],
+    start_value: null,
+    normal_range: true
+};
+
+export const webchartsSettings = {
     x: {
         column: null, // set in syncSettings()
         label: null, // set in syncSettings()
@@ -40,6 +45,8 @@ const defaultSettings = {
     aspect: 3,
     displayNormalRange: false
 };
+
+export default Object.assign({}, rendererSpecificSettings, webchartsSettings);
 
 //Replicate settings in multiple places in the settings object
 export function syncSettings(settings) {
@@ -123,5 +130,3 @@ export function syncControlInputs(settings) {
         return defaultControls.concat(otherFilters);
     } else return defaultControls;
 }
-
-export default defaultSettings;

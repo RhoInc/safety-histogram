@@ -3,50 +3,153 @@
         ? (module.exports = factory(require('webcharts'), require('d3')))
         : typeof define === 'function' && define.amd
           ? define(['webcharts', 'd3'], factory)
-          : (global['safety-histogram'] = factory(global.webCharts, global.d3));
+          : (global.safetyHistogram = factory(global.webCharts, global.d3));
 })(this, function(webcharts, d3$1) {
     'use strict';
 
     if (typeof Object.assign != 'function') {
-        (function() {
-            Object.assign = function(target) {
+        // Must be writable: true, enumerable: false, configurable: true
+        Object.defineProperty(Object, 'assign', {
+            value: function assign(target, varArgs) {
+                // .length of function is 2
                 'use strict';
 
-                if (target === undefined || target === null) {
+                if (target == null) {
+                    // TypeError if undefined or null
                     throw new TypeError('Cannot convert undefined or null to object');
                 }
 
-                var output = Object(target);
+                var to = Object(target);
+
                 for (var index = 1; index < arguments.length; index++) {
-                    var source = arguments[index];
-                    if (source !== undefined && source !== null) {
-                        for (var nextKey in source) {
-                            if (source.hasOwnProperty(nextKey)) {
-                                output[nextKey] = source[nextKey];
+                    var nextSource = arguments[index];
+
+                    if (nextSource != null) {
+                        // Skip over if undefined or null
+                        for (var nextKey in nextSource) {
+                            // Avoid bugs when hasOwnProperty is shadowed
+                            if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+                                to[nextKey] = nextSource[nextKey];
                             }
                         }
                     }
                 }
-                return output;
-            };
-        })();
+
+                return to;
+            },
+            writable: true,
+            configurable: true
+        });
     }
 
-    var defaultSettings = {
-        //Default template settings
-        value_col: 'STRESN',
+    if (!Array.prototype.find) {
+        Object.defineProperty(Array.prototype, 'find', {
+            value: function value(predicate) {
+                // 1. Let O be ? ToObject(this value).
+                if (this == null) {
+                    throw new TypeError('"this" is null or not defined');
+                }
+
+                var o = Object(this);
+
+                // 2. Let len be ? ToLength(? Get(O, 'length')).
+                var len = o.length >>> 0;
+
+                // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+                if (typeof predicate !== 'function') {
+                    throw new TypeError('predicate must be a function');
+                }
+
+                // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
+                var thisArg = arguments[1];
+
+                // 5. Let k be 0.
+                var k = 0;
+
+                // 6. Repeat, while k < len
+                while (k < len) {
+                    // a. Let Pk be ! ToString(k).
+                    // b. Let kValue be ? Get(O, Pk).
+                    // c. Let testResult be ToBoolean(? Call(predicate, T, � kValue, k, O �)).
+                    // d. If testResult is true, return kValue.
+                    var kValue = o[k];
+                    if (predicate.call(thisArg, kValue, k, o)) {
+                        return kValue;
+                    }
+                    // e. Increase k by 1.
+                    k++;
+                }
+
+                // 7. Return undefined.
+                return undefined;
+            }
+        });
+    }
+
+    if (!Array.prototype.findIndex) {
+        Object.defineProperty(Array.prototype, 'findIndex', {
+            value: function value(predicate) {
+                // 1. Let O be ? ToObject(this value).
+                if (this == null) {
+                    throw new TypeError('"this" is null or not defined');
+                }
+
+                var o = Object(this);
+
+                // 2. Let len be ? ToLength(? Get(O, "length")).
+                var len = o.length >>> 0;
+
+                // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+                if (typeof predicate !== 'function') {
+                    throw new TypeError('predicate must be a function');
+                }
+
+                // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
+                var thisArg = arguments[1];
+
+                // 5. Let k be 0.
+                var k = 0;
+
+                // 6. Repeat, while k < len
+                while (k < len) {
+                    // a. Let Pk be ! ToString(k).
+                    // b. Let kValue be ? Get(O, Pk).
+                    // c. Let testResult be ToBoolean(? Call(predicate, T, � kValue, k, O �)).
+                    // d. If testResult is true, return k.
+                    var kValue = o[k];
+                    if (predicate.call(thisArg, kValue, k, o)) {
+                        return k;
+                    }
+                    // e. Increase k by 1.
+                    k++;
+                }
+
+                // 7. Return -1.
+                return -1;
+            }
+        });
+    }
+
+    var rendererSpecificSettings = {
+        //required variables
+        id_col: 'USUBJID',
         measure_col: 'TEST',
         unit_col: 'STRESU',
-        normal_range: true,
+        value_col: 'STRESN',
         normal_col_low: 'STNRLO',
         normal_col_high: 'STNRHI',
-        id_col: 'USUBJID',
+
+        //optional variables
         filters: null,
         details: null,
-        start_value: null,
-        missingValues: ['', 'NA', 'N/A'],
 
-        //Standard webcharts settings
+        //miscellaneous settings
+        missingValues: ['', 'NA', 'N/A'],
+        start_value: null,
+        normal_range: true
+    };
+
+    var webchartsSettings = {
         x: {
             column: null, // set in syncSettings()
             label: null, // set in syncSettings()
@@ -74,6 +177,8 @@
         aspect: 3,
         displayNormalRange: false
     };
+
+    var defaultSettings = Object.assign({}, rendererSpecificSettings, webchartsSettings);
 
     //Replicate settings in multiple places in the settings object
     function syncSettings(settings) {
@@ -174,7 +279,7 @@
 
         this.super_raw_data = this.raw_data;
         //Remove filters whose [ value_col ] does not appear in the data.
-        var columns = d3.keys(this.raw_data[0]);
+        var columns = d3$1.keys(this.raw_data[0]);
         this.controls.config.inputs = this.controls.config.inputs.filter(function(d) {
             return columns.indexOf(d.value_col) > -1 || !!d.option;
         });
@@ -242,7 +347,7 @@
             if (d.type != 'subsetter') {
                 return true;
             } else {
-                var levels = d3
+                var levels = d3$1
                     .set(
                         chart.raw_data.map(function(f) {
                             return f[d.value_col];
@@ -334,7 +439,7 @@
                     var measure_data = chart.super_raw_data.filter(function(d) {
                         return d[chart.config.measure_col] === chart.currentMeasure;
                     });
-                    chart.config.x.domain = d3.extent(measure_data, function(d) {
+                    chart.config.x.domain = d3$1.extent(measure_data, function(d) {
                         return +d[config.value_col];
                     }); //reset axis to full range
 
@@ -425,7 +530,7 @@
         });
 
         //Set x-domain based on currently selected measure.
-        //this.config.x.domain = d3.extent(this.measure_data, d => +d[chart.config.value_col]);
+        //this.config.x.domain = extent(this.measure_data, d => +d[chart.config.value_col]);
 
         //Check if the selected measure has changed.
         var prevMeasure = this.currentMeasure;
@@ -441,7 +546,7 @@
         //Set x-axis domain.
         if (changedMeasureFlag) {
             //reset axis to full range when measure changes
-            this.config.x.domain = d3.extent(this.measure_data, function(d) {
+            this.config.x.domain = d3$1.extent(this.measure_data, function(d) {
                 return +d[config.value_col];
             });
             this.controls.wrap
@@ -514,7 +619,7 @@
             });
 
         //disable the reset button if the full range is shown
-        var raw_range = d3
+        var raw_range = d3$1
             .extent(this.measure_data, function(d) {
                 return +d[config.value_col];
             })
@@ -532,7 +637,7 @@
             .property('disabled', full_range_covered);
     }
 
-    function onDataTransform() {
+    function updateXLabel() {
         if (this.filtered_data.length)
             this.config.x.label =
                 '' +
@@ -542,6 +647,10 @@
                     : '');
     }
 
+    function onDatatransform() {
+        updateXLabel.call(this);
+    }
+
     // Takes a webcharts object creates a text annotation giving the
     // number and percentage of observations shown in the current view
     // inputs:
@@ -549,20 +658,20 @@
     // id_col - a column name in the raw data set (chart.raw_data) representing the observation of interest
     // id_unit - a text string to label the units in the annotation (default = "participants")
     // selector - css selector for the annotation
-    function updateSubjectCount(chart, selector, id_unit) {
+    function updateParticipantCount(chart, selector, id_unit) {
         //count the number of unique ids in the current chart and calculate the percentage
-        var currentObs = d3
+        var currentObs = d3$1
             .set(
                 chart.filtered_data.map(function(d) {
                     return d[chart.config.id_col];
                 })
             )
             .values().length;
-        var percentage = d3.format('0.1%')(currentObs / chart.populationCount);
+        var percentage = d3$1.format('0.1%')(currentObs / chart.populationCount);
 
         //clear the annotation
-        var annotation = d3.select(selector);
-        d3
+        var annotation = d3$1.select(selector);
+        d3$1
             .select(selector)
             .selectAll('*')
             .remove();
@@ -582,7 +691,8 @@
     }
 
     function onDraw() {
-        updateSubjectCount(this, '#populationCount');
+        //Annotate population count.
+        updateParticipantCount(this, '#populationCount');
 
         //Update x-domain when all values are equal.
         if (this.config.x.type === 'linear' && this.x_dom[0] === this.x_dom[1])
@@ -610,7 +720,7 @@
         canvas.selectAll('.normalRange').remove();
 
         //Capture distinct normal ranges in filtered data.
-        var normalRanges = d3
+        var normalRanges = d3$1
             .nest()
             .key(function(d) {
                 return d[chart.config.normal_col_low] + ',' + d[chart.config.normal_col_high];
@@ -619,7 +729,7 @@
                 return d.length;
             })
             .entries(chart.filtered_data);
-        var currentRange = d3.extent(chart.filtered_data, function(d) {
+        var currentRange = d3$1.extent(chart.filtered_data, function(d) {
             return +d[chart.config.value_col];
         });
         //Sort normal ranges so larger normal ranges plot beneath smaller normal ranges.
@@ -681,7 +791,9 @@
                     (chart.config.unit_col
                         ? '' + chart.filtered_data[0][chart.config.unit_col]
                         : '') +
-                    (' (' + d3.format('%')(d.values / chart.filtered_data.length) + ' of records)')
+                    (' (' +
+                        d3$1.format('%')(d.values / chart.filtered_data.length) +
+                        ' of records)')
                 );
             });
     }
@@ -771,7 +883,7 @@
             else chart.wrap.selectAll('.normalRange').remove();
 
             normalRangeControl.on('change', function() {
-                chart.config.displayNormalRange = d3
+                chart.config.displayNormalRange = d3$1
                     .select(this)
                     .select('input')
                     .property('checked');
@@ -799,6 +911,9 @@
             });
     }
 
+    //polyfills
+    //settings
+    //webcharts
     function safetyHistogram(element, settings) {
         var mergedSettings = Object.assign({}, defaultSettings, settings),
             syncedSettings = syncSettings(mergedSettings),
@@ -829,7 +944,7 @@
         chart.on('init', onInit);
         chart.on('layout', onLayout);
         chart.on('preprocess', onPreprocess);
-        chart.on('datatransform', onDataTransform);
+        chart.on('datatransform', onDatatransform);
         chart.on('draw', onDraw);
         chart.on('resize', onResize);
 

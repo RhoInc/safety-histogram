@@ -1,10 +1,8 @@
-import updateSubjectCount from './util/updateSubjectCount';
+import updateParticipantCount from './onDraw/updateParticipantCount';
 
 export default function onDraw() {
-    let context = this;
-
     //Annotate population count.
-    updateSubjectCount(this, '#populationCount');
+    updateParticipantCount(this, '#populationCount');
 
     //Update x-domain when all values are equal.
     if (this.config.x.type === 'linear' && this.x_dom[0] === this.x_dom[1])

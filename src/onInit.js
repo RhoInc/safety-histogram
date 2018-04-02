@@ -1,13 +1,12 @@
-import { set } from 'd3';
-import getValType from './util/getValType';
+import { keys, set } from 'd3';
+import getValType from './onInit/getValType';
 
 export default function onInit() {
-    let context = this;
     let config = this.config;
 
     this.super_raw_data = this.raw_data;
     //Remove filters whose [ value_col ] does not appear in the data.
-    const columns = d3.keys(this.raw_data[0]);
+    const columns = keys(this.raw_data[0]);
     this.controls.config.inputs = this.controls.config.inputs.filter(function(d) {
         return columns.indexOf(d.value_col) > -1 || !!d.option;
     });
@@ -49,7 +48,7 @@ export default function onInit() {
         if (d.type != 'subsetter') {
             return true;
         } else {
-            var levels = d3.set(chart.raw_data.map(f => f[d.value_col])).values();
+            var levels = set(chart.raw_data.map(f => f[d.value_col])).values();
             if (levels.length < 2) {
                 console.warn(
                     d.value_col + ' filter not shown since the variable has less than 2 levels'

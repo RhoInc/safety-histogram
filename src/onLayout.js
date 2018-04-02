@@ -1,4 +1,5 @@
-import { updateXDomain } from './util/updateXDomain';
+import { extent } from 'd3';
+import updateXDomain from './onPreprocess/updateXDomain';
 
 export default function onLayout() {
     let chart = this,
@@ -35,7 +36,7 @@ export default function onLayout() {
                 const measure_data = chart.super_raw_data.filter(
                     d => d[chart.config.measure_col] === chart.currentMeasure
                 );
-                chart.config.x.domain = d3.extent(measure_data, d => +d[config.value_col]); //reset axis to full range
+                chart.config.x.domain = extent(measure_data, d => +d[config.value_col]); //reset axis to full range
 
                 chart.controls.wrap
                     .selectAll('.control-group')

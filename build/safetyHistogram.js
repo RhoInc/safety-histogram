@@ -655,6 +655,8 @@ function onResize() {
 }
 
 //polyfills
+//settings
+//webcharts
 function safetyHistogram(element, settings) {
     var mergedSettings = Object.assign({}, defaultSettings, settings),
         syncedSettings = syncSettings(mergedSettings),

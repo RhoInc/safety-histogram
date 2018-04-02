@@ -2,6 +2,7 @@
 import './polyfills/object-assign';
 import './polyfills/array-find';
 import './polyfills/array-findIndex';
+import './polyfills/math-log10';
 
 //settings
 import defaultSettings, { syncSettings, syncControlInputs } from './defaultSettings';

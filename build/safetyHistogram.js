@@ -4,7 +4,7 @@
         : typeof define === 'function' && define.amd
           ? define(['webcharts', 'd3'], factory)
           : (global.safetyHistogram = factory(global.webCharts, global.d3));
-})(this, function(webcharts, d3$1) {
+})(this, function(webcharts, d3) {
     'use strict';
 
     if (typeof Object.assign != 'function') {
@@ -272,99 +272,116 @@
         } else return defaultControls;
     }
 
-    function onInit() {
+    function countParticipants() {
         var _this = this;
 
-        var config = this.config;
-
-        this.super_raw_data = this.raw_data;
-        //Remove filters whose [ value_col ] does not appear in the data.
-        var columns = d3$1.keys(this.raw_data[0]);
-        this.controls.config.inputs = this.controls.config.inputs.filter(function(d) {
-            return columns.indexOf(d.value_col) > -1 || !!d.option;
-        });
-
-        //Remove whitespace from measure column values.
-        this.raw_data.forEach(function(e) {
-            return (e[config.measure_col] = e[config.measure_col].trim());
-        });
-
-        //Drop missing values.
-        this.populationCount = d3$1
+        this.populationCount = d3
             .set(
                 this.raw_data.map(function(d) {
-                    return d[config.id_col];
+                    return d[_this.config.id_col];
                 })
             )
             .values().length;
-        this.raw_data = this.raw_data.filter(function(f) {
-            return config.missingValues.indexOf(f[config.value_col]) === -1;
+    }
+
+    function cleanData() {
+        var _this = this;
+
+        //Remove missing and non-numeric data.
+        var preclean = this.raw_data;
+        var clean = this.raw_data.filter(function(d) {
+            return /^-?[0-9.]+$/.test(d[_this.config.value_col]);
         });
+        var nPreclean = preclean.length;
+        var nClean = clean.length;
+        var nRemoved = nPreclean - nClean;
 
-        //Remove measures with any non-numeric results.
-        var allMeasures = d3$1
-                .set(
-                    this.raw_data.map(function(m) {
-                        return m[config.measure_col];
-                    })
-                )
-                .values(),
-            catMeasures = allMeasures.filter(function(measure) {
-                var allObservations = _this.raw_data
-                        .filter(function(d) {
-                            return d[config.measure_col] === measure;
-                        })
-                        .map(function(d) {
-                            return d[config.value_col];
-                        }),
-                    numericObservations = allObservations.filter(function(d) {
-                        return /^-?[0-9.]+$/.test(d);
-                    });
-
-                return numericObservations.length < allObservations.length;
-            }),
-            conMeasures = allMeasures.filter(function(measure) {
-                return catMeasures.indexOf(measure) === -1;
-            });
-
-        if (catMeasures.length)
+        //Warn user of removed records.
+        if (nRemoved > 0)
             console.warn(
-                catMeasures.length +
-                    ' non-numeric endpoint' +
-                    (catMeasures.length > 1 ? 's have' : ' has') +
-                    ' been removed: ' +
-                    catMeasures.join(', ')
+                nRemoved +
+                    ' missing or non-numeric result' +
+                    (nRemoved > 1 ? 's have' : ' has') +
+                    ' been removed.'
             );
+        this.raw_data = clean;
 
-        this.raw_data = this.raw_data.filter(function(d) {
-            return catMeasures.indexOf(d[config.measure_col]) === -1;
+        //Attach array of continuous measures to chart object.
+        this.measures = d3
+            .set(
+                this.raw_data.map(function(d) {
+                    return d[_this.config.measure_col];
+                })
+            )
+            .values()
+            .sort();
+    }
+
+    function addVariables() {
+        var _this = this;
+
+        this.raw_data.forEach(function(d) {
+            d[_this.config.measure_col] = d[_this.config.measure_col].trim();
         });
+    }
 
-        // Remove filters for variables with 0 or 1 levels
-        var chart = this;
+    function checkFilters() {
+        var _this = this;
 
-        this.controls.config.inputs = this.controls.config.inputs.filter(function(d) {
-            if (d.type != 'subsetter') {
+        this.controls.config.inputs = this.controls.config.inputs.filter(function(input) {
+            if (input.type != 'subsetter') {
                 return true;
+            } else if (!_this.raw_data[0].hasOwnProperty(input.value_col)) {
+                console.warn(
+                    'The [ ' +
+                        input.label +
+                        ' ] filter has been removed because the variable does not exist.'
+                );
             } else {
-                var levels = d3$1
+                var levels = d3
                     .set(
-                        chart.raw_data.map(function(f) {
-                            return f[d.value_col];
+                        _this.raw_data.map(function(d) {
+                            return d[input.value_col];
                         })
                     )
                     .values();
-                if (levels.length < 2) {
+
+                if (levels.length === 1)
                     console.warn(
-                        d.value_col + ' filter not shown since the variable has less than 2 levels'
+                        'The [ ' +
+                            input.label +
+                            ' ] filter has been removed because the variable has only one level.'
                     );
-                }
-                return levels.length >= 2;
+
+                return levels.length > 1;
             }
         });
+    }
 
-        //Define initial measure.
-        this.controls.config.inputs[0].start = this.config.start_value || conMeasures[0];
+    function setInitialMeasure() {
+        this.controls.config.inputs.filter(function(input) {
+            return input.label === 'Measure';
+        })[0].start =
+            this.config.start_value || this.measures[0];
+    }
+
+    function onInit() {
+        this.super_raw_data = this.raw_data;
+
+        // 1. Count total participants prior to data cleaning.
+        countParticipants.call(this);
+
+        // 2. Drop missing values and remove measures with any non-numeric results.
+        cleanData.call(this);
+
+        // 3a Define additional variables.
+        addVariables.call(this);
+
+        // 3b Remove filters for nonexistent or single-level variables.
+        checkFilters.call(this);
+
+        // 3c Choose the start value for the Test filter
+        setInitialMeasure.call(this);
     }
 
     function updateXDomain(chart) {
@@ -439,7 +456,7 @@
                     var measure_data = chart.super_raw_data.filter(function(d) {
                         return d[chart.config.measure_col] === chart.currentMeasure;
                     });
-                    chart.config.x.domain = d3$1.extent(measure_data, function(d) {
+                    chart.config.x.domain = d3.extent(measure_data, function(d) {
                         return +d[config.value_col];
                     }); //reset axis to full range
 
@@ -546,7 +563,7 @@
         //Set x-axis domain.
         if (changedMeasureFlag) {
             //reset axis to full range when measure changes
-            this.config.x.domain = d3$1.extent(this.measure_data, function(d) {
+            this.config.x.domain = d3.extent(this.measure_data, function(d) {
                 return +d[config.value_col];
             });
             this.controls.wrap
@@ -619,7 +636,7 @@
             });
 
         //disable the reset button if the full range is shown
-        var raw_range = d3$1
+        var raw_range = d3
             .extent(this.measure_data, function(d) {
                 return +d[config.value_col];
             })
@@ -660,18 +677,18 @@
     // selector - css selector for the annotation
     function updateParticipantCount(chart, selector, id_unit) {
         //count the number of unique ids in the current chart and calculate the percentage
-        var currentObs = d3$1
+        var currentObs = d3
             .set(
                 chart.filtered_data.map(function(d) {
                     return d[chart.config.id_col];
                 })
             )
             .values().length;
-        var percentage = d3$1.format('0.1%')(currentObs / chart.populationCount);
+        var percentage = d3.format('0.1%')(currentObs / chart.populationCount);
 
         //clear the annotation
-        var annotation = d3$1.select(selector);
-        d3$1
+        var annotation = d3.select(selector);
+        d3
             .select(selector)
             .selectAll('*')
             .remove();
@@ -720,7 +737,7 @@
         canvas.selectAll('.normalRange').remove();
 
         //Capture distinct normal ranges in filtered data.
-        var normalRanges = d3$1
+        var normalRanges = d3
             .nest()
             .key(function(d) {
                 return d[chart.config.normal_col_low] + ',' + d[chart.config.normal_col_high];
@@ -729,7 +746,7 @@
                 return d.length;
             })
             .entries(chart.filtered_data);
-        var currentRange = d3$1.extent(chart.filtered_data, function(d) {
+        var currentRange = d3.extent(chart.filtered_data, function(d) {
             return +d[chart.config.value_col];
         });
         //Sort normal ranges so larger normal ranges plot beneath smaller normal ranges.
@@ -791,9 +808,7 @@
                     (chart.config.unit_col
                         ? '' + chart.filtered_data[0][chart.config.unit_col]
                         : '') +
-                    (' (' +
-                        d3$1.format('%')(d.values / chart.filtered_data.length) +
-                        ' of records)')
+                    (' (' + d3.format('%')(d.values / chart.filtered_data.length) + ' of records)')
                 );
             });
     }
@@ -828,7 +843,7 @@
         }
 
         //Display data listing on bin click.
-        var cleanF = d3$1.format('.3f');
+        var cleanF = d3.format('.3f');
         var bins = this.svg.selectAll('.bar');
         var footnote = this.wrap.select('.annote');
 
@@ -855,7 +870,7 @@
 
                 //Reduce bin opacity and highlight selected bin.
                 bins.attr('fill-opacity', 0.5);
-                d3$1.select(this).attr('fill-opacity', 1);
+                d3.select(this).attr('fill-opacity', 1);
             })
             .on('mouseover', function(d) {
                 //Update footnote.
@@ -883,7 +898,7 @@
             else chart.wrap.selectAll('.normalRange').remove();
 
             normalRangeControl.on('change', function() {
-                chart.config.displayNormalRange = d3$1
+                chart.config.displayNormalRange = d3
                     .select(this)
                     .select('input')
                     .property('checked');

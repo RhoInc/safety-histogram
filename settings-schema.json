@@ -78,22 +78,6 @@
             "title": "Listing Variables",
             "type": "array"
         },
-        "missingValues": {
-            "defaultObject": [
-                "",
-                "NA",
-                "N/A"
-            ],
-            "description": "a list of values that are interpreted as 'missing'",
-            "items": {
-                "default": "",
-                "description": "a string that represents a missing value",
-                "title": "Missing Value",
-                "type": "string"
-            },
-            "title": "Missing Values",
-            "type": "array"
-        },
         "start_value": {
             "description": "the name of the initially displayed medical sign; defaults to the first measure in the data",
             "title": "Initial Medical Sign",
@@ -101,6 +85,12 @@
         },
         "normal_range": {
             "default": true,
+            "description": "a boolean that dictates whether the normal range control will be generated",
+            "title": "Generate Normal Range Control?",
+            "type": "boolean"
+        },
+        "displayNormalRange": {
+            "default": false,
             "description": "a boolean that dictates whether the normal range will be displayed initially",
             "title": "Display Normal Range?",
             "type": "boolean"

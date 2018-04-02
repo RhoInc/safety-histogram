@@ -3,7 +3,7 @@ The most straightforward way to customize the Safety Histogram is by using a con
 In addition to the standard Webcharts settings several custom settings not available in the base Webcharts library have been added to the Safety Histogram to facilitate data mapping and other custom functionality. These custom settings are described in detail below. All defaults can be overwritten by users.
 
 # Renderer-specific settings
-The sections below describe each safety-histogram setting as of version 2.1.1.
+The sections below describe each safety-histogram setting as of version 2.2.0.
 
 ## settings.id_col
 `string`
@@ -105,22 +105,6 @@ the name of the variable
 
 
 
-## settings.missingValues
-`array`
-
-a list of values that are interpreted as 'missing'
-
-**default:** 
-```
-[
-  "",
-  "NA",
-  "N/A"
-]
-```
-
-
-
 ## settings.start_value
 `string`
 
@@ -133,13 +117,22 @@ the name of the initially displayed medical sign; defaults to the first measure 
 ## settings.normal_range
 `boolean`
 
-a boolean that dictates whether the normal range will be displayed initially
+a boolean that dictates whether the normal range control will be generated
 
 **default:** `true`
 
+
+
+## settings.displayNormalRange
+`boolean`
+
+a boolean that dictates whether the normal range will be displayed initially
+
+**default:** `false`
+
 # Webcharts settings
-The object below contains each Webcharts setting as of version 2.1.1.
+The object below contains each Webcharts setting as of version 2.2.0.
 
 ```
-{    x: {        column: null, // set in syncSettings()        label: null, // set in syncSettings()        type: 'linear',        bin: 25,        behavior: 'flex',        format: '.1f'    },    y: {        label: '# of Observations',        type: 'linear',        behavior: 'flex',        column: '',        domain: [0, null]    },    marks: [        {            per: [], // set in syncSettings()            type: 'bar',            summarizeY: 'count',            summarizeX: 'mean',            attributes: { 'fill-opacity': 0.75 }        }    ],    aspect: 3,    displayNormalRange: false}
+{    x: {        type: 'linear',        column: null, // set in syncSettings()        label: null, // set in syncSettings()        domain: [null, null], // set in preprocess callback        format: null, // set in preprocess callback        bin: 25    },    y: {        type: 'linear',        column: null,        label: '# of Observations',        domain: [0, null],        format: '1d',        behavior: 'flex'    },    marks: [        {            per: [], // set in syncSettings()            type: 'bar',            summarizeY: 'count',            summarizeX: 'mean',            attributes: { 'fill-opacity': 0.75 }        }    ],    aspect: 3}
 ```

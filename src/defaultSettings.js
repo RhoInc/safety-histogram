@@ -12,9 +12,9 @@ export const rendererSpecificSettings = {
     details: null,
 
     //miscellaneous settings
-    missingValues: ['', 'NA', 'N/A'],
     start_value: null,
-    normal_range: true
+    normal_range: true,
+    displayNormalRange: false
 };
 
 export const webchartsSettings = {
@@ -22,7 +22,7 @@ export const webchartsSettings = {
         type: 'linear',
         column: null, // set in syncSettings()
         label: null, // set in syncSettings()
-        domain: [null,null], // set in preprocess callback
+        domain: [null, null], // set in preprocess callback
         format: null, // set in preprocess callback
         bin: 25
     },
@@ -43,8 +43,7 @@ export const webchartsSettings = {
             attributes: { 'fill-opacity': 0.75 }
         }
     ],
-    aspect: 3,
-    displayNormalRange: false
+    aspect: 3
 };
 
 export default Object.assign({}, rendererSpecificSettings, webchartsSettings);
@@ -128,21 +127,19 @@ export function syncControlInputs(settings) {
             label: 'Upper Limit',
             option: 'x.domain[1]',
             require: true
-        },
+        }
     ];
 
     if (Array.isArray(settings.filters) && settings.filters.length > 0) {
-        const otherFilters = settings.filters
-            .map(filter => {
-                const filterObject = {
-                    type: 'subsetter',
-                    value_col: filter.value_col || filter,
-                    label: filter.label || filter.value_col || filter
-                };
-                return filterObject;
-            });
+        const otherFilters = settings.filters.map(filter => {
+            const filterObject = {
+                type: 'subsetter',
+                value_col: filter.value_col || filter,
+                label: filter.label || filter.value_col || filter
+            };
+            return filterObject;
+        });
 
         return defaultControls.concat(otherFilters);
-    } else
-        return defaultControls;
+    } else return defaultControls;
 }

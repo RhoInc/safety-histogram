@@ -5,8 +5,6 @@ import checkFilters from './onInit/checkFilters';
 import setInitialMeasure from './onInit/setInitialMeasure';
 
 export default function onInit() {
-    this.super_raw_data = this.raw_data;
-
     // 1. Count total participants prior to data cleaning.
     countParticipants.call(this);
 

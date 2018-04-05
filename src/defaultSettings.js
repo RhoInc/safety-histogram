@@ -12,26 +12,27 @@ export const rendererSpecificSettings = {
     details: null,
 
     //miscellaneous settings
-    missingValues: ['', 'NA', 'N/A'],
     start_value: null,
-    normal_range: true
+    normal_range: true,
+    displayNormalRange: false
 };
 
 export const webchartsSettings = {
     x: {
+        type: 'linear',
         column: null, // set in syncSettings()
         label: null, // set in syncSettings()
-        type: 'linear',
-        bin: 25,
-        behavior: 'flex',
-        format: '.1f'
+        domain: [null, null], // set in preprocess callback
+        format: null, // set in preprocess callback
+        bin: 25
     },
     y: {
-        label: '# of Observations',
         type: 'linear',
-        behavior: 'flex',
-        column: '',
-        domain: [0, null]
+        column: null,
+        label: '# of Observations',
+        domain: [0, null],
+        format: '1d',
+        behavior: 'flex'
     },
     marks: [
         {
@@ -42,8 +43,7 @@ export const webchartsSettings = {
             attributes: { 'fill-opacity': 0.75 }
         }
     ],
-    aspect: 3,
-    displayNormalRange: false
+    aspect: 3
 };
 
 export default Object.assign({}, rendererSpecificSettings, webchartsSettings);
@@ -115,18 +115,31 @@ export function syncControlInputs(settings) {
             type: 'checkbox',
             label: 'Normal Range',
             option: 'displayNormalRange'
+        },
+        {
+            type: 'number',
+            label: 'Lower Limit',
+            option: 'x.domain[0]',
+            require: true
+        },
+        {
+            type: 'number',
+            label: 'Upper Limit',
+            option: 'x.domain[1]',
+            require: true
         }
     ];
 
-    if (settings.filters && settings.filters.length > 0) {
-        let otherFilters = settings.filters.map(filter => {
-            filter = {
+    if (Array.isArray(settings.filters) && settings.filters.length > 0) {
+        const otherFilters = settings.filters.map(filter => {
+            const filterObject = {
                 type: 'subsetter',
-                value_col: filter.value_col ? filter.value_col : filter,
-                label: filter.label ? filter.label : filter.value_col ? filter.value_col : filter
+                value_col: filter.value_col || filter,
+                label: filter.label || filter.value_col || filter
             };
-            return filter;
+            return filterObject;
         });
+
         return defaultControls.concat(otherFilters);
     } else return defaultControls;
 }

@@ -11,10 +11,12 @@ export default function cleanData() {
     //Warn user of removed records.
     if (nRemoved > 0)
         console.warn(
-            `${nRemoved} missing or non-numeric result${nRemoved > 1
-                ? 's have'
-                : ' has'} been removed.`
+            `${nRemoved} missing or non-numeric result${
+                nRemoved > 1 ? 's have' : ' has'
+            } been removed.`
         );
+
+    //Preserve cleaned data.
     this.raw_data = clean;
 
     //Attach array of continuous measures to chart object.

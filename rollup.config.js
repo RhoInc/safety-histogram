@@ -1,18 +1,27 @@
 import babel from 'rollup-plugin-babel';
 
-export default {
-    name: 'safetyHistogram',
-    input: './src/wrapper.js',
-    output:
-        {file: './build/safetyHistogram.js',
-        format: 'umd'
-    },
-    globals: {
-        d3: 'd3',
-        webcharts: 'webCharts'
+var pkg = require('./package.json');
+
+module.exports = {
+    input: pkg.module,
+    output: {
+        name: pkg.name
+            .split('-')
+            .map((str,i) =>
+                i === 0 ?
+                    str :
+                    (str.substring(0,1).toUpperCase() + str.substring(1))
+            )
+            .join(''),
+        file: pkg.main,
+        format: 'umd',
+        globals: {
+            d3: 'd3',
+            webcharts: 'webCharts'
+        },
     },
     external: (function() {
-        var dependencies = require('./package.json').dependencies;
+        var dependencies = pkg.dependencies;
 
         return Object.keys(dependencies);
     }()),
@@ -20,9 +29,7 @@ export default {
         babel({
             exclude: 'node_modules/**',
             presets: [
-                ['env',
-                {'modules': false}
-                ]
+                [ 'env', {modules: false} ]
             ],
             plugins: [
                 'external-helpers'
@@ -30,4 +37,5 @@ export default {
             babelrc: false
         })
     ]
-}
+};
+

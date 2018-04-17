@@ -1,0 +1,102 @@
+{
+    "description": "JSON schema for the configuration of safety-histogram",
+    "overview": "The most straightforward way to customize the Safety Histogram is by using a configuration object whose properties describe the behavior and appearance of the chart. Since the Safety Histogram is a Webcharts `chart` object, many default Webcharts settings are set in the [defaultSettings.js file](https://github.com/RhoInc/safety-outlier-explorer/blob/master/src/defaultSettings.js) as [described below](#webcharts-settings). Refer to the [Webcharts documentation](https://github.com/RhoInc/Webcharts/wiki/Chart-Configuration) for more details on these settings.\nIn addition to the standard Webcharts settings several custom settings not available in the base Webcharts library have been added to the Safety Histogram to facilitate data mapping and other custom functionality. These custom settings are described in detail below. All defaults can be overwritten by users.",
+    "properties": {
+        "id_col": {
+            "default": "USUBJID",
+            "description": "a variable that contains IDs for each participant",
+            "title": "ID",
+            "type": "string"
+        },
+        "measure_col": {
+            "default": "TEST",
+            "description": "a variable that contains the names of each medical sign",
+            "title": "Medical Sign",
+            "type": "string"
+        },
+        "unit_col": {
+            "default": "STRESU",
+            "description": "a variable that contains the units of each medical sign",
+            "title": "Unit",
+            "type": "string"
+        },
+        "value_col": {
+            "default": "STRESN",
+            "description": "a variable that contains the results for each medical sign; non-numeric results are removed with a notification thrown to the log",
+            "title": "Result",
+            "type": "string"
+        },
+        "normal_col_high": {
+            "default": "STNRHI",
+            "description": "a variable that contains the upper limit of normal of the medical sign",
+            "title": "Upper Limit of Normal",
+            "type": "string"
+        },
+        "normal_col_low": {
+            "default": "STNRLO",
+            "description": "a variable that contains the lower limit of normal of the medical sign",
+            "title": "Lower Limit of Normal",
+            "type": "string"
+        },
+        "filters": {
+            "description": "an array of variables and metadata that will appear in the controls as data filters",
+            "items": {
+                "properties": {
+                    "label": {
+                        "description": "a description of the variable",
+                        "title": "Variable Label",
+                        "type": "string"
+                    },
+                    "value_col": {
+                        "description": "the name of the variable",
+                        "title": "Variable Name",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "title": "Filter Variables",
+            "type": "array"
+        },
+        "details": {
+            "description": "an array of variables and metadata that will appear in the data listing",
+            "items": {
+                "properties": {
+                    "label": {
+                        "description": "a description of the variable",
+                        "title": "Variable Label",
+                        "type": "string"
+                    },
+                    "value_col": {
+                        "description": "the name of the variable",
+                        "title": "Variable Name",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "title": "Listing Variables",
+            "type": "array"
+        },
+        "start_value": {
+            "description": "the name of the initially displayed medical sign; defaults to the first measure in the data",
+            "title": "Initial Medical Sign",
+            "type": "string"
+        },
+        "normal_range": {
+            "default": true,
+            "description": "a boolean that dictates whether the normal range control will be generated",
+            "title": "Generate Normal Range Control?",
+            "type": "boolean"
+        },
+        "displayNormalRange": {
+            "default": false,
+            "description": "a boolean that dictates whether the normal range will be displayed initially",
+            "title": "Display Normal Range?",
+            "type": "boolean"
+        }
+    },
+    "title": "settings",
+    "type": "object",
+    "version": "2.2.0"
+}

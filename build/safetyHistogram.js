@@ -8,59 +8,169 @@
     'use strict';
 
     if (typeof Object.assign != 'function') {
-        (function() {
-            Object.assign = function(target) {
+        // Must be writable: true, enumerable: false, configurable: true
+        Object.defineProperty(Object, 'assign', {
+            value: function assign(target, varArgs) {
+                // .length of function is 2
                 'use strict';
 
-                if (target === undefined || target === null) {
+                if (target == null) {
+                    // TypeError if undefined or null
                     throw new TypeError('Cannot convert undefined or null to object');
                 }
 
-                var output = Object(target);
+                var to = Object(target);
+
                 for (var index = 1; index < arguments.length; index++) {
-                    var source = arguments[index];
-                    if (source !== undefined && source !== null) {
-                        for (var nextKey in source) {
-                            if (source.hasOwnProperty(nextKey)) {
-                                output[nextKey] = source[nextKey];
+                    var nextSource = arguments[index];
+
+                    if (nextSource != null) {
+                        // Skip over if undefined or null
+                        for (var nextKey in nextSource) {
+                            // Avoid bugs when hasOwnProperty is shadowed
+                            if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+                                to[nextKey] = nextSource[nextKey];
                             }
                         }
                     }
                 }
-                return output;
-            };
-        })();
+
+                return to;
+            },
+            writable: true,
+            configurable: true
+        });
     }
 
-    var defaultSettings = {
-        //Default template settings
-        value_col: 'STRESN',
+    if (!Array.prototype.find) {
+        Object.defineProperty(Array.prototype, 'find', {
+            value: function value(predicate) {
+                // 1. Let O be ? ToObject(this value).
+                if (this == null) {
+                    throw new TypeError('"this" is null or not defined');
+                }
+
+                var o = Object(this);
+
+                // 2. Let len be ? ToLength(? Get(O, 'length')).
+                var len = o.length >>> 0;
+
+                // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+                if (typeof predicate !== 'function') {
+                    throw new TypeError('predicate must be a function');
+                }
+
+                // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
+                var thisArg = arguments[1];
+
+                // 5. Let k be 0.
+                var k = 0;
+
+                // 6. Repeat, while k < len
+                while (k < len) {
+                    // a. Let Pk be ! ToString(k).
+                    // b. Let kValue be ? Get(O, Pk).
+                    // c. Let testResult be ToBoolean(? Call(predicate, T, � kValue, k, O �)).
+                    // d. If testResult is true, return kValue.
+                    var kValue = o[k];
+                    if (predicate.call(thisArg, kValue, k, o)) {
+                        return kValue;
+                    }
+                    // e. Increase k by 1.
+                    k++;
+                }
+
+                // 7. Return undefined.
+                return undefined;
+            }
+        });
+    }
+
+    if (!Array.prototype.findIndex) {
+        Object.defineProperty(Array.prototype, 'findIndex', {
+            value: function value(predicate) {
+                // 1. Let O be ? ToObject(this value).
+                if (this == null) {
+                    throw new TypeError('"this" is null or not defined');
+                }
+
+                var o = Object(this);
+
+                // 2. Let len be ? ToLength(? Get(O, "length")).
+                var len = o.length >>> 0;
+
+                // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+                if (typeof predicate !== 'function') {
+                    throw new TypeError('predicate must be a function');
+                }
+
+                // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
+                var thisArg = arguments[1];
+
+                // 5. Let k be 0.
+                var k = 0;
+
+                // 6. Repeat, while k < len
+                while (k < len) {
+                    // a. Let Pk be ! ToString(k).
+                    // b. Let kValue be ? Get(O, Pk).
+                    // c. Let testResult be ToBoolean(? Call(predicate, T, � kValue, k, O �)).
+                    // d. If testResult is true, return k.
+                    var kValue = o[k];
+                    if (predicate.call(thisArg, kValue, k, o)) {
+                        return k;
+                    }
+                    // e. Increase k by 1.
+                    k++;
+                }
+
+                // 7. Return -1.
+                return -1;
+            }
+        });
+    }
+
+    Math.log10 = Math.log10 =
+        Math.log10 ||
+        function(x) {
+            return Math.log(x) * Math.LOG10E;
+        };
+
+    var rendererSpecificSettings = {
+        //required variables
+        id_col: 'USUBJID',
         measure_col: 'TEST',
         unit_col: 'STRESU',
-        normal_range: true,
+        value_col: 'STRESN',
         normal_col_low: 'STNRLO',
         normal_col_high: 'STNRHI',
-        id_col: 'USUBJID',
+
+        //optional variables
         filters: null,
         details: null,
-        start_value: null,
-        missingValues: ['', 'NA', 'N/A'],
 
-        //Standard webcharts settings
+        //miscellaneous settings
+        start_value: null,
+        normal_range: true,
+        displayNormalRange: false
+    };
+
+    var webchartsSettings = {
         x: {
+            type: 'linear',
             column: null, // set in syncSettings()
             label: null, // set in syncSettings()
-            type: 'linear',
-            bin: 25,
-            behavior: 'flex',
-            format: '.1f'
+            domain: [null, null], // set in preprocess callback
+            format: null, // set in preprocess callback
+            bin: 25
         },
         y: {
-            label: '# of Observations',
             type: 'linear',
-            behavior: 'flex',
-            column: '',
-            domain: [0, null]
+            column: null,
+            label: '# of Observations',
+            domain: [0, null],
+            format: '1d',
+            behavior: 'flex'
         },
         marks: [
             {
@@ -71,9 +181,10 @@
                 attributes: { 'fill-opacity': 0.75 }
             }
         ],
-        aspect: 3,
-        displayNormalRange: false
+        aspect: 3
     };
+
+    var defaultSettings = Object.assign({}, rendererSpecificSettings, webchartsSettings);
 
     //Replicate settings in multiple places in the settings object
     function syncSettings(settings) {
@@ -149,301 +260,320 @@
                 type: 'checkbox',
                 label: 'Normal Range',
                 option: 'displayNormalRange'
+            },
+            {
+                type: 'number',
+                label: 'Lower Limit',
+                option: 'x.domain[0]',
+                require: true
+            },
+            {
+                type: 'number',
+                label: 'Upper Limit',
+                option: 'x.domain[1]',
+                require: true
             }
         ];
 
-        if (settings.filters && settings.filters.length > 0) {
+        if (Array.isArray(settings.filters) && settings.filters.length > 0) {
             var otherFilters = settings.filters.map(function(filter) {
-                filter = {
+                var filterObject = {
                     type: 'subsetter',
-                    value_col: filter.value_col ? filter.value_col : filter,
-                    label: filter.label
-                        ? filter.label
-                        : filter.value_col ? filter.value_col : filter
+                    value_col: filter.value_col || filter,
+                    label: filter.label || filter.value_col || filter
                 };
-                return filter;
+                return filterObject;
             });
+
             return defaultControls.concat(otherFilters);
         } else return defaultControls;
     }
 
-    function onInit() {
+    function countParticipants() {
         var _this = this;
 
-        var config = this.config;
-
-        this.super_raw_data = this.raw_data;
-        //Remove filters whose [ value_col ] does not appear in the data.
-        var columns = d3.keys(this.raw_data[0]);
-        this.controls.config.inputs = this.controls.config.inputs.filter(function(d) {
-            return columns.indexOf(d.value_col) > -1 || !!d.option;
-        });
-
-        //Remove whitespace from measure column values.
-        this.raw_data.forEach(function(e) {
-            return (e[config.measure_col] = e[config.measure_col].trim());
-        });
-
-        //Drop missing values.
         this.populationCount = d3$1
             .set(
                 this.raw_data.map(function(d) {
-                    return d[config.id_col];
+                    return d[_this.config.id_col];
                 })
             )
             .values().length;
-        this.raw_data = this.raw_data.filter(function(f) {
-            return config.missingValues.indexOf(f[config.value_col]) === -1;
+    }
+
+    function cleanData() {
+        var _this = this;
+
+        //Remove missing and non-numeric data.
+        var preclean = this.raw_data;
+        var clean = this.raw_data.filter(function(d) {
+            return /^-?[0-9.]+$/.test(d[_this.config.value_col]);
         });
+        var nPreclean = preclean.length;
+        var nClean = clean.length;
+        var nRemoved = nPreclean - nClean;
 
-        //Remove measures with any non-numeric results.
-        var allMeasures = d3$1
-                .set(
-                    this.raw_data.map(function(m) {
-                        return m[config.measure_col];
-                    })
-                )
-                .values(),
-            catMeasures = allMeasures.filter(function(measure) {
-                var allObservations = _this.raw_data
-                        .filter(function(d) {
-                            return d[config.measure_col] === measure;
-                        })
-                        .map(function(d) {
-                            return d[config.value_col];
-                        }),
-                    numericObservations = allObservations.filter(function(d) {
-                        return /^-?[0-9.]+$/.test(d);
-                    });
-
-                return numericObservations.length < allObservations.length;
-            }),
-            conMeasures = allMeasures.filter(function(measure) {
-                return catMeasures.indexOf(measure) === -1;
-            });
-
-        if (catMeasures.length)
+        //Warn user of removed records.
+        if (nRemoved > 0)
             console.warn(
-                catMeasures.length +
-                    ' non-numeric endpoint' +
-                    (catMeasures.length > 1 ? 's have' : ' has') +
-                    ' been removed: ' +
-                    catMeasures.join(', ')
+                nRemoved +
+                    ' missing or non-numeric result' +
+                    (nRemoved > 1 ? 's have' : ' has') +
+                    ' been removed.'
             );
 
-        this.raw_data = this.raw_data.filter(function(d) {
-            return catMeasures.indexOf(d[config.measure_col]) === -1;
+        //Preserve cleaned data.
+        this.raw_data = clean;
+
+        //Attach array of continuous measures to chart object.
+        this.measures = d3$1
+            .set(
+                this.raw_data.map(function(d) {
+                    return d[_this.config.measure_col];
+                })
+            )
+            .values()
+            .sort();
+    }
+
+    function addVariables() {
+        var _this = this;
+
+        this.raw_data.forEach(function(d) {
+            d[_this.config.measure_col] = d[_this.config.measure_col].trim();
         });
+    }
 
-        // Remove filters for variables with 0 or 1 levels
-        var chart = this;
+    function checkFilters() {
+        var _this = this;
 
-        this.controls.config.inputs = this.controls.config.inputs.filter(function(d) {
-            if (d.type != 'subsetter') {
+        this.controls.config.inputs = this.controls.config.inputs.filter(function(input) {
+            if (input.type != 'subsetter') {
                 return true;
+            } else if (!_this.raw_data[0].hasOwnProperty(input.value_col)) {
+                console.warn(
+                    'The [ ' +
+                        input.label +
+                        ' ] filter has been removed because the variable does not exist.'
+                );
             } else {
-                var levels = d3
+                var levels = d3$1
                     .set(
-                        chart.raw_data.map(function(f) {
-                            return f[d.value_col];
+                        _this.raw_data.map(function(d) {
+                            return d[input.value_col];
                         })
                     )
                     .values();
-                if (levels.length < 2) {
+
+                if (levels.length === 1)
                     console.warn(
-                        d.value_col + ' filter not shown since the variable has less than 2 levels'
+                        'The [ ' +
+                            input.label +
+                            ' ] filter has been removed because the variable has only one level.'
                     );
-                }
-                return levels.length >= 2;
+
+                return levels.length > 1;
             }
         });
-
-        //Define initial measure.
-        this.controls.config.inputs[0].start = this.config.start_value || conMeasures[0];
     }
 
-    function updateXDomain(chart) {
-        var xMinSelect = chart.controls.wrap
-            .selectAll('.control-group')
-            .filter(function(f) {
-                return f.option === 'x.domain[0]';
-            })
-            .select('input');
-
-        var xMaxSelect = chart.controls.wrap
-            .selectAll('.control-group')
-            .filter(function(f) {
-                return f.option === 'x.domain[1]';
-            })
-            .select('input');
-
-        //switch the values if min > max
-        var range = [+xMinSelect.node().value, +xMaxSelect.node().value].sort(function(a, b) {
-            return a - b;
-        });
-
-        // add some padding if min = max
-        if (range[0] === range[1]) {
-            range = [range[0] - range[0] * 0.05, range[1] + range[1] * 0.05];
-            console.warn("Can't specify a 0 range, so some padding was added.");
-        }
-
-        //update the select values if needed
-        xMinSelect.node().value = range[0];
-        xMaxSelect.node().value = range[1];
-
-        //apply custom domain to the chart
-        chart.config.x.domain = range;
-        chart.x_dom = range;
-
-        //if the current range is the same as the full range, disable the reset reset button
+    function setInitialMeasure() {
+        this.controls.config.inputs.find(function(input) {
+            return input.label === 'Measure';
+        }).start =
+            this.config.start_value && this.measures.indexOf(this.config.start_value) > -1
+                ? this.config.start_value
+                : this.measures[0];
     }
 
-    function onLayout() {
-        var chart = this,
-            config = this.config;
+    function onInit() {
+        // 1. Count total participants prior to data cleaning.
+        countParticipants.call(this);
 
-        function updateLimits() {
-            //update the domain and re-draw
-            updateXDomain(chart);
-            chart.draw();
-        }
+        // 2. Drop missing values and remove measures with any non-numeric results.
+        cleanData.call(this);
 
-        /////////////////////////////////
-        //Add controls for X-axis Limits
-        /////////////////////////////////
+        // 3a Define additional variables.
+        addVariables.call(this);
 
-        //x-domain reset button
+        // 3b Remove filters for nonexistent or single-level variables.
+        checkFilters.call(this);
+
+        // 3c Choose the start value for the Test filter
+        setInitialMeasure.call(this);
+    }
+
+    function addXdomainResetButton() {
+        var _this = this;
+
+        //Add x-domain reset button container.
         var resetContainer = this.controls.wrap
-                .insert('div', '.control-group:nth-child(3)')
-                .classed('control-group x-axis', true)
-                .datum({
-                    type: 'button',
-                    option: 'x.domain',
-                    label: 'x-axis:'
-                }),
-            resetLabel = resetContainer
-                .append('span')
-                .attr('class', 'wc-control-label')
-                .style('text-align', 'right')
-                .text('X-axis:'),
-            resetButton = resetContainer
-                .append('button')
-                .text('Reset Limits')
-                .on('click', function() {
-                    var measure_data = chart.super_raw_data.filter(function(d) {
-                        return d[chart.config.measure_col] === chart.currentMeasure;
-                    });
-                    chart.config.x.domain = d3.extent(measure_data, function(d) {
-                        return +d[config.value_col];
-                    }); //reset axis to full range
+            .insert('div', '.control-group:nth-child(3)')
+            .classed('control-group x-axis', true)
+            .datum({
+                type: 'button',
+                option: 'x.domain',
+                label: 'x-axis:'
+            });
 
-                    chart.controls.wrap
-                        .selectAll('.control-group')
-                        .filter(function(f) {
-                            return f.option === 'x.domain[0]';
-                        })
-                        .select('input')
-                        .property('value', chart.config.x.domain[0]);
+        //Add label.
+        resetContainer
+            .append('span')
+            .attr('class', 'wc-control-label')
+            .style('text-align', 'right')
+            .text('X-axis:');
 
-                    chart.controls.wrap
-                        .selectAll('.control-group')
-                        .filter(function(f) {
-                            return f.option === 'x.domain[1]';
-                        })
-                        .select('input')
-                        .property('value', chart.config.x.domain[1]);
+        //Add button.
+        resetContainer
+            .append('button')
+            .text('Reset Limits')
+            .on('click', function() {
+                _this.config.x.domain = _this.measure_domain;
 
-                    chart.draw();
-                });
+                _this.controls.wrap
+                    .selectAll('.control-group')
+                    .filter(function(f) {
+                        return f.option === 'x.domain[0]';
+                    })
+                    .select('input')
+                    .property('value', _this.config.x.domain[0]);
 
-        //x-domain lower limit
-        var lowerLimitContainer = this.controls.wrap
-                .insert('div', '.control-group:nth-child(4)')
-                .classed('control-group x-axis', true)
-                .datum({
-                    type: 'number',
-                    option: 'x.domain[0]',
-                    label: 'Lower Limit'
-                }),
-            lowerLimitLabel = lowerLimitContainer
-                .append('span')
-                .attr('class', 'wc-control-label')
-                .style('text-align', 'right')
-                .text('Lower Limit'),
-            lowerLimitControl = lowerLimitContainer.append('input').on('change', updateLimits);
+                _this.controls.wrap
+                    .selectAll('.control-group')
+                    .filter(function(f) {
+                        return f.option === 'x.domain[1]';
+                    })
+                    .select('input')
+                    .property('value', _this.config.x.domain[1]);
 
-        //x-domain upper limit
-        var upperLimitContainer = this.controls.wrap
-                .insert('div', '.control-group:nth-child(5)')
-                .classed('control-group x-axis', true)
-                .datum({
-                    type: 'number',
-                    option: 'x.domain[1]',
-                    label: 'Upper Limit'
-                }),
-            upperLimitLabel = upperLimitContainer
-                .append('span')
-                .attr('class', 'wc-control-label')
-                .style('text-align', 'right')
-                .text('Upper Limit'),
-            upperLimitControl = upperLimitContainer.append('input').on('change', updateLimits);
+                _this.draw();
+            });
+    }
 
-        //Add x-axis class to x-axis limit controls.
+    function classXaxisLimitControls() {
         this.controls.wrap
             .selectAll('.control-group')
             .filter(function(d) {
                 return ['Lower Limit', 'Upper Limit'].indexOf(d.label) > -1;
             })
             .classed('x-axis', true);
+    }
 
-        //Add population count container.
+    function addPopulationCountContainer() {
         this.controls.wrap
             .append('div')
             .attr('id', 'populationCount')
             .style('font-style', 'italic');
+    }
 
-        //Add footnote.
+    function addFootnoteContainer() {
         this.wrap
             .insert('p', '.wc-chart')
             .attr('class', 'annote')
             .text('Click a bar for details.');
     }
 
-    function onPreprocess() {
+    function onLayout() {
+        //Add button that resets x-domain.
+        addXdomainResetButton.call(this);
+
+        //Add x-axis class to x-axis limit controls.
+        classXaxisLimitControls.call(this);
+
+        //Add container for population count.
+        addPopulationCountContainer.call(this);
+
+        //Add container for footnote.
+        addFootnoteContainer.call(this);
+    }
+
+    function getCurrentMeasure() {
         var _this = this;
 
-        var chart = this,
-            config = this.config;
-
-        //Filter raw data on currently selected measure.
-        var measure = this.filters.filter(function(filter) {
+        this.previousMeasure = this.currentMeasure;
+        this.currentMeasure = this.filters.find(function(filter) {
             return filter.col === _this.config.measure_col;
-        })[0].val;
-        this.measure_data = this.super_raw_data.filter(function(d) {
-            return d[_this.config.measure_col] === measure;
+        }).val;
+    }
+
+    function defineMeasureData() {
+        var _this = this;
+
+        this.measure_data = this.raw_data.filter(function(d) {
+            return d[_this.config.measure_col] === _this.currentMeasure;
+        });
+        this.measure_domain = d3$1.extent(this.measure_data, function(d) {
+            return +d[_this.config.value_col];
+        });
+    }
+
+    function setXdomain() {
+        if (this.currentMeasure !== this.previousMeasure)
+            // new measure
+            this.config.x.domain = this.measure_domain;
+        else if (this.config.x.domain[0] > this.config.x.domain[1])
+            // invalid domain
+            this.config.x.domain.reverse();
+        else if (this.config.x.domain[0] === this.config.x.domain[1])
+            // domain with zero range
+            this.config.x.domain = this.config.x.domain.map(function(d, i) {
+                return i === 0 ? d - d * 0.01 : d + d * 0.01;
+            });
+    }
+
+    function setXaxisLabel() {
+        this.config.x.label =
+            this.currentMeasure +
+            (this.config.unit_col && this.measure_data[0][this.config.unit_col]
+                ? ' (' + this.measure_data[0][this.config.unit_col] + ')'
+                : '');
+    }
+
+    function setXprecision() {
+        var _this = this;
+
+        //Calculate range of current measure and the log10 of the range to choose an appropriate precision.
+        this.config.x.range = this.config.x.domain[1] - this.config.x.domain[0];
+        this.config.x.log10range = Math.log10(this.config.x.range);
+        this.config.x.roundedLog10range = Math.round(this.config.x.log10range);
+        this.config.x.precision1 = -1 * (this.config.x.roundedLog10range - 1);
+        this.config.x.precision2 = -1 * (this.config.x.roundedLog10range - 2);
+
+        //Define the format of the x-axis tick labels and x-domain controls.
+        this.config.x.format =
+            this.config.x.log10range > 0.5 ? '1f' : '.' + this.config.x.precision1 + 'f';
+        this.config.x.d3_format = d3.format(this.config.x.format);
+        this.config.x.formatted_domain = this.config.x.domain.map(function(d) {
+            return _this.config.x.d3_format(d);
         });
 
-        //Set x-domain based on currently selected measure.
-        //this.config.x.domain = d3.extent(this.measure_data, d => +d[chart.config.value_col]);
+        //Define the bin format: one less than the x-axis format.
+        this.config.x.format1 =
+            this.config.x.log10range > 5 ? '1f' : '.' + this.config.x.precision2 + 'f';
+        this.config.x.d3_format1 = d3.format(this.config.x.format1);
+    }
 
-        //Check if the selected measure has changed.
-        var prevMeasure = this.currentMeasure;
-        this.currentMeasure = this.controls.wrap
+    function updateXaxisLimitControls() {
+        //Update x-axis limit controls.
+        this.controls.wrap
             .selectAll('.control-group')
-            .filter(function(d) {
-                return d.value_col && d.value_col === config.measure_col;
+            .filter(function(f) {
+                return f.option === 'x.domain[0]';
             })
-            .select('option:checked')
-            .text();
-        var changedMeasureFlag = this.currentMeasure !== prevMeasure;
+            .select('input')
+            .property('value', this.config.x.formatted_domain[0]);
+        this.controls.wrap
+            .selectAll('.control-group')
+            .filter(function(f) {
+                return f.option === 'x.domain[1]';
+            })
+            .select('input')
+            .property('value', this.config.x.formatted_domain[1]);
+    }
 
-        //Set x-axis domain.
-        if (changedMeasureFlag) {
-            //reset axis to full range when measure changes
-            this.config.x.domain = d3.extent(this.measure_data, function(d) {
-                return +d[config.value_col];
-            });
+    function updateXaxisResetButton() {
+        //Update tooltip of x-axis domain reset button.
+        if (this.currentMeasure !== this.previousMeasure)
             this.controls.wrap
                 .selectAll('.x-axis')
                 .property(
@@ -454,93 +584,32 @@
                         this.config.x.domain[1] +
                         ']'
                 );
-
-            //Set x-axis domain controls.
-            this.controls.wrap
-                .selectAll('.control-group')
-                .filter(function(f) {
-                    return f.option === 'x.domain[0]';
-                })
-                .select('input')
-                .property('value', this.config.x.domain[0]);
-            this.controls.wrap
-                .selectAll('.control-group')
-                .filter(function(f) {
-                    return f.option === 'x.domain[1]';
-                })
-                .select('input')
-                .property('value', this.config.x.domain[1]);
-        }
-
-        //Determine whether currently selected measure contains normal range data.
-        if (this.config.normal_range) {
-            var hasNormalRange =
-                this.measure_data.filter(function(d) {
-                    return (
-                        (+d[chart.config.normal_col_low] || !!d[chart.config.normal_col_low]) &&
-                        (+d[chart.config.normal_col_high] || !!d[chart.config.normal_col_high])
-                    );
-                }).length > 0;
-            var normalRangeInput = this.controls.wrap
-                .selectAll('.control-group')
-                .filter(function(d) {
-                    return d.label === 'Normal Range';
-                })
-                .select('input');
-
-            if (!hasNormalRange)
-                normalRangeInput
-                    .attr('title', 'This measure does not contain normal range data.')
-                    .style('cursor', 'not-allowed')
-                    .property('checked', false)
-                    .property('disabled', true);
-            else
-                normalRangeInput
-                    .attr('title', '')
-                    .style('cursor', 'pointer')
-                    .property('checked', this.config.displayNormalRange)
-                    .property('disabled', false);
-        }
-
-        //only draw the chart using data from the currently selected x-axis range
-        updateXDomain(chart);
-        this.raw_data = this.super_raw_data
-            .filter(function(d) {
-                return d[chart.config.measure_col] === chart.currentMeasure;
-            })
-            .filter(function(f) {
-                var v = chart.config.value_col;
-                return +f[v] >= +chart.x_dom[0] && +f[v] <= +chart.x_dom[1];
-            });
-
-        //disable the reset button if the full range is shown
-        var raw_range = d3
-            .extent(this.measure_data, function(d) {
-                return +d[config.value_col];
-            })
-            .map(function(f) {
-                return '' + f;
-            });
-        var full_range_covered =
-            +chart.x_dom[0] == +raw_range[0] && +chart.x_dom[1] == +raw_range[1];
-        chart.controls.wrap
-            .selectAll('.control-group')
-            .filter(function(f) {
-                return f.option === 'x.domain';
-            })
-            .select('button')
-            .property('disabled', full_range_covered);
     }
 
-    function onDataTransform() {
-        if (this.filtered_data.length)
-            this.config.x.label =
-                '' +
-                this.filtered_data[0][this.config.measure_col] +
-                (this.config.unit_col
-                    ? ' (' + this.filtered_data[0][this.config.unit_col] + ')'
-                    : '');
+    function onPreprocess() {
+        // 1. Capture currently selected measure.
+        getCurrentMeasure.call(this);
+
+        // 2. Filter data on currently selected measure.
+        defineMeasureData.call(this);
+
+        // 3a Set x-domain given currently selected measure.
+        setXdomain.call(this);
+
+        // 3b Set x-axis label to current measure.
+        setXaxisLabel.call(this);
+
+        // 4a Define precision of measure.
+        setXprecision.call(this);
+
+        // 4b Update x-axis reset button when measure changes.
+        updateXaxisResetButton.call(this);
+
+        // 4c Update x-axis limit controls to match y-axis domain.
+        updateXaxisLimitControls.call(this);
     }
+
+    function onDatatransform() {}
 
     // Takes a webcharts object creates a text annotation giving the
     // number and percentage of observations shown in the current view
@@ -549,20 +618,20 @@
     // id_col - a column name in the raw data set (chart.raw_data) representing the observation of interest
     // id_unit - a text string to label the units in the annotation (default = "participants")
     // selector - css selector for the annotation
-    function updateSubjectCount(chart, selector, id_unit) {
+    function updateParticipantCount(chart, selector, id_unit) {
         //count the number of unique ids in the current chart and calculate the percentage
-        var currentObs = d3
+        var currentObs = d3$1
             .set(
                 chart.filtered_data.map(function(d) {
                     return d[chart.config.id_col];
                 })
             )
             .values().length;
-        var percentage = d3.format('0.1%')(currentObs / chart.populationCount);
+        var percentage = d3$1.format('0.1%')(currentObs / chart.populationCount);
 
         //clear the annotation
-        var annotation = d3.select(selector);
-        d3
+        var annotation = d3$1.select(selector);
+        d3$1
             .select(selector)
             .selectAll('*')
             .remove();
@@ -581,19 +650,12 @@
         );
     }
 
-    function onDraw() {
-        updateSubjectCount(this, '#populationCount');
-
-        //Update x-domain when all values are equal.
-        if (this.config.x.type === 'linear' && this.x_dom[0] === this.x_dom[1])
-            this.x_dom = [
-                this.x_dom[0] - this.x_dom[0] * 0.05,
-                this.x_dom[1] + this.x_dom[1] * 0.05
-            ];
-
+    function resetRenderer() {
         //Reset listing.
         this.listing.draw([]);
         this.listing.wrap.selectAll('*').style('display', 'none');
+
+        //Reset footnote.
         this.wrap
             .select('.annote')
             .classed('tableTitle', false)
@@ -604,95 +666,19 @@
         this.svg.selectAll('.bar').attr('opacity', 1);
     }
 
-    function drawNormalRanges(chart) {
-        //Clear normal ranges.
-        var canvas = chart.wrap.select('.bar-supergroup');
-        canvas.selectAll('.normalRange').remove();
+    function onDraw() {
+        //Annotate population count.  This function is called on draw() so that it can access the
+        //filtered data, i.e. the data with the current filters applied.  However the filtered data is
+        //mark-specific, which could cause issues in other scenarios with mark-specific filters via the
+        //marks.[].values setting.  chart.filtered_data is set to the last mark data defined rather
+        //than the full data with filters applied, irrespective of the mark-specific filters.
+        updateParticipantCount(this, '#populationCount');
 
-        //Capture distinct normal ranges in filtered data.
-        var normalRanges = d3
-            .nest()
-            .key(function(d) {
-                return d[chart.config.normal_col_low] + ',' + d[chart.config.normal_col_high];
-            }) // set key to comma-delimited normal range
-            .rollup(function(d) {
-                return d.length;
-            })
-            .entries(chart.filtered_data);
-        var currentRange = d3.extent(chart.filtered_data, function(d) {
-            return +d[chart.config.value_col];
-        });
-        //Sort normal ranges so larger normal ranges plot beneath smaller normal ranges.
-        normalRanges.sort(function(a, b) {
-            var a_lo = a.key.split(',')[0];
-            var a_hi = a.key.split(',')[1];
-            var b_lo = b.key.split(',')[0];
-            var b_hi = b.key.split(',')[1];
-            return a_lo <= b_lo && a_hi >= b_hi
-                ? 2 // lesser minimum and greater maximum
-                : a_lo >= b_lo && a_hi <= b_hi
-                  ? -2 // greater minimum and lesser maximum
-                  : a_lo <= b_lo && a_hi <= b_hi
-                    ? 1 // lesser minimum and lesser maximum
-                    : a_lo >= b_lo && a_hi >= b_hi
-                      ? -1 // greater minimum and greater maximum
-                      : 1;
-        });
-        //Add divs to chart for each normal range.
-        canvas
-            .selectAll('.normalRange rect')
-            .data(normalRanges)
-            .enter()
-            .insert('rect', ':first-child')
-            .attr({
-                class: 'normalRange',
-                x: function x(d) {
-                    return chart.x(Math.max(+d.key.split(',')[0], currentRange[0]));
-                }, // set x to range low
-                y: 0,
-                width: function width(d) {
-                    return Math.min(
-                        chart.plot_width - chart.x(Math.max(+d.key.split(',')[0], currentRange[0])), // chart width - range low
-
-                        chart.x(+d.key.split(',')[1]) -
-                            chart.x(Math.max(+d.key.split(',')[0], currentRange[0]))
-                    );
-                }, // range high - range low
-
-                height: chart.plot_height
-            })
-            .style({
-                stroke: 'black',
-                fill: 'black',
-                'stroke-opacity': function strokeOpacity(d) {
-                    return d.values / chart.filtered_data.length * 0.75;
-                }, // opacity as a function of fraction of records with the given normal range
-                'fill-opacity': function fillOpacity(d) {
-                    return d.values / chart.filtered_data.length * 0.5;
-                }
-            }) // opacity as a function of fraction of records with the given normal range
-            .append('title')
-            .text(function(d) {
-                return (
-                    'Normal range: ' +
-                    d.key.split(',')[0] +
-                    '-' +
-                    d.key.split(',')[1] +
-                    (chart.config.unit_col
-                        ? '' + chart.filtered_data[0][chart.config.unit_col]
-                        : '') +
-                    (' (' + d3.format('%')(d.values / chart.filtered_data.length) + ' of records)')
-                );
-            });
+        //Reset chart and listing.  Doesn't really need to be called on draw() but whatever.
+        resetRenderer.call(this);
     }
 
-    function onResize() {
-        var _this = this;
-
-        var chart = this,
-            config = this.config;
-
-        //Draw custom bin for single observation subsets.
+    function handleSingleObservation() {
         this.svg.select('#custom-bin').remove();
         if (this.current_data.length === 1) {
             var datum = this.current_data[0];
@@ -714,9 +700,11 @@
                     x: this.x(datum.values.x * 0.99)
                 });
         }
+    }
 
-        //Display data listing on bin click.
-        var cleanF = d3$1.format('.3f');
+    function addBinClickListener() {
+        var chart = this;
+        var config = this.config;
         var bins = this.svg.selectAll('.bar');
         var footnote = this.wrap.select('.annote');
 
@@ -732,7 +720,9 @@
                             d.values.raw.length +
                             ' records with ' +
                             (chart.filtered_data[0][config.measure_col] + ' values from ') +
-                            (cleanF(d.rangeLow) + ' to ' + cleanF(d.rangeHigh)) +
+                            (chart.config.x.d3_format1(d.rangeLow) +
+                                ' to ' +
+                                chart.config.x.d3_format1(d.rangeHigh)) +
                             (config.unit_col ? ' ' + chart.filtered_data[0][config.unit_col] : '') +
                             '. Click outside a bar to remove details.'
                     );
@@ -752,7 +742,9 @@
                         d.values.raw.length +
                             ' records with ' +
                             (chart.filtered_data[0][config.measure_col] + ' values from ') +
-                            (cleanF(d.rangeLow) + ' to ' + cleanF(d.rangeHigh)) +
+                            (chart.config.x.d3_format1(d.rangeLow) +
+                                ' to ' +
+                                chart.config.x.d3_format1(d.rangeHigh)) +
                             (config.unit_col ? ' ' + chart.filtered_data[0][config.unit_col] : '')
                     );
             })
@@ -761,17 +753,21 @@
                 if (footnote.classed('tableTitle') === false)
                     footnote.text('Click a bar for details.');
             });
+    }
 
-        //Visualize normal ranges.
+    function drawNormalRanges() {
+        var chart = this;
+        var config = this.config;
         var normalRangeControl = this.controls.wrap.selectAll('.control-group').filter(function(d) {
             return d.label === 'Normal Range';
         });
+
         if (config.normal_range) {
             if (chart.config.displayNormalRange) drawNormalRanges(chart);
             else chart.wrap.selectAll('.normalRange').remove();
 
             normalRangeControl.on('change', function() {
-                chart.config.displayNormalRange = d3
+                chart.config.displayNormalRange = d3$1
                     .select(this)
                     .select('input')
                     .property('checked');
@@ -781,57 +777,190 @@
             });
         } else normalRangeControl.style('display', 'none');
 
-        //Clear listing when clicking outside bins.
+        function drawNormalRanges() {
+            //Clear normal ranges.
+            var canvas = chart.svg;
+            canvas.selectAll('.normalRange').remove();
+
+            //Capture distinct normal ranges in filtered data.
+            var normalRanges = d3$1
+                .nest()
+                .key(function(d) {
+                    return d[chart.config.normal_col_low] + ',' + d[chart.config.normal_col_high];
+                }) // set key to comma-delimited normal range
+                .rollup(function(d) {
+                    return d.length;
+                })
+                .entries(chart.filtered_data);
+            var currentRange = d3$1.extent(chart.filtered_data, function(d) {
+                return +d[chart.config.value_col];
+            });
+            //Sort normal ranges so larger normal ranges plot beneath smaller normal ranges.
+            normalRanges.sort(function(a, b) {
+                var a_lo = a.key.split(',')[0];
+                var a_hi = a.key.split(',')[1];
+                var b_lo = b.key.split(',')[0];
+                var b_hi = b.key.split(',')[1];
+                return a_lo <= b_lo && a_hi >= b_hi
+                    ? 2 // lesser minimum and greater maximum
+                    : a_lo >= b_lo && a_hi <= b_hi
+                      ? -2 // greater minimum and lesser maximum
+                      : a_lo <= b_lo && a_hi <= b_hi
+                        ? 1 // lesser minimum and lesser maximum
+                        : a_lo >= b_lo && a_hi >= b_hi
+                          ? -1 // greater minimum and greater maximum
+                          : 1;
+            });
+            //Add divs to chart for each normal range.
+            canvas
+                .selectAll('.normalRange rect')
+                .data(normalRanges)
+                .enter()
+                .insert('rect', ':first-child')
+                .attr({
+                    class: 'normalRange',
+                    x: function x(d) {
+                        return chart.x(Math.max(+d.key.split(',')[0], currentRange[0]));
+                    }, // set x to range low
+                    y: 0,
+                    width: function width(d) {
+                        return Math.min(
+                            chart.plot_width -
+                                chart.x(Math.max(+d.key.split(',')[0], currentRange[0])), // chart width - range low
+
+                            chart.x(+d.key.split(',')[1]) -
+                                chart.x(Math.max(+d.key.split(',')[0], currentRange[0]))
+                        );
+                    }, // range high - range low
+
+                    height: chart.plot_height
+                })
+                .style({
+                    stroke: 'black',
+                    fill: 'black',
+                    'stroke-opacity': function strokeOpacity(d) {
+                        return d.values / chart.filtered_data.length * 0.75;
+                    }, // opacity as a function of fraction of records with the given normal range
+                    'fill-opacity': function fillOpacity(d) {
+                        return d.values / chart.filtered_data.length * 0.5;
+                    }
+                }) // opacity as a function of fraction of records with the given normal range
+                .append('title')
+                .text(function(d) {
+                    return (
+                        'Normal range: ' +
+                        d.key.split(',')[0] +
+                        '-' +
+                        d.key.split(',')[1] +
+                        (chart.config.unit_col
+                            ? '' + chart.filtered_data[0][chart.config.unit_col]
+                            : '') +
+                        (' (' +
+                            d3$1.format('%')(d.values / chart.filtered_data.length) +
+                            ' of records)')
+                    );
+                });
+        }
+    }
+
+    function addClearListing() {
+        var chart = this;
+        var footnote = this.wrap.select('.annote');
         this.wrap.selectAll('.overlay, .normalRange').on('click', function() {
             delete chart.highlightedBin;
             chart.listing.draw([]);
             chart.listing.wrap.selectAll('*').style('display', 'none');
-            bins.attr('fill-opacity', 0.75);
+            chart.svg.selectAll('.bar').attr('fill-opacity', 0.75);
 
             if (footnote.classed('tableTitle'))
                 footnote.classed('tableTitle', false).text('Click a bar for details.');
         });
+    }
 
-        //Keep highlighted bin highlighted on resize.
+    function maintainBinHighlighting() {
+        var _this = this;
+
         if (this.highlightedBin)
-            bins.attr('fill-opacity', function(d) {
+            this.svg.selectAll('.bar').attr('fill-opacity', function(d) {
                 return d.key !== _this.highlightedBin ? 0.5 : 1;
             });
     }
 
+    function hideDuplicateXaxisTickLabels() {
+        this.svg.selectAll('.x.axis .tick').each(function(d, i) {
+            var tick = d3$1.select(this);
+            var value = +d;
+            var text = +tick.select('text').text();
+            tick.style('display', value === text ? 'block' : 'none');
+        });
+    }
+
+    function onResize() {
+        //Draw custom bin for single observation subsets.
+        handleSingleObservation.call(this);
+
+        //Display data listing on bin click.
+        addBinClickListener.call(this);
+
+        //Visualize normal ranges.
+        drawNormalRanges.call(this);
+
+        //Clear listing when clicking outside bins.
+        addClearListing.call(this);
+
+        //Keep highlighted bin highlighted on resize.
+        maintainBinHighlighting.call(this);
+
+        //Hide duplicate x-axis tick labels (d3 sometimes draws more ticks than the precision allows).
+        hideDuplicateXaxisTickLabels.call(this);
+    }
+
+    function onDestroy() {}
+
+    //polyfills
+    //settings
+    //webcharts
     function safetyHistogram(element, settings) {
-        var mergedSettings = Object.assign({}, defaultSettings, settings),
-            syncedSettings = syncSettings(mergedSettings),
-            syncedControlInputs = syncControlInputs(syncedSettings),
-            controls = webcharts.createControls(element, {
-                location: 'top',
-                inputs: syncedControlInputs
-            }),
-            chart = webcharts.createChart(element, syncedSettings, controls),
-            listingSettings = {
-                cols: syncedSettings.details.map(function(detail) {
-                    return detail.value_col;
-                }),
-                headers: syncedSettings.details.map(function(detail) {
-                    return detail.label;
-                }),
-                searchable: syncedSettings.searchable,
-                sortable: syncedSettings.sortable,
-                pagination: syncedSettings.pagination,
-                exportable: syncedSettings.exportable
-            };
+        //Define chart.
+        var mergedSettings = Object.assign({}, defaultSettings, settings);
+        var syncedSettings = syncSettings(mergedSettings);
+        var syncedControlInputs = syncControlInputs(syncedSettings);
+        var controls = webcharts.createControls(element, {
+            location: 'top',
+            inputs: syncedControlInputs
+        });
+        var chart = webcharts.createChart(element, syncedSettings, controls);
 
-        chart.listing = webcharts.createTable(element, listingSettings);
-        chart.listing.init([]);
-        chart.listing.wrap.selectAll('*').style('display', 'none');
-
-        //Define callbacks.
+        //Define chart callbacks.
         chart.on('init', onInit);
         chart.on('layout', onLayout);
         chart.on('preprocess', onPreprocess);
-        chart.on('datatransform', onDataTransform);
+        chart.on('datatransform', onDatatransform);
         chart.on('draw', onDraw);
         chart.on('resize', onResize);
+        chart.on('destroy', onDestroy);
+
+        //Define listing
+        var listingSettings = {
+            cols: syncedSettings.details.map(function(detail) {
+                return detail.value_col;
+            }),
+            headers: syncedSettings.details.map(function(detail) {
+                return detail.label;
+            }),
+            searchable: syncedSettings.searchable,
+            sortable: syncedSettings.sortable,
+            pagination: syncedSettings.pagination,
+            exportable: syncedSettings.exportable
+        };
+        var listing = webcharts.createTable(element, listingSettings);
+
+        //Attach listing to chart.
+        chart.listing = listing;
+
+        //Initialize listing and hide initially.
+        chart.listing.init([]);
+        chart.listing.wrap.selectAll('*').style('display', 'none');
 
         return chart;
     }

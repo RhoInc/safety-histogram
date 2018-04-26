@@ -58,11 +58,11 @@ d3.csv('../data/ADBDS.csv', function(data) {
 });
 ```
 
-Click [here](https://rhoinc.github.io/viz-library/examples/0008-safetyExplorer-default/safety-histogram/) to open an interactive example.
+Click [here](https://rhoinc.github.io/safety-histogram/build/test-page/) to open an interactive example.
 
 ## Links 
 
-- [Interactive Example](https://rhoinc.github.io/viz-library/examples/0008-safetyExplorer-default/safety-histogram/)
+- [Interactive Example](https://rhoinc.github.io/safety-histogram/build/test-page/)
 - [Configuration](https://github.com/RhoInc/safety-histogram/wiki/Configuration) 
 - [API](https://github.com/RhoInc/safety-histogram/wiki/API)
 - [Technical Documentation](https://github.com/RhoInc/safety-histogram/wiki/Technical-Documentation) 

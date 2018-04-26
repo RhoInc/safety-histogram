@@ -8,7 +8,7 @@ Safety Histogram is a JavaScript library, built using Webcharts ([1](https://git
 
 ![Example](https://user-images.githubusercontent.com/31038805/33951675-9edaeb42-dffd-11e7-8bed-71988d7092a2.gif)
 
-The chart uses [SDTM](http://www.cdisc.org/sdtm) data standards by default, but can be customized to use any data set that contains one record per person per measure. Full details about chart configuration are [here](Configuration).
+The chart uses [SDTM](http://www.cdisc.org/sdtm) data standards by default, but can be customized to use any data set that contains one record per person per measure. Full details about chart configuration are [here](https://github.com/RhoInc/safety-histogram/wiki/Configuration).
 
 Users can:
 * See the histogram for a single measure of interest

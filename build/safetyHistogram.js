@@ -1,19 +1,16 @@
 (function(global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined'
-        ? (module.exports = factory(require('webcharts'), require('d3')))
+        ? (module.exports = factory(require('d3'), require('webcharts')))
         : typeof define === 'function' && define.amd
-          ? define(['webcharts', 'd3'], factory)
-          : (global.safetyHistogram = factory(global.webCharts, global.d3));
-})(this, function(webcharts, d3$1) {
+          ? define(['d3', 'webcharts'], factory)
+          : (global.safetyHistogram = factory(global.d3, global.webCharts));
+})(this, function(d3$1, webcharts) {
     'use strict';
 
     if (typeof Object.assign != 'function') {
         // Must be writable: true, enumerable: false, configurable: true
         Object.defineProperty(Object, 'assign', {
             value: function assign(target, varArgs) {
-                // .length of function is 2
-                'use strict';
-
                 if (target == null) {
                     // TypeError if undefined or null
                     throw new TypeError('Cannot convert undefined or null to object');
@@ -612,12 +609,7 @@
     function onDatatransform() {}
 
     // Takes a webcharts object creates a text annotation giving the
-    // number and percentage of observations shown in the current view
-    // inputs:
-    // chart - a webcharts chart object
-    // id_col - a column name in the raw data set (chart.raw_data) representing the observation of interest
-    // id_unit - a text string to label the units in the annotation (default = "participants")
-    // selector - css selector for the annotation
+
     function updateParticipantCount(chart, selector, id_unit) {
         //count the number of unique ids in the current chart and calculate the percentage
         var currentObs = d3$1
@@ -918,8 +910,7 @@
     function onDestroy() {}
 
     //polyfills
-    //settings
-    //webcharts
+
     function safetyHistogram(element, settings) {
         //Define chart.
         var mergedSettings = Object.assign({}, defaultSettings, settings);

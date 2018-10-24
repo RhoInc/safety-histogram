@@ -1,19 +1,16 @@
 (function(global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined'
-        ? (module.exports = factory(require('webcharts'), require('d3')))
+        ? (module.exports = factory(require('d3'), require('webcharts')))
         : typeof define === 'function' && define.amd
-          ? define(['webcharts', 'd3'], factory)
-          : (global.safetyHistogram = factory(global.webCharts, global.d3));
-})(this, function(webcharts, d3$1) {
+          ? define(['d3', 'webcharts'], factory)
+          : (global.safetyHistogram = factory(global.d3, global.webCharts));
+})(this, function(d3, webcharts) {
     'use strict';
 
     if (typeof Object.assign != 'function') {
         // Must be writable: true, enumerable: false, configurable: true
         Object.defineProperty(Object, 'assign', {
             value: function assign(target, varArgs) {
-                // .length of function is 2
-                'use strict';
-
                 if (target == null) {
                     // TypeError if undefined or null
                     throw new TypeError('Cannot convert undefined or null to object');
@@ -292,7 +289,7 @@
     function countParticipants() {
         var _this = this;
 
-        this.populationCount = d3$1
+        this.populationCount = d3
             .set(
                 this.raw_data.map(function(d) {
                     return d[_this.config.id_col];
@@ -326,7 +323,7 @@
         this.raw_data = clean;
 
         //Attach array of continuous measures to chart object.
-        this.measures = d3$1
+        this.measures = d3
             .set(
                 this.raw_data.map(function(d) {
                     return d[_this.config.measure_col];
@@ -357,7 +354,7 @@
                         ' ] filter has been removed because the variable does not exist.'
                 );
             } else {
-                var levels = d3$1
+                var levels = d3
                     .set(
                         _this.raw_data.map(function(d) {
                             return d[input.value_col];
@@ -502,7 +499,7 @@
         this.measure_data = this.raw_data.filter(function(d) {
             return d[_this.config.measure_col] === _this.currentMeasure;
         });
-        this.measure_domain = d3$1.extent(this.measure_data, function(d) {
+        this.measure_domain = d3.extent(this.measure_data, function(d) {
             return +d[_this.config.value_col];
         });
     }
@@ -612,26 +609,21 @@
     function onDatatransform() {}
 
     // Takes a webcharts object creates a text annotation giving the
-    // number and percentage of observations shown in the current view
-    // inputs:
-    // chart - a webcharts chart object
-    // id_col - a column name in the raw data set (chart.raw_data) representing the observation of interest
-    // id_unit - a text string to label the units in the annotation (default = "participants")
-    // selector - css selector for the annotation
+
     function updateParticipantCount(chart, selector, id_unit) {
         //count the number of unique ids in the current chart and calculate the percentage
-        var currentObs = d3$1
+        var currentObs = d3
             .set(
                 chart.filtered_data.map(function(d) {
                     return d[chart.config.id_col];
                 })
             )
             .values().length;
-        var percentage = d3$1.format('0.1%')(currentObs / chart.populationCount);
+        var percentage = d3.format('0.1%')(currentObs / chart.populationCount);
 
         //clear the annotation
-        var annotation = d3$1.select(selector);
-        d3$1
+        var annotation = d3.select(selector);
+        d3
             .select(selector)
             .selectAll('*')
             .remove();
@@ -733,7 +725,7 @@
 
                 //Reduce bin opacity and highlight selected bin.
                 bins.attr('fill-opacity', 0.5);
-                d3$1.select(this).attr('fill-opacity', 1);
+                d3.select(this).attr('fill-opacity', 1);
             })
             .on('mouseover', function(d) {
                 //Update footnote.
@@ -767,7 +759,7 @@
             else chart.wrap.selectAll('.normalRange').remove();
 
             normalRangeControl.on('change', function() {
-                chart.config.displayNormalRange = d3$1
+                chart.config.displayNormalRange = d3
                     .select(this)
                     .select('input')
                     .property('checked');
@@ -783,7 +775,7 @@
             canvas.selectAll('.normalRange').remove();
 
             //Capture distinct normal ranges in filtered data.
-            var normalRanges = d3$1
+            var normalRanges = d3
                 .nest()
                 .key(function(d) {
                     return d[chart.config.normal_col_low] + ',' + d[chart.config.normal_col_high];
@@ -792,7 +784,7 @@
                     return d.length;
                 })
                 .entries(chart.filtered_data);
-            var currentRange = d3$1.extent(chart.filtered_data, function(d) {
+            var currentRange = d3.extent(chart.filtered_data, function(d) {
                 return +d[chart.config.value_col];
             });
             //Sort normal ranges so larger normal ranges plot beneath smaller normal ranges.
@@ -856,7 +848,7 @@
                             ? '' + chart.filtered_data[0][chart.config.unit_col]
                             : '') +
                         (' (' +
-                            d3$1.format('%')(d.values / chart.filtered_data.length) +
+                            d3.format('%')(d.values / chart.filtered_data.length) +
                             ' of records)')
                     );
                 });
@@ -888,7 +880,7 @@
 
     function hideDuplicateXaxisTickLabels() {
         this.svg.selectAll('.x.axis .tick').each(function(d, i) {
-            var tick = d3$1.select(this);
+            var tick = d3.select(this);
             var value = +d;
             var text = +tick.select('text').text();
             tick.style('display', value === text ? 'block' : 'none');
@@ -918,8 +910,7 @@
     function onDestroy() {}
 
     //polyfills
-    //settings
-    //webcharts
+
     function safetyHistogram(element, settings) {
         //Define chart.
         var mergedSettings = Object.assign({}, defaultSettings, settings);

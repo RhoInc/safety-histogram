@@ -1,3 +1,5 @@
+import { format } from 'd3';
+
 export default function setXprecision() {
     //Calculate range of current measure and the log10 of the range to choose an appropriate precision.
     this.config.x.range = this.config.x.domain[1] - this.config.x.domain[0];
@@ -8,10 +10,10 @@ export default function setXprecision() {
 
     //Define the format of the x-axis tick labels and x-domain controls.
     this.config.x.format = this.config.x.log10range > 0.5 ? '1f' : `.${this.config.x.precision1}f`;
-    this.config.x.d3_format = d3.format(this.config.x.format);
+    this.config.x.d3_format = format(this.config.x.format);
     this.config.x.formatted_domain = this.config.x.domain.map(d => this.config.x.d3_format(d));
 
     //Define the bin format: one less than the x-axis format.
     this.config.x.format1 = this.config.x.log10range > 5 ? '1f' : `.${this.config.x.precision2}f`;
-    this.config.x.d3_format1 = d3.format(this.config.x.format1);
+    this.config.x.d3_format1 = format(this.config.x.format1);
 }

@@ -6,8 +6,7 @@ export default function addBinClickListener() {
     const bins = this.svg.selectAll('.bar');
     const footnote = this.wrap.select('.annote');
 
-    bins
-        .style('cursor', 'pointer')
+    bins.style('cursor', 'pointer')
         .on('click', function(d) {
             chart.highlightedBin = d.key;
             //Update footnote.

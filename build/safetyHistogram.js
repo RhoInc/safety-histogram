@@ -2,8 +2,8 @@
     typeof exports === 'object' && typeof module !== 'undefined'
         ? (module.exports = factory(require('d3'), require('webcharts')))
         : typeof define === 'function' && define.amd
-          ? define(['d3', 'webcharts'], factory)
-          : (global.safetyHistogram = factory(global.d3, global.webCharts));
+            ? define(['d3', 'webcharts'], factory)
+            : (global.safetyHistogram = factory(global.d3, global.webCharts));
 })(this, function(d3, webcharts) {
     'use strict';
 
@@ -202,7 +202,9 @@
                     value_col: filter.value_col ? filter.value_col : filter,
                     label: filter.label
                         ? filter.label
-                        : filter.value_col ? filter.value_col : filter
+                        : filter.value_col
+                            ? filter.value_col
+                            : filter
                 });
             });
         defaultDetails.push({ value_col: settings.value_col, label: 'Result' });
@@ -235,7 +237,9 @@
                         value_col: detail.value_col ? detail.value_col : detail,
                         label: detail.label
                             ? detail.label
-                            : detail.value_col ? detail.value_col : detail
+                            : detail.value_col
+                                ? detail.value_col
+                                : detail
                     });
             });
             settings.details = defaultDetails;
@@ -623,8 +627,7 @@
 
         //clear the annotation
         var annotation = d3.select(selector);
-        d3
-            .select(selector)
+        d3.select(selector)
             .selectAll('*')
             .remove();
 
@@ -700,8 +703,7 @@
         var bins = this.svg.selectAll('.bar');
         var footnote = this.wrap.select('.annote');
 
-        bins
-            .style('cursor', 'pointer')
+        bins.style('cursor', 'pointer')
             .on('click', function(d) {
                 chart.highlightedBin = d.key;
                 //Update footnote.
@@ -796,12 +798,12 @@
                 return a_lo <= b_lo && a_hi >= b_hi
                     ? 2 // lesser minimum and greater maximum
                     : a_lo >= b_lo && a_hi <= b_hi
-                      ? -2 // greater minimum and lesser maximum
-                      : a_lo <= b_lo && a_hi <= b_hi
-                        ? 1 // lesser minimum and lesser maximum
-                        : a_lo >= b_lo && a_hi >= b_hi
-                          ? -1 // greater minimum and greater maximum
-                          : 1;
+                        ? -2 // greater minimum and lesser maximum
+                        : a_lo <= b_lo && a_hi <= b_hi
+                            ? 1 // lesser minimum and lesser maximum
+                            : a_lo >= b_lo && a_hi >= b_hi
+                                ? -1 // greater minimum and greater maximum
+                                : 1;
             });
             //Add divs to chart for each normal range.
             canvas
@@ -831,10 +833,10 @@
                     stroke: 'black',
                     fill: 'black',
                     'stroke-opacity': function strokeOpacity(d) {
-                        return d.values / chart.filtered_data.length * 0.75;
+                        return (d.values / chart.filtered_data.length) * 0.75;
                     }, // opacity as a function of fraction of records with the given normal range
                     'fill-opacity': function fillOpacity(d) {
-                        return d.values / chart.filtered_data.length * 0.5;
+                        return (d.values / chart.filtered_data.length) * 0.5;
                     }
                 }) // opacity as a function of fraction of records with the given normal range
                 .append('title')

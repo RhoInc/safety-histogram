@@ -1,7 +1,7 @@
 {
   "name": "safety-histogram",
   "description": "Histogram showing distribution of lab measures, vital signs and other related measures in clinical trials.",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "author": "Rho, Inc.",
   "license": "MIT",
   "homepage": "https://github.com/rhoinc/safety-histogram#readme",
@@ -23,7 +23,7 @@
     "webcharts": "^1.10"
   },
   "scripts": {
-    "build": "npm run bundle && npm run format && npm run build-md",
+    "build": "npm audit fix && npm run bundle && npm run format && npm run build-md",
     "build-md": "node ./scripts/configuration-markdown.js",
     "bundle": "rollup -c",
     "format": "npm run format-src && npm run format-build",
@@ -34,11 +34,11 @@
   },
   "devDependencies": {
     "babel-plugin-external-helpers": "^6.22.0",
-    "babel-preset-env": "^1.6.0",
+    "babel-preset-env": "^1.7.0",
     "babel-register": "^6.26.0",
-    "prettier": "^1.7.4",
+    "prettier": "^1.14.3",
     "rollup": "^0.66.6",
-    "rollup-plugin-babel": "^3.0.2"
+    "rollup-plugin-babel": "^3.0.7"
   },
   "repository": {
     "type": "git",

@@ -41,12 +41,12 @@ export default function drawNormalRanges() {
             return a_lo <= b_lo && a_hi >= b_hi
                 ? 2 // lesser minimum and greater maximum
                 : a_lo >= b_lo && a_hi <= b_hi
-                  ? -2 // greater minimum and lesser maximum
-                  : a_lo <= b_lo && a_hi <= b_hi
-                    ? 1 // lesser minimum and lesser maximum
-                    : a_lo >= b_lo && a_hi >= b_hi
-                      ? -1 // greater minimum and greater maximum
-                      : 1;
+                    ? -2 // greater minimum and lesser maximum
+                    : a_lo <= b_lo && a_hi <= b_hi
+                        ? 1 // lesser minimum and lesser maximum
+                        : a_lo >= b_lo && a_hi >= b_hi
+                            ? -1 // greater minimum and greater maximum
+                            : 1;
         });
         //Add divs to chart for each normal range.
         canvas
@@ -71,8 +71,8 @@ export default function drawNormalRanges() {
             .style({
                 stroke: 'black',
                 fill: 'black',
-                'stroke-opacity': d => d.values / chart.filtered_data.length * 0.75, // opacity as a function of fraction of records with the given normal range
-                'fill-opacity': d => d.values / chart.filtered_data.length * 0.5
+                'stroke-opacity': d => (d.values / chart.filtered_data.length) * 0.75, // opacity as a function of fraction of records with the given normal range
+                'fill-opacity': d => (d.values / chart.filtered_data.length) * 0.5
             }) // opacity as a function of fraction of records with the given normal range
             .append('title')
             .text(

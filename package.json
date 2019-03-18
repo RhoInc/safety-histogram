@@ -1,12 +1,12 @@
 {
   "name": "safety-histogram",
   "description": "Histogram showing distribution of lab measures, vital signs and other related measures in clinical trials.",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "author": "Rho, Inc.",
   "license": "MIT",
   "homepage": "https://github.com/rhoinc/safety-histogram#readme",
-  "main": "./build/safetyHistogram.js",
-  "module": "./src/wrapper.js",
+  "module": "./src/index.js",
+  "main": "./safetyHistogram.js",
   "keywords": [
     "labs",
     "vitals",
@@ -23,12 +23,14 @@
     "webcharts": "^1.10"
   },
   "scripts": {
-    "build": "npm audit fix && npm run bundle && npm run format && npm run build-md",
-    "build-md": "node ./scripts/configuration-markdown.js",
+    "build": "npm audit fix && npm run bundle && npm run format && npm run build-wiki",
+    "build-wiki": "npm run build-configuration-wiki",
+    "build-configuration-wiki": "node ./scripts/build-configuration-wiki.js",
+    "build-data-guidelines-wiki": "node ./scripts/build-data-guidelines-wiki.js",
     "bundle": "rollup -c",
-    "format": "npm run format-src && npm run format-build",
+    "format": "npm run format-src && npm run format-bundle",
     "format-src": "prettier --print-width=100 --tab-width=4 --single-quote --write \"./src/**/*.js\"",
-    "format-build": "prettier --print-width=100 --tab-width=4 --single-quote --write ./build/safetyHistogram.js",
+    "format-bundle": "prettier --print-width=100 --tab-width=4 --single-quote --write ./safetyHistogram.js",
     "test-page": "start chrome ./test-page/index.html && start firefox ./test-page/index.html && start iexplore file://%CD%/test-page/index.html",
     "watch": "rollup -c -w"
   },

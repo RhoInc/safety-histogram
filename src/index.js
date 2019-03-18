@@ -1,21 +1,7 @@
-//polyfills
-import './polyfills/object-assign';
-import './polyfills/array-find';
-import './polyfills/array-findIndex';
-import './polyfills/math-log10';
-
-//settings
+import './util/polyfills';
 import defaultSettings, { syncSettings, syncControlInputs } from './defaultSettings';
-
-//webcharts
 import { createChart, createControls, createTable } from 'webcharts';
-import onInit from './onInit';
-import onLayout from './onLayout';
-import onPreprocess from './onPreprocess';
-import onDatatransform from './onDatatransform';
-import onDraw from './onDraw';
-import onResize from './onResize';
-import onDestroy from './onDestroy';
+import callbacks from './callbacks/index';
 
 export default function safetyHistogram(element, settings) {
     //Define chart.
@@ -26,13 +12,8 @@ export default function safetyHistogram(element, settings) {
     const chart = createChart(element, syncedSettings, controls);
 
     //Define chart callbacks.
-    chart.on('init', onInit);
-    chart.on('layout', onLayout);
-    chart.on('preprocess', onPreprocess);
-    chart.on('datatransform', onDatatransform);
-    chart.on('draw', onDraw);
-    chart.on('resize', onResize);
-    chart.on('destroy', onDestroy);
+    for (const callback in callbacks)
+        chart.on(callback.substring(2).toLowerCase(), callbacks[callback]);
 
     //Define listing
     const listingSettings = {
@@ -47,6 +28,7 @@ export default function safetyHistogram(element, settings) {
 
     //Attach listing to chart.
     chart.listing = listing;
+    listing.chart = chart;
 
     //Initialize listing and hide initially.
     chart.listing.init([]);

@@ -1,14 +1,20 @@
 import './util/polyfills';
-import defaultSettings, { syncSettings, syncControlInputs } from './defaultSettings';
+import configuration from './configuration/index';
 import { createChart, createControls, createTable } from 'webcharts';
 import callbacks from './callbacks/index';
 
 export default function safetyHistogram(element, settings) {
     //Define chart.
-    const mergedSettings = Object.assign({}, defaultSettings, settings);
-    const syncedSettings = syncSettings(mergedSettings);
-    const syncedControlInputs = syncControlInputs(syncedSettings);
-    const controls = createControls(element, { location: 'top', inputs: syncedControlInputs });
+    const mergedSettings = Object.assign({}, configuration.settings, settings);
+    const syncedSettings = configuration.syncSettings(mergedSettings);
+    const syncedControlInputs = configuration.syncControlInputs(
+        configuration.controlInputs(),
+        syncedSettings
+    );
+    const controls = createControls(element, {
+        location: 'top',
+        inputs: syncedControlInputs
+    });
     const chart = createChart(element, syncedSettings, controls);
 
     //Define chart callbacks.
@@ -16,14 +22,14 @@ export default function safetyHistogram(element, settings) {
         chart.on(callback.substring(2).toLowerCase(), callbacks[callback]);
 
     //Define listing
-    const listingSettings = {
-        cols: syncedSettings.details.map(detail => detail.value_col),
-        headers: syncedSettings.details.map(detail => detail.label),
-        searchable: syncedSettings.searchable,
-        sortable: syncedSettings.sortable,
-        pagination: syncedSettings.pagination,
-        exportable: syncedSettings.exportable
-    };
+    const listingSettings = Object.assign(
+        {},
+        {
+            cols: syncedSettings.details.map(detail => detail.value_col),
+            headers: syncedSettings.details.map(detail => detail.label)
+        },
+        syncedSettings
+    );
     const listing = createTable(element, listingSettings);
 
     //Attach listing to chart.

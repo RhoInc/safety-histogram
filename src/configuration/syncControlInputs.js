@@ -1,18 +1,17 @@
 export default function syncControlInputs(controlInputs, settings) {
-    //Sync measure filter.
-    const measureFilter = controlInputs.find(input => input.label === 'Measure');
-    measureFilter.value_col = settings.measure_col;
-    measureFilter.start = settings.start_value;
-
     //Add filters to default controls.
-    if (Array.isArray(settings.filters) && settings.filters.length > 0)
+    if (Array.isArray(settings.filters) && settings.filters.length > 0) {
+        let position = controlInputs.findIndex(input => input.label === 'Normal Range');
         settings.filters.forEach(filter => {
-            controlInputs.push({
+            const filterObj = {
                 type: 'subsetter',
                 value_col: filter.value_col || filter,
                 label: filter.label || filter.value_col || filter
-            });
+            };
+            controlInputs.splice(position, 0, filterObj);
+            ++position;
         });
+    }
 
     return controlInputs;
 }

@@ -2,26 +2,26 @@ export default function controlInputs() {
     return [
         {
             type: 'subsetter',
+            value_col: 'sh_measure',
             label: 'Measure',
-            value_col: null, // set in ./syncControlInputs
-            start: null // set in ./syncControlInputs
+            start: null // set in ../callbacks/onInit/checkControls/updateMeasureFilter
+        },
+        {
+            type: 'number',
+            option: 'x.domain[0]',
+            label: 'Lower',
+            require: true
+        },
+        {
+            type: 'number',
+            option: 'x.domain[1]',
+            label: 'Upper',
+            require: true
         },
         {
             type: 'checkbox',
-            label: 'Normal Range',
-            option: 'displayNormalRange'
-        },
-        {
-            type: 'number',
-            label: 'Lower Limit',
-            option: 'x.domain[0]',
-            require: true
-        },
-        {
-            type: 'number',
-            label: 'Upper Limit',
-            option: 'x.domain[1]',
-            require: true
+            option: 'displayNormalRange',
+            label: 'Normal Range'
         }
     ];
 }

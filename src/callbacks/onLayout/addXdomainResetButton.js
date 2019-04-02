@@ -3,27 +3,29 @@ import { extent } from 'd3';
 export default function addXdomainResetButton() {
     //Add x-domain reset button container.
     const resetContainer = this.controls.wrap
-        .insert('div', '.control-group:nth-child(3)')
+        .insert('div', '#lower')
         .classed('control-group x-axis', true)
         .datum({
             type: 'button',
             option: 'x.domain',
-            label: 'x-axis:'
-        });
+            label: ''
+        })
+        .style('vertical-align', 'bottom');
 
     //Add label.
     resetContainer
         .append('span')
         .attr('class', 'wc-control-label')
         .style('text-align', 'right')
-        .text('X-axis:');
+        .text('Limits');
 
     //Add button.
     resetContainer
         .append('button')
-        .text('Reset Limits')
+        .text(' Reset ')
+        .style('padding', '0px 5px')
         .on('click', () => {
-            this.config.x.domain = this.measure_domain;
+            this.config.x.domain = this.measure.domain;
 
             this.controls.wrap
                 .selectAll('.control-group')

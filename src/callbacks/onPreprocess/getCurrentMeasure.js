@@ -1,4 +1,4 @@
 export default function getCurrentMeasure() {
-    this.previousMeasure = this.currentMeasure;
-    this.currentMeasure = this.filters.find(filter => filter.col === this.config.measure_col).val;
+    this.measure.previous = this.measure.current;
+    this.measure.current = this.controls.wrap.selectAll('#measure option:checked').text();
 }

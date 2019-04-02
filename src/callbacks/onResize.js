@@ -1,5 +1,5 @@
 import handleSingleObservation from './onResize/handleSingleObservation';
-import addBinClickListener from './onResize/addBinClickListener';
+import addBinEventListeners from './onResize/addBinEventListeners';
 import drawNormalRanges from './onResize/drawNormalRanges';
 import addClearListing from './onResize/addClearListing';
 import maintainBinHighlighting from './onResize/maintainBinHighlighting';
@@ -10,7 +10,7 @@ export default function onResize() {
     handleSingleObservation.call(this);
 
     //Display data listing on bin click.
-    addBinClickListener.call(this);
+    addBinEventListeners.call(this);
 
     //Visualize normal ranges.
     drawNormalRanges.call(this);

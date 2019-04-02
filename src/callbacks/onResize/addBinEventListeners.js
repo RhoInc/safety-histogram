@@ -1,46 +1,19 @@
-import { select, format } from 'd3';
+import mouseover from './addBinEventListeners/mouseover';
+import mouseout from './addBinEventListeners/mouseout';
+import click from './addBinEventListeners/click';
 
 export default function addBinEventListeners() {
-    const chart = this;
-    const config = this.config;
-    const bins = this.svg.selectAll('.bar');
-    const footnote = this.wrap.select('.annote');
+    const context = this;
 
-    bins.style('cursor', 'pointer')
-        .on('mouseover', d => {
-            //Update footnote.
-            if (footnote.classed('tableTitle') === false)
-                footnote.text(
-                    `${d.values.raw.length} records with ` +
-                        `${chart.measure.current} values from ` +
-                        `${chart.config.x.d3format1(d.rangeLow)} to ${chart.config.x.d3format1(
-                            d.rangeHigh
-                        )}`
-                );
+    this.svg.selectAll('.bar-group')
+        .style('cursor', 'pointer')
+        .on('mouseover', function(d) {
+            mouseover.call(context, this, d);
         })
-        .on('mouseout', d => {
-            //Update footnote.
-            if (footnote.classed('tableTitle') === false) footnote.text('Click a bar for details.');
+        .on('mouseout', function(d) {
+            mouseout.call(context, this, d);
         })
         .on('click', function(d) {
-            chart.highlightedBin = d.key;
-            //Update footnote.
-            footnote
-                .classed('tableTitle', true)
-                .text(
-                    `Table displays ${d.values.raw.length} records with ` +
-                        `${chart.measure.current} values from ` +
-                        `${chart.config.x.d3format1(d.rangeLow)} to ${chart.config.x.d3format1(
-                            d.rangeHigh
-                        )}. Click outside a bar to remove details.`
-                );
-
-            //Draw listing.
-            chart.listing.draw(d.values.raw);
-            chart.listing.wrap.selectAll('*').style('display', null);
-
-            //Reduce bin opacity and highlight selected bin.
-            bins.attr('fill-opacity', 0.5);
-            select(this).attr('fill-opacity', 1);
+            click.call(context, this, d);
         });
 }

@@ -1,7 +1,7 @@
 export default function handleSingleObservation() {
     this.svg.select('#custom-bin').remove();
     if (this.current_data.length === 1) {
-        var datum = this.current_data[0];
+        const datum = this.current_data[0];
         this.svg
             .append('g')
             .classed('bar-group', true)
@@ -16,8 +16,8 @@ export default function handleSingleObservation() {
                 stroke: 'rgb(102,194,165)',
                 fill: 'rgb(102,194,165)',
                 'fill-opacity': '0.75',
-                width: this.x(datum.values.x * 1.01) - this.x(datum.values.x * 0.99),
-                x: this.x(datum.values.x * 0.99)
+                width: this.x(datum.values.x * 1.001) - this.x(datum.values.x * 0.999),
+                x: this.x(datum.values.x * 0.999)
             });
     }
 }

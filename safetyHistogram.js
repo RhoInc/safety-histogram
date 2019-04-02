@@ -637,7 +637,7 @@
         this.config.x.d3format1 = d3.format(this.config.x.format1);
 
         //define the size of the x-axis limit increments
-        var step = this.measure.range / 15;
+        var step = this.measure.range > 0 ? this.measure.range / 15 : this.measure.domain / 15;
         if (step < 1) {
             var x10 = 0;
             do {
@@ -646,7 +646,7 @@
             } while (step < 1);
             step = Math.round(step) / Math.pow(10, x10);
         } else step = Math.round(step);
-        this.measure.step = step;
+        this.measure.step = step || 1;
     }
 
     function setYaxisLabel() {
@@ -737,8 +737,8 @@
                 stroke: 'rgb(102,194,165)',
                 fill: 'rgb(102,194,165)',
                 'fill-opacity': '0.75',
-                width: this.x(datum.values.x * 1.01) - this.x(datum.values.x * 0.99),
-                x: this.x(datum.values.x * 0.99)
+                width: this.x(datum.values.x * 1.001) - this.x(datum.values.x * 0.999),
+                x: this.x(datum.values.x * 0.999)
             });
         }
     }

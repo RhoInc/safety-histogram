@@ -10,8 +10,6 @@ export default function click(element, d) {
     this.svg.selectAll('.bar-group').classed('selected', false);
     selection.classed('selected', !selected);
 
-    if (!selected)
-        select.call(this, element, d);
-    else
-        deselect.call(this, element, d);
+    if (!selected) select.call(this, element, d);
+    else deselect.call(this, element, d);
 }

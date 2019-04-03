@@ -3,10 +3,11 @@ export default function resetRenderer() {
     delete this.highlighteD;
 
     //Reset bar highlighting.
-    this.svg.selectAll('.bar-group')
+    this.svg
+        .selectAll('.bar-group')
         .classed('selected', false)
-            .selectAll('.bar')
-            .attr('fill-opacity', 0.75);
+        .selectAll('.bar')
+        .attr('fill-opacity', 0.75);
 
     //Reset footnotes.
     this.footnotes.barClick
@@ -15,8 +16,7 @@ export default function resetRenderer() {
             cursor: 'normal'
         })
         .text('Click a bar for details.');
-    this.footnotes.barDetails
-        .text('');
+    this.footnotes.barDetails.text('');
 
     //Reset listing.
     this.listing.draw([]);

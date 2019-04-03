@@ -11,12 +11,9 @@ export default function deselect(element, d) {
             'text-decoration': 'none'
         })
         .text('Click a bar for details.');
-    this.footnotes.barDetails
-        .text(
-            `${d.values.raw.length} records with ` +
-                `${this.measure.current} values from ` +
-                `${this.config.x.d3format1(d.rangeLow)} to ${this.config.x.d3format1(
-                    d.rangeHigh
-                )}`
-        );
+    this.footnotes.barDetails.text(
+        `${d.values.raw.length} records with ` +
+            `${this.measure.current} values from ` +
+            `${this.config.x.d3format1(d.rangeLow)} to ${this.config.x.d3format1(d.rangeHigh)}`
+    );
 }

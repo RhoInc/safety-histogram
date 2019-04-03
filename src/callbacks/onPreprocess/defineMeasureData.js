@@ -3,12 +3,18 @@ import { extent } from 'd3';
 export default function defineMeasureData() {
     this.measure.data = this.initial_data.filter(d => d.sh_measure === this.measure.current);
     this.measure.unit =
-        this.config.unit_col && this.measure.data[0].hasOwnProperty(this.config.unit_col)
+        this.config.unit_col && this.measure.data.length && this.measure.data[0].hasOwnProperty(this.config.unit_col)
             ? this.measure.data[0][this.config.unit_col]
             : null;
     this.measure.results = this.measure.data
         .map(d => +d[this.config.value_col])
         .sort((a, b) => a - b);
+    this.measure.uniqueResults = d3.set(this.measure.results).values();
+    this.measure.nUniqueResults = this.measure.uniqueResults.length;
+    if (this.measure.nUniqueResults < this.config.bins)
+        this.config.x.bin = this.measure.nUniqueResults;
+    else
+        this.config.x.bin = this.config.bins;
     this.measure.domain = extent(this.measure.results);
     this.measure.range = this.measure.domain[1] - this.measure.domain[0];
     this.measure.log10range = Math.log10(this.measure.range);

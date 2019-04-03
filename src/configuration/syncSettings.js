@@ -6,6 +6,7 @@ export default function syncSettings(settings) {
     if (!settings.normal_range) {
         settings.normal_col_low = null;
         settings.normal_col_high = null;
+        settings.displayNormalRange = false;
     }
 
     //Define default details.

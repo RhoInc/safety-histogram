@@ -708,17 +708,22 @@
     }
 
     function resetRenderer() {
+        delete this.highlightedBin;
+        delete this.highlighteD;
+
+        //Reset bar highlighting.
+        this.svg.selectAll('.bar-group').classed('selected', false).selectAll('.bar').attr('fill-opacity', 0.75);
+
+        //Reset footnotes.
+        this.footnotes.barClick.style({
+            'text-decoration': 'none',
+            cursor: 'normal'
+        }).text('Click a bar for details.');
+        this.footnotes.barDetails.text('');
+
         //Reset listing.
         this.listing.draw([]);
         this.listing.wrap.selectAll('*').style('display', 'none');
-
-        //Reset footnote.
-        this.wrap.select('.annote').classed('tableTitle', false).text('Click a bar for details.');
-
-        //Reset bar highlighting.
-        delete this.highlightedBin;
-        delete this.highlighteD;
-        this.svg.selectAll('.bar').attr('opacity', 1);
     }
 
     function onDraw() {
@@ -726,19 +731,17 @@
         resetRenderer.call(this);
     }
 
-    function handleSingleObservation() {
-        this.svg.select('#custom-bin').remove();
+    function drawZeroRangeBar() {
+        var _this = this;
+
         if (this.current_data.length === 1) {
-            var datum = this.current_data[0];
-            this.svg.append('g').classed('bar-group', true).attr('id', 'custom-bin').append('rect').data([datum]).classed('wc-data-mark bar', true).attr({
-                y: 0,
-                height: this.plot_height,
-                'shape-rendering': 'crispEdges',
-                stroke: 'rgb(102,194,165)',
-                fill: 'rgb(102,194,165)',
-                'fill-opacity': '0.75',
-                width: this.x(datum.values.x * 1.001) - this.x(datum.values.x * 0.999),
-                x: this.x(datum.values.x * 0.999)
+            this.svg.selectAll('g.bar-group rect').transition(250).attr({
+                x: function x(d) {
+                    return _this.x(d.values.x * 0.999);
+                },
+                width: function width(d) {
+                    return _this.x(d.values.x * 1.001) - _this.x(d.values.x * 0.999);
+                }
             });
         }
     }
@@ -787,22 +790,16 @@
     function select(element, d) {
         var _this = this;
 
+        //Reduce bin opacity and highlight selected bin.
+        this.svg.selectAll('.bar-group').selectAll('.bar').attr('fill-opacity', 0.5);
+        d3.select(element).select('.bar').attr('fill-opacity', 1);
+
         //Update bar click footnote
         this.footnotes.barClick.style({
             cursor: 'pointer',
             'text-decoration': 'underline'
         }).text('Click here to remove details and clear highlighting.').on('click', function () {
-            delete _this.highlightedBin;
-            delete _this.highlighteD;
-            _this.listing.draw([]);
-            _this.listing.wrap.selectAll('*').style('display', 'none');
-            _this.svg.selectAll('.bar').attr('fill-opacity', 0.75);
-
-            _this.footnotes.barClick.style({
-                cursor: 'default',
-                'text-decoration': 'none'
-            }).text('Click a bar for details.');
-            _this.footnotes.barDetails.text(d.values.raw.length + ' records with ' + (_this.measure.current + ' values from ') + (_this.config.x.d3format1(d.rangeLow) + ' to ' + _this.config.x.d3format1(d.rangeHigh)));
+            resetRenderer.call(_this);
         });
 
         //Update bar details footnotes.
@@ -811,10 +808,6 @@
         //Draw listing.
         this.listing.draw(d.values.raw);
         this.listing.wrap.selectAll('*').style('display', null);
-
-        //Reduce bin opacity and highlight selected bin.
-        this.svg.selectAll('.bar-group').selectAll('.bar').attr('fill-opacity', 0.5);
-        d3.select(element).select('.bar').attr('fill-opacity', 1);
     }
 
     function deselect(element, d) {
@@ -825,7 +818,7 @@
         this.svg.selectAll('.bar').attr('fill-opacity', 0.75);
 
         this.footnotes.barClick.style({
-            cursor: 'default',
+            cursor: 'normal',
             'text-decoration': 'none'
         }).text('Click a bar for details.');
         this.footnotes.barDetails.text(d.values.raw.length + ' records with ' + (this.measure.current + ' values from ') + (this.config.x.d3format1(d.rangeLow) + ' to ' + this.config.x.d3format1(d.rangeHigh)));
@@ -947,7 +940,7 @@
 
     function onResize() {
         //Draw custom bin for single observation subsets.
-        handleSingleObservation.call(this);
+        drawZeroRangeBar.call(this);
 
         //Add invisible bars for improved hovering.
         addHoverBars.call(this);

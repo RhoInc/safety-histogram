@@ -7,7 +7,7 @@ export default function deselect(element, d) {
 
     this.footnotes.barClick
         .style({
-            cursor: 'default',
+            cursor: 'normal',
             'text-decoration': 'none'
         })
         .text('Click a bar for details.');

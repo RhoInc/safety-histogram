@@ -809,15 +809,12 @@
     function defineMeasureData() {
         var _this = this;
 
+        //Filter on selected measure.
         this.measure.data = this.initial_data.filter(function(d) {
             return d.sh_measure === _this.measure.current;
         });
-        this.measure.unit =
-            this.config.unit_col &&
-            this.measure.data.length &&
-            this.measure.data[0].hasOwnProperty(this.config.unit_col)
-                ? this.measure.data[0][this.config.unit_col]
-                : null;
+
+        //Define array of all and unique results.
         this.measure.results = this.measure.data
             .map(function(d) {
                 return +d[_this.config.value_col];
@@ -826,10 +823,12 @@
                 return a - b;
             });
         this.measure.uniqueResults = d3.set(this.measure.results).values();
-        this.measure.nUniqueResults = this.measure.uniqueResults.length;
+
+        //Calculate statistics.
         this.measure.domain = d3$1.extent(this.measure.results);
         this.measure.stats = {
             n: this.measure.results.length,
+            nUnique: this.measure.uniqueResults.length,
             min: this.measure.domain[0],
             q25: d3$1.quantile(this.measure.results, 0.25),
             median: d3$1.quantile(this.measure.results, 0.5),
@@ -840,14 +839,17 @@
         this.measure.stats.log10range =
             this.measure.stats.range > 0 ? Math.log10(this.measure.stats.range) : NaN;
         this.measure.stats.iqr = this.measure.stats.q75 - this.measure.stats.q25;
+
+        //Calculate bin width and number of bins.
         this.measure.stats.binWidth =
-            (2 * this.measure.stats.iqr) / Math.pow(this.measure.stats.n, 1.0 / 3.0);
-        this.measure.stats.bins =
+            (2 * this.measure.stats.iqr) / Math.pow(this.measure.stats.n, 1.0 / 3.0); // https://en.wikipedia.org/wiki/Freedman%E2%80%93Diaconis_rule
+        this.measure.stats.nBins =
             this.measure.stats.binWidth > 0
                 ? this.measure.stats.range / this.measure.stats.binWidth
-                : this.measure.nUniqueResults;
-        console.table(this.measure.stats);
-        this.config.x.bin = this.measure.stats.bins;
+                : this.measure.stats.nUnique;
+        this.config.x.bin = this.measure.stats.nBins;
+
+        //Set chart data to measure data.
         this.raw_data = this.measure.data.slice();
     }
 
@@ -859,7 +861,7 @@
 
     function calculateXPrecision() {
         //define the precision of the x-axis
-        this.config.x.precisionFactor = Math.round(this.measure.log10range);
+        this.config.x.precisionFactor = Math.round(this.measure.stats.log10range);
         this.config.x.precision = Math.pow(10, this.config.x.precisionFactor);
 
         //x-axis format
@@ -877,7 +879,12 @@
         this.config.x.d3format1 = d3$1.format(this.config.x.format1);
 
         //define the size of the x-axis limit increments
-        var step = this.measure.range > 0 ? this.measure.range / 15 : this.measure.domain / 15;
+        var step =
+            this.measure.stats.range > 0
+                ? Math.abs(this.measure.stats.range / 15) // non-zero range
+                : this.measure.results[0] !== 0
+                    ? Math.abs(this.measure.results[0] / 15) // zero range, non-zero result(s)
+                    : 1; // zero range, zero result(s)
         if (step < 1) {
             var x10 = 0;
             do {
@@ -887,6 +894,7 @@
             step = Math.round(step) / Math.pow(10, x10);
         } else step = Math.round(step);
         this.measure.step = step || 1;
+        console.log(this.measure.step);
     }
 
     function setYaxisLabel() {
@@ -1017,10 +1025,12 @@
                 .delay(250) // wait for initial marks to transition
                 .attr({
                     x: function x(d) {
-                        return _this.x(d.values.x * 0.999);
+                        return d.values.x !== 0 ? _this.x(d.values.x * 0.999) : _this.x(-0.1);
                     },
                     width: function width(d) {
-                        return _this.x(d.values.x * 1.001) - _this.x(d.values.x * 0.999);
+                        return d.values.x !== 0
+                            ? _this.x(d.values.x * 1.001) - _this.x(d.values.x * 0.999)
+                            : _this.x(0.1) - _this.x(-0.1);
                     }
                 });
         }

@@ -2,7 +2,7 @@ import { format } from 'd3';
 
 export default function calculateXPrecision() {
     //define the precision of the x-axis
-    this.config.x.precisionFactor = Math.round(this.measure.log10range);
+    this.config.x.precisionFactor = Math.round(this.measure.stats.log10range);
     this.config.x.precision = Math.pow(10, this.config.x.precisionFactor);
 
     //x-axis format
@@ -20,7 +20,12 @@ export default function calculateXPrecision() {
     this.config.x.d3format1 = format(this.config.x.format1);
 
     //define the size of the x-axis limit increments
-    let step = this.measure.range > 0 ? this.measure.range / 15 : this.measure.domain / 15;
+    let step =
+        this.measure.stats.range > 0
+            ? Math.abs(this.measure.stats.range / 15) // non-zero range
+            : this.measure.results[0] !== 0
+                ? Math.abs(this.measure.results[0] / 15) // zero range, non-zero result(s)
+                : 1; // zero range, zero result(s)
     if (step < 1) {
         let x10 = 0;
         do {
@@ -30,4 +35,5 @@ export default function calculateXPrecision() {
         step = Math.round(step) / Math.pow(10, x10);
     } else step = Math.round(step);
     this.measure.step = step || 1;
+    console.log(this.measure.step);
 }

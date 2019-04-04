@@ -2,7 +2,7 @@ d3.csv(
     'https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinical-trials/renderer-specific/adbds.csv',
     function(d,i) {
         if (d.TEST === 'Albumin' && d.STRESN !== '') {
-            d.STRESN = 45; // zero range
+            d.STRESN = 10000; // zero range
             d.STRESN = Math.pow(i%10, 2); // two unique values
             d.STRESN = i%10; // small number of unique values
         }

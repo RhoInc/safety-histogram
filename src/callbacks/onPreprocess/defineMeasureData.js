@@ -29,10 +29,12 @@ export default function defineMeasureData() {
     //Calculate bin width and number of bins.
     this.measure.stats.binWidth =
         (2 * this.measure.stats.iqr) / Math.pow(this.measure.stats.n, 1.0 / 3.0); // https://en.wikipedia.org/wiki/Freedman%E2%80%93Diaconis_rule
-    this.measure.stats.nBins =
-        this.measure.stats.binWidth > 0
-            ? this.measure.stats.range / this.measure.stats.binWidth
-            : this.measure.stats.nUnique;
+    this.measure.stats.calculatedBins = this.measure.stats.binWidth > 0
+        ? Math.ceil(this.measure.stats.range / this.measure.stats.binWidth)
+        : NaN;
+    this.measure.stats.nBins = this.measure.stats.calculatedBins < this.measure.stats.nUnique
+        ? this.measure.stats.calculatedBins
+        : this.measure.stats.nUnique;
     this.config.x.bin = this.measure.stats.nBins;
 
     //Set chart data to measure data.

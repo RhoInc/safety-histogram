@@ -35,5 +35,4 @@ export default function calculateXPrecision() {
         step = Math.round(step) / Math.pow(10, x10);
     } else step = Math.round(step);
     this.measure.step = step || 1;
-    console.log(this.measure.step);
 }

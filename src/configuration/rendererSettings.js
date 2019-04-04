@@ -16,6 +16,6 @@ export default function rendererSettings() {
         start_value: null,
         normal_range: true,
         displayNormalRange: false,
-        bins: 25,
+        bins: 25
     };
 }

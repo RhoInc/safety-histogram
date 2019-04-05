@@ -709,7 +709,7 @@
 
         if (
             this.filters.find(function(filter) {
-                return filter.col !== _this.config.measure_col;
+                return filter.col !== 'sh_measure';
             })
         ) {
             //Add x-domain zoom button container.

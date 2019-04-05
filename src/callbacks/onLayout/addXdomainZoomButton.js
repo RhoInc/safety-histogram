@@ -1,7 +1,7 @@
 import { extent } from 'd3';
 
 export default function addXdomainZoomButton() {
-    if (this.filters.find(filter => filter.col !== this.config.measure_col)) {
+    if (this.filters.find(filter => filter.col !== 'sh_measure')) {
         //Add x-domain zoom button container.
         const resetContainer = this.controls.wrap
             .select('.x-axis-limits-grouping-fieldset')

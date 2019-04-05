@@ -10,14 +10,14 @@ export default function addXdomainResetButton() {
             option: 'x.domain',
             label: ''
         })
+        .attr('title', 'Reset x-axis limits.')
         .style('vertical-align', 'bottom');
 
     //Add label.
     resetContainer
         .append('span')
         .attr('class', 'wc-control-label')
-        .style('text-align', 'right')
-        .text('Limits');
+        .text('');
 
     //Add button.
     resetContainer

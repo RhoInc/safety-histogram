@@ -25,7 +25,7 @@ export default function addXdomainResetButton() {
         .text(' Reset ')
         .style('padding', '0px 5px')
         .on('click', () => {
-            this.config.x.domain = this.measure.domain;
+            this.config.x.domain = this.measure.raw.domain;
 
             this.controls.wrap
                 .selectAll('.control-group')

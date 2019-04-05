@@ -1,5 +1,6 @@
 d3.csv(
-    'https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinical-trials/renderer-specific/adbds.csv',
+    //'https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinical-trials/renderer-specific/adbds.csv',
+    '../../data-library/data/clinical-trials/renderer-specific/adbds.csv',
     function(d,i) {
         if (d.TEST === 'Albumin' && d.STRESN !== '') {
             //d.STRESN = 0; // zero range
@@ -13,7 +14,7 @@ d3.csv(
         var instance = safetyHistogram(
             '#container', // element
             {
-                filters: ['USUBJID'],
+                filters: ['SITEID', 'USUBJID'],
                 displayNormalRange: true
             } // settings
         );

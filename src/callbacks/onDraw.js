@@ -4,5 +4,4 @@ import resetRenderer from './onDraw/resetRenderer';
 export default function onDraw() {
     updateParticipantCount.call(this);
     resetRenderer.call(this);
-    console.log(this.current_data);
 }

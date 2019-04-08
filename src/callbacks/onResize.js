@@ -27,4 +27,5 @@ export default function onResize() {
 
     //Annotate bin boundaries.
     annotateBinBoundaries.call(this);
+    console.log(this.config);
 }

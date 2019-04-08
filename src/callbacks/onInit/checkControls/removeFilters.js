@@ -2,7 +2,7 @@ import { set } from 'd3';
 
 export default function removeFilters() {
     this.controls.config.inputs = this.controls.config.inputs.filter(input => {
-        if (input.type !== 'subsetter' || input.value_col === 'soe_measure') {
+        if (input.type !== 'subsetter' || input.value_col === 'sh_measure') {
             return true;
         } else if (!this.raw_data[0].hasOwnProperty(input.value_col)) {
             console.warn(

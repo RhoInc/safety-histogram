@@ -1,9 +1,9 @@
-import { extent, quantile } from 'd3';
+import { set, extent, quantile } from 'd3';
 
 export default function calculateStatistics(obj) {
     //Define array of all and unique results.
     obj.results = obj.data.map(d => +d[this.config.value_col]).sort((a, b) => a - b);
-    obj.uniqueResults = d3.set(obj.results).values();
+    obj.uniqueResults = set(obj.results).values();
 
     //Calculate statistics.
     obj.domain = extent(obj.results);

@@ -10,7 +10,7 @@ export default function syncSettings(settings) {
     }
 
     //Define default details.
-    let defaultDetails = [{ value_col: settings.id_col, label: 'Subject Identifier' }];
+    let defaultDetails = [{ value_col: settings.id_col, label: 'Participant ID' }];
     if (Array.isArray(settings.filters))
         settings.filters.forEach(filter =>
             defaultDetails.push({

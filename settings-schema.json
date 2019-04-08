@@ -5,15 +5,6 @@
     "type": "object",
     "version": "2.3.0",
     "properties": {
-        "id_col": {
-            "title": "ID",
-            "description": "a variable that contains IDs for each participant",
-            "type": "string",
-            "default": "USUBJID",
-            "data-mapping": true,
-            "data-type": "character",
-            "required": true
-        },
         "measure_col": {
             "title": "Medical Sign",
             "description": "a variable that contains the names of each medical sign",
@@ -22,15 +13,6 @@
             "data-mapping": true,
             "data-type": "character",
             "required": true
-        },
-        "unit_col": {
-            "title": "Unit",
-            "description": "a variable that contains the units of each medical sign",
-            "type": "string",
-            "default": "STRESU",
-            "data-mapping": true,
-            "data-type": "character",
-            "required": false
         },
         "value_col": {
             "title": "Result",
@@ -41,13 +23,22 @@
             "data-type": "numeric",
             "required": true
         },
-        "normal_col_high": {
-            "title": "Upper Limit of Normal",
-            "description": "a variable that contains the upper limit of normal of the medical sign",
+        "id_col": {
+            "title": "ID",
+            "description": "a variable that contains IDs for each participant",
             "type": "string",
-            "default": "STNRHI",
+            "default": "USUBJID",
             "data-mapping": true,
-            "data-type": "numeric",
+            "data-type": "character",
+            "required": false
+        },
+        "unit_col": {
+            "title": "Unit",
+            "description": "a variable that contains the units of each medical sign",
+            "type": "string",
+            "default": "STRESU",
+            "data-mapping": true,
+            "data-type": "character",
             "required": false
         },
         "normal_col_low": {
@@ -55,6 +46,15 @@
             "description": "a variable that contains the lower limit of normal of the medical sign",
             "type": "string",
             "default": "STNRLO",
+            "data-mapping": true,
+            "data-type": "numeric",
+            "required": false
+        },
+        "normal_col_high": {
+            "title": "Upper Limit of Normal",
+            "description": "a variable that contains the upper limit of normal of the medical sign",
+            "type": "string",
+            "default": "STNRHI",
             "data-mapping": true,
             "data-type": "numeric",
             "required": false

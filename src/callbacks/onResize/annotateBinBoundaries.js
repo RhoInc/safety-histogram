@@ -1,10 +1,11 @@
+import { set, merge, nest } from 'd3';
+
 export default function annotateBinBoundaries() {
     //Remove bin boundaries.
     this.svg.selectAll('text.bin-boundary').remove();
 
     //Define set of bin boundaries.
-    const binBoundaries = d3
-        .set(d3.merge(this.current_data.map(d => [d.rangeLow, d.rangeHigh])))
+    const binBoundaries = set(merge(this.current_data.map(d => [d.rangeLow, d.rangeHigh])))
         .values()
         .map(value => {
             return {
@@ -16,8 +17,7 @@ export default function annotateBinBoundaries() {
         .sort((a, b) => a.value - b.value);
 
     //Check for repeats of values formatted with lower precision.
-    const repeats = d3
-        .nest()
+    const repeats = nest()
         .key(d => d.value1)
         .rollup(d => d.length)
         .entries(binBoundaries)

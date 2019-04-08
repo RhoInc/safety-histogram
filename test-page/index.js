@@ -8,7 +8,7 @@ d3.csv(
         var instance = safetyHistogram(
             '#container', // element
             {
-                filters: ['SITEID', 'USUBJID']
+                measure_col: 'asdf'
             } // settings
         );
         instance.init(data);

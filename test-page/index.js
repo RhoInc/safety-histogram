@@ -7,6 +7,10 @@ d3.csv(
         var instance = safetyHistogram(
             '#container', // element
             {
+                filters: [
+                    {value_col: 'ARM', label: 'Treatment Group'}
+                ],
+                displayNormalRange: true
             } // settings
         );
         instance.init(data);

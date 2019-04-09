@@ -1406,23 +1406,6 @@
         });
     }
 
-    function mouseover(element, d) {
-        //Update footnote.
-        this.footnotes.barDetails.text(
-            d.values.raw.length +
-                ' records with ' +
-                (this.measure.current + ' values from ') +
-                (this.config.x.d3format1(d.rangeLow) +
-                    ' to ' +
-                    this.config.x.d3format1(d.rangeHigh))
-        );
-
-        //Highlight bar.
-        var selection = d3.select(element);
-        selection.moveToFront();
-        selection.selectAll('.bar').attr('stroke', 'black');
-    }
-
     function mouseout(element, d) {
         //Update footnote.
         this.footnotes.barDetails.text(
@@ -1441,6 +1424,23 @@
         //Remove bar highlight.
         var selection = d3.select(element);
         selection.selectAll('.bar').attr('stroke', this.colorScale());
+    }
+
+    function mouseover(element, d) {
+        //Update footnote.
+        this.footnotes.barDetails.text(
+            d.values.raw.length +
+                ' records with ' +
+                (this.measure.current + ' values from ') +
+                (this.config.x.d3format1(d.rangeLow) +
+                    ' to ' +
+                    this.config.x.d3format1(d.rangeHigh))
+        );
+
+        //Highlight bar.
+        var selection = d3.select(element);
+        selection.moveToFront();
+        selection.selectAll('.bar').attr('stroke', 'black');
     }
 
     function select(element, d) {
@@ -1521,9 +1521,9 @@
     function addBinEventListeners() {
         var context = this;
 
-        this.svg
-            .selectAll('.bar-group')
-            .style('cursor', 'pointer')
+        var barGroups = this.svg.selectAll('.bar-group').style('cursor', 'pointer');
+
+        barGroups
             .on('mouseover', function(d) {
                 mouseover.call(context, this, d);
             })
@@ -1538,7 +1538,8 @@
     function drawNormalRanges() {
         var _this = this;
 
-        this.svg.selectAll('.normal-range').remove();
+        this.controls.wrap.select('.normal-range-list').remove();
+        this.svg.select('.normal-ranges').remove();
 
         if (this.config.displayNormalRange) {
             //Capture distinct normal ranges in filtered data.
@@ -1567,13 +1568,14 @@
 
                     //tooltip
                     d.tooltip =
-                        'Normal range: ' +
-                        d.lower +
-                        ' - ' +
-                        d.upper +
-                        ' (' +
-                        d3.format('%')(d.values / _this.filtered_data.length) +
-                        ' of records)';
+                        d.values < _this.filtered_data.length
+                            ? d.lower +
+                              ' - ' +
+                              d.upper +
+                              ' (' +
+                              d3.format('%')(d.values / _this.filtered_data.length) +
+                              ' of records)'
+                            : d.lower + ' - ' + d.upper;
 
                     //plot if:
                     //  - at least one of the limits of normal fall within the current x-domain
@@ -1584,9 +1586,6 @@
                         (_this.x_dom[0] >= d.lower && d.upper >= _this.x_dom[1]);
 
                     return d;
-                })
-                .filter(function(d) {
-                    return d.plot;
                 })
                 .sort(function(a, b) {
                     return a.lower <= b.lower && a.upper >= b.upper
@@ -1600,13 +1599,43 @@
                                     : 1;
                 }); // sort normal ranges so larger normal ranges plot beneath smaller normal ranges
 
-            //Add rects to chart for each normal range.
-            var rects = this.svg
-                .selectAll('rect.normal-range')
-                .data(normalRanges)
+            //Add tooltip to Normal Range control that lists normal ranges.
+            this.controls.wrap
+                .selectAll('#normal-range .wc-control-label')
+                .append('span')
+                .classed('normal-range-list', true)
+                .html(' &#9432')
+                .attr(
+                    'title',
+                    normalRanges.length > 1
+                        ? this.measure.current +
+                          ' normal ranges:\n' +
+                          normalRanges
+                              .map(function(normalRange) {
+                                  return normalRange.tooltip;
+                              })
+                              .join('\n')
+                        : this.measure.current + ' normal range: ' + normalRanges[0].tooltip
+                )
+                .style('cursor', 'default');
+
+            //Add groups in which to draw normal range rectangles and annotations.
+            var group = this.svg.insert('g', '.bar-supergroup').classed('normal-ranges', true);
+            var groups = group
+                .selectAll('g.normal-range')
+                .data(
+                    normalRanges.filter(function(d) {
+                        return d.plot;
+                    })
+                )
                 .enter()
-                .insert('rect', '.bar-supergroup')
-                .classed('normal-range', true)
+                .append('g')
+                .classed('normal-range', true);
+
+            //Draw normal range rectangles.
+            var rectangles = groups
+                .append('rect')
+                .classed('normal-range__rect', true)
                 .attr({
                     x: function x(d) {
                         return d.x1;
@@ -1627,11 +1656,6 @@
                         return (d.values / _this.filtered_data.length) * 0.5;
                     }
                 }); // opacity as a function of fraction of records with the given normal range
-
-            //Add tooltips to each normal range rect.
-            var titles = rects.append('title').text(function(d) {
-                return d.tooltip;
-            });
         }
     }
 

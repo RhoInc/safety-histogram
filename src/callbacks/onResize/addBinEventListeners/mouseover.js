@@ -1,4 +1,5 @@
 import { select } from 'd3';
+import mouseout from './mouseout';
 
 export default function mouseover(element, d) {
     //Update footnote.

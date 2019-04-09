@@ -171,14 +171,13 @@
 
     function webchartsSettings() {
         return {
-            //chart settings
             x: {
                 type: 'linear',
-                column: null, // set in syncSettings()
-                label: null, // set in syncSettings()
-                domain: [null, null], // set in preprocess callback
-                format: null, // set in preprocess callback
-                bin: 25
+                column: null, // set in ./syncSettings
+                label: null, // set in ../callbacks/onPreprocess/setXaxisLabel
+                domain: [null, null], // set in ../callbacks/onPreprocess/setXdomain
+                format: null, // set in ../callbacks/onPreprocess/calculateXPrecision
+                bin: null // set in ../callbacks/onPreprocess/defineMeasureData
             },
             y: {
                 type: 'linear',
@@ -190,7 +189,7 @@
             },
             marks: [
                 {
-                    per: [], // set in syncSettings()
+                    per: [], // set in ./syncSettings
                     type: 'bar',
                     summarizeY: 'count',
                     summarizeX: 'mean',
@@ -202,7 +201,6 @@
     }
 
     function syncSettings(settings) {
-        settings.x.label = settings.start_value;
         settings.x.column = settings.value_col;
         settings.marks[0].per[0] = settings.value_col;
 
@@ -1737,7 +1735,6 @@
 
         //Annotate bin boundaries.
         annotateBinBoundaries.call(this);
-        console.log(this.config);
     }
 
     function onDestroy() {

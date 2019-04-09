@@ -130,6 +130,8 @@ a boolean that dictates whether the normal range will be displayed initially
 
 **default:** `false`
 
+
+
 # Webcharts settings
 The object below contains Webcharts settings that define the safety-histogram chart as of version 2.3.0 of the Safety Histogram.
 
@@ -144,7 +146,7 @@ The object below contains Webcharts settings that define the safety-histogram ch
             null
         ],
         "format": null,
-        "bin": 25
+        "bin": null
     },
     "y": {
         "type": "linear",

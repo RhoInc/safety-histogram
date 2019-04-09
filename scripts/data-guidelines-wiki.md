@@ -1,7 +1,7 @@
-
+The Safety Histogram accepts [JSON](https://en.wikipedia.org/wiki/JSON) data of the format returned by [`d3.csv()`](https://github.com/d3/d3-3.x-api-reference/blob/master/CSV.md). The renderer visualizes clinical medical signs data with **one row per measurement** plus the required variables specified below.
 
 ## Data structure
-
+one record per measurement
 
 ## Data specification
 required and optional variables:

@@ -1,5 +1,4 @@
 export default function syncSettings(settings) {
-    settings.x.label = settings.start_value;
     settings.x.column = settings.value_col;
     settings.marks[0].per[0] = settings.value_col;
 

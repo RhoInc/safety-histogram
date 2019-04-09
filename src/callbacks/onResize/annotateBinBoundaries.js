@@ -27,16 +27,16 @@ export default function annotateBinBoundaries() {
     this.svg
         .append('g')
         .classed('bin-boundaries', true)
-            .selectAll('text.bin-boundary')
-            .data(binBoundaries)
-            .enter()
-            .append('text')
-            .classed('bin-boundary', true)
-            .attr({
-                x: d => this.x(d.value),
-                y: this.y(0),
-                dy: '16px',
-                'text-anchor': 'middle'
-            })
-            .text(d => (repeats ? d.value2 : d.value1));
+        .selectAll('text.bin-boundary')
+        .data(binBoundaries)
+        .enter()
+        .append('text')
+        .classed('bin-boundary', true)
+        .attr({
+            x: d => this.x(d.value),
+            y: this.y(0),
+            dy: '16px',
+            'text-anchor': 'middle'
+        })
+        .text(d => (repeats ? d.value2 : d.value1));
 }

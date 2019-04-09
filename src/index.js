@@ -6,7 +6,11 @@ import callbacks from './callbacks/index';
 
 export default function safetyHistogram(element = 'body', settings = {}) {
     //Define chart.
-    const mergedSettings = Object.assign({}, JSON.parse(JSON.stringify(configuration.settings)), settings);
+    const mergedSettings = Object.assign(
+        {},
+        JSON.parse(JSON.stringify(configuration.settings)),
+        settings
+    );
     const syncedSettings = configuration.syncSettings(mergedSettings);
     const syncedControlInputs = configuration.syncControlInputs(
         configuration.controlInputs(),

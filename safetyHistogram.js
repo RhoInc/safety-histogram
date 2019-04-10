@@ -497,10 +497,8 @@
             this.variables.required.some(function(definition) {
                 return definition.missing;
             })
-        ) {
+        )
             this.destroy();
-            this.listing.destroy();
-        }
     }
 
     function checkOptional() {
@@ -1717,14 +1715,15 @@
             });
 
         //Annotate bin boundaries.
-        this.svg
-            .append('g')
-            .classed('bin-boundaries', true)
-            .selectAll('text.bin-boundary')
+        var axis = this.svg.append('g').classed('bin-boundaries axis', true);
+        var ticks = axis
+            .selectAll('g.bin-boundary')
             .data(binBoundaries)
             .enter()
+            .append('g')
+            .classed('bin-boundary tick', true);
+        var texts = ticks
             .append('text')
-            .classed('bin-boundary', true)
             .attr({
                 x: function x(d) {
                     return _this.x(d.value);

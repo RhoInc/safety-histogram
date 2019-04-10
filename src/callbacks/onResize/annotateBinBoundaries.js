@@ -24,14 +24,15 @@ export default function annotateBinBoundaries() {
         .some(d => d.values > 1);
 
     //Annotate bin boundaries.
-    this.svg
-        .append('g')
-        .classed('bin-boundaries', true)
-        .selectAll('text.bin-boundary')
+    const axis = this.svg.append('g').classed('bin-boundaries axis', true);
+    const ticks = axis
+        .selectAll('g.bin-boundary')
         .data(binBoundaries)
         .enter()
+        .append('g')
+        .classed('bin-boundary tick', true);
+    const texts = ticks
         .append('text')
-        .classed('bin-boundary', true)
         .attr({
             x: d => this.x(d.value),
             y: this.y(0),

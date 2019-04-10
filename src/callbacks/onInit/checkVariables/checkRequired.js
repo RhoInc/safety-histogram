@@ -31,8 +31,5 @@ export default function checkRequired() {
     });
 
     //Destroy chart.
-    if (this.variables.required.some(definition => definition.missing)) {
-        this.destroy();
-        this.listing.destroy();
-    }
+    if (this.variables.required.some(definition => definition.missing)) this.destroy();
 }

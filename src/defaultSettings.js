@@ -61,6 +61,11 @@ export function syncSettings(settings) {
 
     //Define default details.
     let defaultDetails = [{ value_col: settings.id_col, label: 'Subject Identifier' }];
+
+    if (!(settings.filters instanceof Array)) {
+        settings.filters = typeof settings.filters == 'string' ? [settings.filters] : [];
+    }
+
     if (settings.filters)
         settings.filters.forEach(filter =>
             defaultDetails.push({
@@ -76,6 +81,11 @@ export function syncSettings(settings) {
             value_col: settings.normal_col_high,
             label: 'Upper Limit of Normal'
         });
+
+    //If [settings.details] is not an array:
+    if (!(settings.details instanceof Array)) {
+        settings.details = typeof settings.details == 'string' ? [settings.details] : [];
+    }
 
     //If [settings.details] is not specified:
     if (!settings.details) settings.details = defaultDetails;

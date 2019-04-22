@@ -1,7 +1,8 @@
 import { extent, nest, format } from 'd3';
 
 export default function drawNormalRanges() {
-    this.svg.selectAll('.normal-range').remove();
+    this.controls.wrap.select('.normal-range-list').remove();
+    this.svg.select('.normal-ranges').remove();
 
     if (this.config.displayNormalRange) {
         //Capture distinct normal ranges in filtered data.
@@ -24,9 +25,12 @@ export default function drawNormalRanges() {
                 d.width = d.x2 - d.x1;
 
                 //tooltip
-                d.tooltip = `Normal range: ${d.lower} - ${d.upper} (${format('%')(
-                    d.values / this.filtered_data.length
-                )} of records)`;
+                d.tooltip =
+                    d.values < this.filtered_data.length
+                        ? `${d.lower} - ${d.upper} (${format('%')(
+                              d.values / this.filtered_data.length
+                          )} of records)`
+                        : `${d.lower} - ${d.upper}`;
 
                 //plot if:
                 //  - at least one of the limits of normal fall within the current x-domain
@@ -38,7 +42,6 @@ export default function drawNormalRanges() {
 
                 return d;
             })
-            .filter(d => d.plot)
             .sort(
                 (a, b) =>
                     a.lower <= b.lower && a.upper >= b.upper
@@ -52,13 +55,35 @@ export default function drawNormalRanges() {
                                     : 1
             ); // sort normal ranges so larger normal ranges plot beneath smaller normal ranges
 
-        //Add rects to chart for each normal range.
-        const rects = this.svg
-            .selectAll('rect.normal-range')
-            .data(normalRanges)
+        //Add tooltip to Normal Range control that lists normal ranges.
+        this.controls.wrap
+            .selectAll('#normal-range .wc-control-label')
+            .append('span')
+            .classed('normal-range-list', true)
+            .html(' &#9432')
+            .attr(
+                'title',
+                normalRanges.length > 1
+                    ? `${this.measure.current} normal ranges:\n${normalRanges
+                          .map(normalRange => normalRange.tooltip)
+                          .join('\n')}`
+                    : `${this.measure.current} normal range: ${normalRanges[0].tooltip}`
+            )
+            .style('cursor', 'default');
+
+        //Add groups in which to draw normal range rectangles and annotations.
+        const group = this.svg.insert('g', '.bar-supergroup').classed('normal-ranges', true);
+        const groups = group
+            .selectAll('g.normal-range')
+            .data(normalRanges.filter(d => d.plot))
             .enter()
-            .insert('rect', '.bar-supergroup')
-            .classed('normal-range', true)
+            .append('g')
+            .classed('normal-range', true);
+
+        //Draw normal range rectangles.
+        const rectangles = groups
+            .append('rect')
+            .classed('normal-range__rect', true)
             .attr({
                 x: d => d.x1,
                 y: 0,
@@ -71,8 +96,5 @@ export default function drawNormalRanges() {
                 'stroke-opacity': d => (d.values / this.filtered_data.length) * 0.75,
                 'fill-opacity': d => (d.values / this.filtered_data.length) * 0.5
             }); // opacity as a function of fraction of records with the given normal range
-
-        //Add tooltips to each normal range rect.
-        const titles = rects.append('title').text(d => d.tooltip);
     }
 }

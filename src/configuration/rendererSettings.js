@@ -1,21 +1,20 @@
 export default function rendererSettings() {
     return {
         //required variables
-        id_col: 'USUBJID',
         measure_col: 'TEST',
-        unit_col: 'STRESU',
         value_col: 'STRESN',
-        normal_col_low: 'STNRLO',
-        normal_col_high: 'STNRHI',
 
         //optional variables
+        id_col: 'USUBJID',
+        unit_col: 'STRESU',
+        normal_col_low: 'STNRLO',
+        normal_col_high: 'STNRHI',
         filters: null,
         details: null,
 
         //miscellaneous settings
         start_value: null,
         normal_range: true,
-        displayNormalRange: false,
-        bins: 25
+        displayNormalRange: false
     };
 }

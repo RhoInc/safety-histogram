@@ -1,67 +1,58 @@
 # Safety Histogram
-![alt tag](https://user-images.githubusercontent.com/31038805/33951165-3e6299dc-dffc-11e7-82c6-0ffd133f42ac.gif)
+[![Safety Histogram animation](https://user-images.githubusercontent.com/5428548/55808856-e722b200-5ab2-11e9-9223-de22e2719035.gif)](https://rhoinc.github.io/safety-histogram/test-page/)
 
 ## Overview
-Safety Histogram is a JavaScript library, built using Webcharts ([1](https://github.com/RhoInc/Webcharts), [2](https://github.com/RhoInc/webcharts-wrapper-boilerplate)), that creates an interactive histogram showing the distribution of lab measures, vital signs, and other measures related to safety in clinical trials. A typical chart created with safety-histogram looks like this: 
+Safety Histogram is a JavaScript library built with Webcharts ([1](https://github.com/RhoInc/Webcharts), [2](https://github.com/RhoInc/webcharts-wrapper-boilerplate)) that creates an interactive histogram plotting the distribution of lab measures, vital signs, and other measures related to safety in clinical trials.
+A typical chart created with safety-histogram looks like this:
 
-![Example](https://user-images.githubusercontent.com/31038805/33951675-9edaeb42-dffd-11e7-8bed-71988d7092a2.gif)
+![Safety Histogram image](https://user-images.githubusercontent.com/5428548/55808876-f144b080-5ab2-11e9-9354-fe7898ee91f6.PNG)
 
-The chart uses [SDTM](http://www.cdisc.org/sdtm) data standards by default, but can be customized to use any data set that contains one record per person per measure. Full details about chart configuration are [here](Configuration).
+By default the chart expects [SDTM](http://www.cdisc.org/sdtm)-structured data, but can be configured for any dataset with one record per measurement.
+View full chart configuration details [here](https://github.com/RhoInc/safety-histogram/wiki/Configuration).
 
-Users can:
-* See the histogram for a single measure of interest
-* See the number and percentage of participants displayed in the current view (updates with each user interaction)
-* Change the measure of interest, and see an updated chart
-* Display metadata when hovering over a bar
-* Click a bars in the histogram to show a linked listing of the underlying data
-* Filter the histogram for selected criteria, and see an updated chart (optional)
-* Show or hide normal ranges for the selected measure (optional)
+Users can view a histogram of each measure in the data, update the x-axis limits, toggle display of the normal range, and click the chart to view the raw data.
+View full chart functionality [here](https://github.com/RhoInc/safety-histogram/wiki/Technical-Documentation).
 
 ## Typical Usage
-In the simplest case, using a dataset matching all default requirements, the chart can be created with a single line of code.
+In the simplest case, the chart can be created with a single line of code provided the input dataset meets the [default requirements](https://github.com/RhoInc/safety-histogram/wiki/Data-Guidelines):
 
 ```javascript
-safetyHistogram('#chartLocation', {}).init(data);
+    safetyHistogram().init(data);
 ```
 
-The code to load a comma-delimited data set and initialize the customized chart, with filters and simple data mappings, looks like this: 
+Alternatively, the chart can be configured for a different data standard, such as for [ADaM](https://www.cdisc.org/standards/foundational/adam) in the example below:
 
 ```javascript
-const settings = {
-    start_value: 'POTASSIUM',
-    filters: [
-        {value_col: 'VISIT'   , label: 'Visit'},
-        {value_col: 'SITEID'  , label: 'Site ID'},
-        {value_col: 'SEX'     , label: 'Sex'},
-        {value_col: 'RACE'    , label: 'Race'}
-    ],
-    details: [
-        {value_col: 'USUBJID' , label: 'Subject ID'},
-        {value_col: 'SITEID'  , label: 'Site ID'},
-        {value_col: 'SEX'     , label: 'Sex'},
-        {value_col: 'RACE'    , label: 'Race'},
-        {value_col: 'VISIT'   , label: 'Visit'},
-        {value_col: 'DY'      , label: 'Study Day'},
-        {value_col: 'STNRLO'  , label: 'LLN'},
-        {value_col: 'STRESN'  , label: 'Result'},
-        {value_col: 'STNRHI'  , label: 'ULN'},
-        {value_col: 'STRESU'  , label: 'Units'}
-    ]
-};
+    const element = 'body'; // element in which to draw the chart
+    const settings = {
+        measure_col: 'PARAM',
+        value_col: 'AVAL',
+        id_col: 'USUBJID',
+        normal_col_low: 'ANRLO',
+        normal_col_high: 'ANRHI',
+        filters: [
+            {value_col: 'SEX'    , label: 'Sex'},
+            {value_col: 'RACE'   , label: 'Race'},
+            {value_col: 'ARM'    , label: 'Arm'},
+            {value_col: 'AVISIT' , label: 'Visit'},
+            {value_col: 'SITE'   , label: 'Site'},
+        ],
+    }; // custom chart settings
 
-d3.csv(
-    'https://rawgit.com/RhoInc/viz-library/master/data/safetyData/ADBDS.csv',
-    function(data) {
-        safetyHistogram('body', settings).init(data);
-    }
-);
+    d3.csv(
+        'https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinical-trials/adam/advs.csv', // data file location
+        function(data) {
+            safetyHistogram(element, settings).init(data);
+        } // callback function in which the chart is created
+    );
 ```
 
 Click [here](https://rhoinc.github.io/safety-histogram/test-page/) to open an interactive example.
 
 ## Links 
 - [Interactive Example](https://rhoinc.github.io/safety-histogram/test-page/)
-- [Configuration](https://github.com/RhoInc/safety-histogram/wiki/Configuration)
+- [Wiki](https://github.com/RhoInc/safety-histogram/wiki)
 - [API](https://github.com/RhoInc/safety-histogram/wiki/API)
-- [Technical Documentation](https://github.com/RhoInc/safety-histogram/wiki/Technical-Documentation)
+- [Configuration](https://github.com/RhoInc/safety-histogram/wiki/Configuration)
 - [Data Guidelines](https://github.com/RhoInc/safety-histogram/wiki/Data-Guidelines)
+- [Technical Documentation](https://github.com/RhoInc/safety-histogram/wiki/Technical-Documentation)

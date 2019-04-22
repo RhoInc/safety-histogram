@@ -1,3 +1,4 @@
+import checkVariables from './onInit/checkVariables';
 import countParticipants from './onInit/countParticipants';
 import cleanData from './onInit/cleanData';
 import addVariables from './onInit/addVariables';
@@ -5,6 +6,9 @@ import defineSets from './onInit/defineSets';
 import checkControls from './onInit/checkControls';
 
 export default function onInit() {
+    // 0. Check variables.
+    checkVariables.call(this);
+
     // 1. Count total participants prior to data cleaning.
     countParticipants.call(this);
 

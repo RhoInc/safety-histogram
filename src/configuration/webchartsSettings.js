@@ -1,13 +1,12 @@
 export default function webchartsSettings() {
     return {
-        //chart settings
         x: {
             type: 'linear',
-            column: null, // set in syncSettings()
-            label: null, // set in syncSettings()
-            domain: [null, null], // set in preprocess callback
-            format: null, // set in preprocess callback
-            bin: 25
+            column: null, // set in ./syncSettings
+            label: null, // set in ../callbacks/onPreprocess/setXaxisLabel
+            domain: [null, null], // set in ../callbacks/onPreprocess/setXdomain
+            format: null, // set in ../callbacks/onPreprocess/calculateXPrecision
+            bin: null // set in ../callbacks/onPreprocess/defineMeasureData
         },
         y: {
             type: 'linear',
@@ -19,7 +18,7 @@ export default function webchartsSettings() {
         },
         marks: [
             {
-                per: [], // set in syncSettings()
+                per: [], // set in ./syncSettings
                 type: 'bar',
                 summarizeY: 'count',
                 summarizeX: 'mean',

@@ -5,30 +5,12 @@ In addition to the standard Webcharts settings several custom settings not avail
 # Renderer-specific settings
 The sections below describe each safety-histogram setting as of version 2.3.0.
 
-## settings.id_col
-`string`
-
-a variable that contains IDs for each participant
-
-**default:** `"USUBJID"`
-
-
-
 ## settings.measure_col
 `string`
 
 a variable that contains the names of each medical sign
 
 **default:** `"TEST"`
-
-
-
-## settings.unit_col
-`string`
-
-a variable that contains the units of each medical sign
-
-**default:** `"STRESU"`
 
 
 
@@ -41,12 +23,21 @@ a variable that contains the results for each medical sign; non-numeric results 
 
 
 
-## settings.normal_col_high
+## settings.id_col
 `string`
 
-a variable that contains the upper limit of normal of the medical sign
+a variable that contains IDs for each participant
 
-**default:** `"STNRHI"`
+**default:** `"USUBJID"`
+
+
+
+## settings.unit_col
+`string`
+
+a variable that contains the units of each medical sign
+
+**default:** `"STRESU"`
 
 
 
@@ -56,6 +47,15 @@ a variable that contains the upper limit of normal of the medical sign
 a variable that contains the lower limit of normal of the medical sign
 
 **default:** `"STNRLO"`
+
+
+
+## settings.normal_col_high
+`string`
+
+a variable that contains the upper limit of normal of the medical sign
+
+**default:** `"STNRHI"`
 
 
 
@@ -130,6 +130,8 @@ a boolean that dictates whether the normal range will be displayed initially
 
 **default:** `false`
 
+
+
 # Webcharts settings
 The object below contains Webcharts settings that define the safety-histogram chart as of version 2.3.0 of the Safety Histogram.
 
@@ -144,7 +146,7 @@ The object below contains Webcharts settings that define the safety-histogram ch
             null
         ],
         "format": null,
-        "bin": 25
+        "bin": null
     },
     "y": {
         "type": "linear",

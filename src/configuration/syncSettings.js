@@ -1,5 +1,4 @@
 export default function syncSettings(settings) {
-    settings.x.label = settings.start_value;
     settings.x.column = settings.value_col;
     settings.marks[0].per[0] = settings.value_col;
 
@@ -10,7 +9,7 @@ export default function syncSettings(settings) {
     }
 
     //Define default details.
-    let defaultDetails = [{ value_col: settings.id_col, label: 'Subject Identifier' }];
+    let defaultDetails = [{ value_col: settings.id_col, label: 'Participant ID' }];
     if (Array.isArray(settings.filters))
         settings.filters.forEach(filter =>
             defaultDetails.push({

@@ -7,6 +7,10 @@ export default function addParticipantCountContainer() {
             position: 'absolute',
             'font-style': 'italic',
             bottom: '-10px',
-            left: 0
+            left: 0,
+            display: this.variables.optional.find(definition => definition.property === 'id_col')
+                .missing
+                ? 'none'
+                : 'block'
         });
 }

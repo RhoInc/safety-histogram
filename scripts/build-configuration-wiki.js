@@ -85,18 +85,15 @@ function setDefault(setting) {
                         });
                 }
 
-                if (i < keys.length - 1) {
-                    markdown.push(``);
-                    markdown.push(``);
-                    markdown.push(``);
-                }
+                markdown.push(``);
+                markdown.push(``);
+                markdown.push(``);
             });
 
 /*------------------------------------------------------------------------------------------------\
   Webcharts settings
 \------------------------------------------------------------------------------------------------*/
 
-    markdown.push(``);
     markdown.push(`# Webcharts settings`);
     markdown.push(`The object below contains Webcharts settings that define the safety-histogram chart as of version ${schema.version} of the ${pkg.name.split('-').map(str => str.substring(0,1).toUpperCase() + str.substring(1).toLowerCase()).join(' ')}.`);
     markdown.push(``);

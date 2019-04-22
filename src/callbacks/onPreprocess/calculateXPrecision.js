@@ -20,7 +20,7 @@ export default function calculateXPrecision() {
     this.config.x.d3format1 = format(this.config.x.format1);
 
     //define the size of the x-axis limit increments
-    let step = this.measure.range / 15;
+    let step = this.measure.range > 0 ? this.measure.range / 15 : this.measure.domain / 15;
     if (step < 1) {
         let x10 = 0;
         do {
@@ -29,5 +29,5 @@ export default function calculateXPrecision() {
         } while (step < 1);
         step = Math.round(step) / Math.pow(10, x10);
     } else step = Math.round(step);
-    this.measure.step = step;
+    this.measure.step = step || 1;
 }

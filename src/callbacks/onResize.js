@@ -1,4 +1,4 @@
-import handleSingleObservation from './onResize/handleSingleObservation';
+import drawZeroRangeBar from './onResize/drawZeroRangeBar';
 import addHoverBars from './onResize/addHoverBars';
 import addBinEventListeners from './onResize/addBinEventListeners';
 import drawNormalRanges from './onResize/drawNormalRanges';
@@ -7,7 +7,7 @@ import hideDuplicateXaxisTickLabels from './onResize/hideDuplicateXaxisTickLabel
 
 export default function onResize() {
     //Draw custom bin for single observation subsets.
-    handleSingleObservation.call(this);
+    drawZeroRangeBar.call(this);
 
     //Add invisible bars for improved hovering.
     addHoverBars.call(this);

@@ -1,6 +1,8 @@
 export default function addFootnoteContainer() {
     this.footnotes = {
-        container: this.wrap.insert('div', '.wc-chart').classed('footnotes', true)
+        container: this.wrap
+            .insert('div', '.wc-chart')
+            .classed('footnotes', true)
             .style({
                 'border-top': '1px solid #ccc',
                 'padding-top': '10px'

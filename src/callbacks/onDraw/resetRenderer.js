@@ -11,5 +11,6 @@ export default function resetRenderer() {
 
     //Reset bar highlighting.
     delete this.highlightedBin;
+    delete this.highlighteD;
     this.svg.selectAll('.bar').attr('opacity', 1);
 }

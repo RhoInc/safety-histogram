@@ -632,14 +632,14 @@
                 option: 'x.domain',
                 label: ''
             })
+            .attr('title', 'Reset x-axis limits.')
             .style('vertical-align', 'bottom');
 
         //Add label.
         resetContainer
             .append('span')
             .attr('class', 'wc-control-label')
-            .style('text-align', 'right')
-            .text('Limits');
+            .text('');
 
         //Add button.
         resetContainer
@@ -670,31 +670,100 @@
     }
 
     function insertGrouping(selector, label) {
-        var grouping = this.controls.wrap
+        var className = label.toLowerCase().replace(/ /g, '-') + '-grouping';
+        var div = this.controls.wrap
             .insert('div', selector)
+            .classed(className + '-div', true)
             .style({
                 display: 'inline-block',
                 'margin-right': '5px'
-            })
+            });
+        var fieldset = div
             .append('fieldset')
+            .classed(className + '-fieldset', true)
             .style('padding', '0px 2px');
-        grouping.append('legend').text(label);
+        var legend = fieldset
+            .append('legend')
+            .classed(className + '-legend', true)
+            .text(label);
         this.controls.wrap.selectAll(selector).each(function(d) {
             this.style.marginTop = '0px';
             this.style.marginRight = '2px';
             this.style.marginBottom = '2px';
             this.style.marginLeft = '2px';
-            grouping.node().appendChild(this);
+            fieldset.node().appendChild(this);
         });
     }
 
     function groupControls() {
         //Group x-axis controls.
-        insertGrouping.call(this, '.x-axis', 'X-axis');
+        insertGrouping.call(this, '.x-axis', 'X-axis Limits');
 
         //Group filters.
         if (this.filters.length > 1)
             insertGrouping.call(this, '.subsetter:not(#measure)', 'Filters');
+    }
+
+    function addXdomainZoomButton() {
+        var _this = this;
+
+        if (
+            this.filters.find(function(filter) {
+                return filter.col !== 'sh_measure';
+            })
+        ) {
+            //Add x-domain zoom button container.
+            var resetContainer = this.controls.wrap
+                .select('.x-axis-limits-grouping-fieldset')
+                .append('div')
+                .classed('control-group x-axis', true)
+                .datum({
+                    type: 'button',
+                    option: 'x.domain',
+                    label: ''
+                })
+                .attr('title', 'Zoom in on filtered histogram.')
+                .style({
+                    'vertical-align': 'bottom',
+                    'margin-top': '0px',
+                    'margin-right': '2px',
+                    'margin-bottom': '2px',
+                    'margin-left': '2px'
+                });
+
+            //Add label.
+            resetContainer
+                .append('span')
+                .attr('class', 'wc-control-label')
+                .text('');
+
+            //Add button.
+            resetContainer
+                .append('button')
+                .text(' Zoom ')
+                .style('padding', '0px 5px')
+                .on('click', function() {
+                    _this.config.x.domain = _this.measure.filtered.domain;
+
+                    _this.controls.wrap
+                        .selectAll('.control-group')
+                        .filter(function(f) {
+                            return f.option === 'x.domain[0]';
+                        })
+                        .select('input')
+                        .property('value', _this.config.x.domain[0]);
+
+                    _this.controls.wrap
+                        .selectAll('.control-group')
+                        .filter(function(f) {
+                            return f.option === 'x.domain[1]';
+                        })
+                        .select('input')
+                        .property('value', _this.config.x.domain[1]);
+
+                    _this.draw();
+                });
+        }
     }
 
     function addParticipantCountContainer() {
@@ -795,6 +864,7 @@
         identifyControls.call(this);
         addXdomainResetButton.call(this);
         groupControls.call(this);
+        addXdomainZoomButton.call(this);
         addParticipantCountContainer.call(this);
         addRemovedRecordsNote.call(this);
         addBorderAboveChart.call(this);

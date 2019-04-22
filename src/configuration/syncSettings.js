@@ -6,11 +6,12 @@ export default function syncSettings(settings) {
     if (!settings.normal_range) {
         settings.normal_col_low = null;
         settings.normal_col_high = null;
+        settings.displayNormalRange = false;
     }
 
     //Define default details.
     let defaultDetails = [{ value_col: settings.id_col, label: 'Subject Identifier' }];
-    if (settings.filters)
+    if (Array.isArray(settings.filters))
         settings.filters.forEach(filter =>
             defaultDetails.push({
                 value_col: filter.value_col ? filter.value_col : filter,

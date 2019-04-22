@@ -4,7 +4,7 @@
         : typeof define === 'function' && define.amd
             ? define(['d3', 'webcharts'], factory)
             : (global.safetyHistogram = factory(global.d3, global.webCharts));
-})(this, function(d3, webcharts) {
+})(this, function(d3$1, webcharts) {
     'use strict';
 
     if (typeof Object.assign != 'function') {
@@ -133,13 +133,13 @@
         };
 
     // https://github.com/wbkd/d3-extended
-    d3.selection.prototype.moveToFront = function() {
+    d3$1.selection.prototype.moveToFront = function() {
         return this.each(function() {
             this.parentNode.appendChild(this);
         });
     };
 
-    d3.selection.prototype.moveToBack = function() {
+    d3$1.selection.prototype.moveToBack = function() {
         return this.each(function() {
             var firstChild = this.parentNode.firstChild;
             if (firstChild) {
@@ -165,7 +165,8 @@
             //miscellaneous settings
             start_value: null,
             normal_range: true,
-            displayNormalRange: false
+            displayNormalRange: false,
+            bins: 25
         };
     }
 
@@ -209,11 +210,12 @@
         if (!settings.normal_range) {
             settings.normal_col_low = null;
             settings.normal_col_high = null;
+            settings.displayNormalRange = false;
         }
 
         //Define default details.
         var defaultDetails = [{ value_col: settings.id_col, label: 'Subject Identifier' }];
-        if (settings.filters)
+        if (Array.isArray(settings.filters))
             settings.filters.forEach(function(filter) {
                 return defaultDetails.push({
                     value_col: filter.value_col ? filter.value_col : filter,
@@ -310,6 +312,15 @@
             });
         }
 
+        //Remove normal range control.
+        if (!settings.normal_range)
+            controlInputs.splice(
+                controlInputs.findIndex(function(input) {
+                    return input.label === 'Normal Range';
+                }),
+                1
+            );
+
         return controlInputs;
     }
 
@@ -326,7 +337,7 @@
         var _this = this;
 
         this.participantCount = {
-            N: d3
+            N: d3$1
                 .set(
                     this.raw_data.map(function(d) {
                         return d[_this.config.id_col];
@@ -354,7 +365,7 @@
         });
 
         //Nest missing and nonmissing results by participant.
-        var participantsWithMissingResults = d3
+        var participantsWithMissingResults = d3$1
             .nest()
             .key(function(d) {
                 return d[_this.config.id_col];
@@ -363,7 +374,7 @@
                 return d.length;
             })
             .entries(missingResults);
-        var participantsWithNonMissingResults = d3
+        var participantsWithNonMissingResults = d3$1
             .nest()
             .key(function(d) {
                 return d[_this.config.id_col];
@@ -394,7 +405,7 @@
             );
 
         //Count the number of records with missing results.
-        this.removedRecords.missing = d3.sum(
+        this.removedRecords.missing = d3$1.sum(
             participantsWithMissingResults.filter(function(d) {
                 return _this.removedRecords.placeholderRecords.indexOf(d.key) < 0;
             }),
@@ -465,7 +476,7 @@
     function participant() {
         var _this = this;
 
-        this.participants = d3
+        this.participants = d3$1
             .set(
                 this.initial_data.map(function(d) {
                     return d[_this.config.id_col];
@@ -478,7 +489,7 @@
     function measure() {
         var _this = this;
 
-        this.measures = d3
+        this.measures = d3$1
             .set(
                 this.initial_data.map(function(d) {
                     return d[_this.config.measure_col];
@@ -486,7 +497,7 @@
             )
             .values()
             .sort();
-        this.sh_measures = d3
+        this.sh_measures = d3$1
             .set(
                 this.initial_data.map(function(d) {
                     return d.sh_measure;
@@ -545,7 +556,7 @@
                         ' ] filter has been removed because the variable does not exist.'
                 );
             } else {
-                var levels = d3
+                var levels = d3$1
                     .set(
                         _this.raw_data.map(function(d) {
                             return d[input.value_col];
@@ -598,7 +609,7 @@
                 return d.label.toLowerCase().replace(' ', '-');
             })
             .each(function(d) {
-                d3.select(this).classed(d.type, true);
+                d3$1.select(this).classed(d.type, true);
             });
 
         //Give x-axis controls a common class name.
@@ -636,7 +647,7 @@
             .text(' Reset ')
             .style('padding', '0px 5px')
             .on('click', function() {
-                _this.config.x.domain = _this.measure.domain;
+                _this.config.x.domain = _this.measure.raw.domain;
 
                 _this.controls.wrap
                     .selectAll('.control-group')
@@ -795,38 +806,87 @@
         this.measure.current = this.controls.wrap.selectAll('#measure option:checked').text();
     }
 
-    function defineMeasureData() {
+    function calculateStatistics(obj) {
         var _this = this;
 
-        this.measure.data = this.initial_data.filter(function(d) {
-            return d.sh_measure === _this.measure.current;
-        });
-        this.measure.unit =
-            this.config.unit_col && this.measure.data[0].hasOwnProperty(this.config.unit_col)
-                ? this.measure.data[0][this.config.unit_col]
-                : null;
-        this.measure.results = this.measure.data
+        //Define array of all and unique results.
+        obj.results = obj.data
             .map(function(d) {
                 return +d[_this.config.value_col];
             })
             .sort(function(a, b) {
                 return a - b;
             });
-        this.measure.domain = d3.extent(this.measure.results);
-        this.measure.range = this.measure.domain[1] - this.measure.domain[0];
-        this.measure.log10range = Math.log10(this.measure.range);
-        this.raw_data = this.measure.data.slice();
+        obj.uniqueResults = d3.set(obj.results).values();
+
+        //Calculate statistics.
+        obj.domain = d3$1.extent(obj.results);
+        obj.stats = {
+            n: obj.results.length,
+            nUnique: obj.uniqueResults.length,
+            min: obj.domain[0],
+            q25: d3$1.quantile(obj.results, 0.25),
+            median: d3$1.quantile(obj.results, 0.5),
+            q75: d3$1.quantile(obj.results, 0.75),
+            max: obj.domain[1],
+            range: obj.domain[1] - obj.domain[0]
+        };
+        obj.stats.log10range = obj.stats.range > 0 ? Math.log10(obj.stats.range) : NaN;
+        obj.stats.iqr = obj.stats.q75 - obj.stats.q25;
+
+        //Calculate bin width and number of bins.
+        obj.stats.calculatedBinWidth = (2 * obj.stats.iqr) / Math.pow(obj.stats.n, 1.0 / 3.0); // https://en.wikipedia.org/wiki/Freedman%E2%80%93Diaconis_rule
+        obj.stats.calculatedBins =
+            obj.stats.calculatedBinWidth > 0
+                ? Math.ceil(obj.stats.range / obj.stats.calculatedBinWidth)
+                : NaN;
+        obj.stats.nBins =
+            obj.stats.calculatedBins < obj.stats.nUnique
+                ? obj.stats.calculatedBins
+                : obj.stats.nUnique;
+        obj.stats.binWidth = obj.stats.range / obj.nBins;
+    }
+
+    function defineMeasureData() {
+        var _this = this;
+
+        //Filter data on selected measure.
+        this.measure.raw = {
+            data: this.initial_data.filter(function(d) {
+                return d.sh_measure === _this.measure.current;
+            })
+        };
+        calculateStatistics.call(this, this.measure.raw);
+
+        //Apply other filters to measure data.
+        this.measure.filtered = {
+            data: this.measure.raw.data
+        };
+        this.filters.forEach(function(filter) {
+            _this.measure.filtered.data = _this.measure.filtered.data.filter(function(d) {
+                return filter.val === 'All'
+                    ? true
+                    : Array.isArray(filter.val)
+                        ? filter.val.includes(d[filter.col])
+                        : filter.val === d[filter.col];
+            });
+        });
+        calculateStatistics.call(this, this.measure.filtered);
+
+        //Update chart config and set chart data to measure data.
+        this.config.x.bin = this.measure.filtered.stats.nBins;
+        this.raw_data = this.measure.raw.data.slice();
     }
 
     function setXdomain() {
         if (this.measure.current !== this.measure.previous)
-            this.config.x.domain = this.measure.domain;
+            this.config.x.domain = this.measure.raw.domain;
         else if (this.config.x.domain[0] > this.config.x.domain[1]) this.config.x.domain.reverse();
     }
 
     function calculateXPrecision() {
         //define the precision of the x-axis
-        this.config.x.precisionFactor = Math.round(this.measure.log10range);
+        this.config.x.precisionFactor = Math.round(this.measure.raw.stats.log10range);
         this.config.x.precision = Math.pow(10, this.config.x.precisionFactor);
 
         //x-axis format
@@ -834,17 +894,22 @@
             this.config.x.precisionFactor > 0
                 ? '.0f'
                 : '.' + (Math.abs(this.config.x.precisionFactor) + 1) + 'f';
-        this.config.x.d3format = d3.format(this.config.x.format);
+        this.config.x.d3format = d3$1.format(this.config.x.format);
 
         //one more precision please: bin format
         this.config.x.format1 =
             this.config.x.precisionFactor > 0
                 ? '.1f'
                 : '.' + (Math.abs(this.config.x.precisionFactor) + 2) + 'f';
-        this.config.x.d3format1 = d3.format(this.config.x.format1);
+        this.config.x.d3format1 = d3$1.format(this.config.x.format1);
 
         //define the size of the x-axis limit increments
-        var step = this.measure.range > 0 ? this.measure.range / 15 : this.measure.domain / 15;
+        var step =
+            this.measure.raw.stats.range > 0
+                ? Math.abs(this.measure.raw.stats.range / 15) // non-zero range
+                : this.measure.raw.results[0] !== 0
+                    ? Math.abs(this.measure.raw.results[0] / 15) // zero range, non-zero result(s)
+                    : 1; // zero range, zero result(s)
         if (step < 1) {
             var x10 = 0;
             do {
@@ -918,14 +983,14 @@
         var _this = this;
 
         //count the number of unique ids in the current chart and calculate the percentage
-        this.participantCount.n = d3
+        this.participantCount.n = d3$1
             .set(
                 this.filtered_data.map(function(d) {
                     return d[_this.config.id_col];
                 })
             )
             .values().length;
-        this.participantCount.percentage = d3.format('0.1%')(
+        this.participantCount.percentage = d3$1.format('0.1%')(
             this.participantCount.n / this.participantCount.N
         );
 
@@ -984,10 +1049,12 @@
                 .delay(250) // wait for initial marks to transition
                 .attr({
                     x: function x(d) {
-                        return _this.x(d.values.x * 0.999);
+                        return d.values.x !== 0 ? _this.x(d.values.x * 0.999) : _this.x(-0.1);
                     },
                     width: function width(d) {
-                        return _this.x(d.values.x * 1.001) - _this.x(d.values.x * 0.999);
+                        return d.values.x !== 0
+                            ? _this.x(d.values.x * 1.001) - _this.x(d.values.x * 0.999)
+                            : _this.x(0.1) - _this.x(-0.1);
                     }
                 });
         }
@@ -997,7 +1064,7 @@
         var context = this;
 
         var bins = this.svg.selectAll('.bar-group').each(function(d) {
-            var g = d3.select(this);
+            var g = d3$1.select(this);
             g.selectAll('.hover-bar').remove();
 
             //Drawing a path instead of a rect because Webcharts messes up the original rect on resize.
@@ -1030,7 +1097,7 @@
         );
 
         //Highlight bar.
-        var selection = d3.select(element);
+        var selection = d3$1.select(element);
         selection.moveToFront();
         selection.selectAll('.bar').attr('stroke', 'black');
     }
@@ -1051,7 +1118,7 @@
         );
 
         //Remove bar highlight.
-        var selection = d3.select(element);
+        var selection = d3$1.select(element);
         selection.selectAll('.bar').attr('stroke', this.colorScale());
     }
 
@@ -1063,7 +1130,7 @@
             .selectAll('.bar-group')
             .selectAll('.bar')
             .attr('fill-opacity', 0.5);
-        d3.select(element)
+        d3$1.select(element)
             .select('.bar')
             .attr('fill-opacity', 1);
 
@@ -1121,7 +1188,7 @@
     function click(element, d) {
         this.highlightedBin = d.key;
         this.highlighteD = d;
-        var selection = d3.select(element);
+        var selection = d3$1.select(element);
         var selected = selection.classed('selected');
         this.svg.selectAll('.bar-group').classed('selected', false);
         selection.classed('selected', !selected);
@@ -1148,110 +1215,102 @@
     }
 
     function drawNormalRanges() {
-        var chart = this;
-        var config = this.config;
-        var normalRangeControl = this.controls.wrap.selectAll('.control-group').filter(function(d) {
-            return d.label === 'Normal Range';
-        });
+        var _this = this;
 
-        if (config.normal_range) {
-            if (chart.config.displayNormalRange) drawNormalRanges(chart);
-            else chart.wrap.selectAll('.normalRange').remove();
+        this.svg.selectAll('.normal-range').remove();
 
-            normalRangeControl.on('change', function() {
-                chart.config.displayNormalRange = d3
-                    .select(this)
-                    .select('input')
-                    .property('checked');
-
-                if (chart.config.displayNormalRange) drawNormalRanges(chart);
-                else chart.wrap.selectAll('.normalRange').remove();
-            });
-        } else normalRangeControl.style('display', 'none');
-
-        function drawNormalRanges() {
-            //Clear normal ranges.
-            var canvas = chart.svg;
-            canvas.selectAll('.normalRange').remove();
-
+        if (this.config.displayNormalRange) {
             //Capture distinct normal ranges in filtered data.
-            var normalRanges = d3
+            var normalRanges = d3$1
                 .nest()
                 .key(function(d) {
-                    return d[chart.config.normal_col_low] + ',' + d[chart.config.normal_col_high];
+                    return d[_this.config.normal_col_low] + ',' + d[_this.config.normal_col_high];
                 }) // set key to comma-delimited normal range
                 .rollup(function(d) {
                     return d.length;
                 })
-                .entries(chart.filtered_data);
-            var currentRange = d3.extent(chart.filtered_data, function(d) {
-                return +d[chart.config.value_col];
-            });
-            //Sort normal ranges so larger normal ranges plot beneath smaller normal ranges.
-            normalRanges.sort(function(a, b) {
-                var a_lo = a.key.split(',')[0];
-                var a_hi = a.key.split(',')[1];
-                var b_lo = b.key.split(',')[0];
-                var b_hi = b.key.split(',')[1];
-                return a_lo <= b_lo && a_hi >= b_hi
-                    ? 2 // lesser minimum and greater maximum
-                    : a_lo >= b_lo && a_hi <= b_hi
-                        ? -2 // greater minimum and lesser maximum
-                        : a_lo <= b_lo && a_hi <= b_hi
-                            ? 1 // lesser minimum and lesser maximum
-                            : a_lo >= b_lo && a_hi >= b_hi
-                                ? -1 // greater minimum and greater maximum
-                                : 1;
-            });
-            //Add divs to chart for each normal range.
-            canvas
-                .selectAll('.normalRange rect')
+                .entries(this.filtered_data)
+                .map(function(d) {
+                    d.keySplit = d.key.split(',');
+
+                    //lower
+                    d.lower = +d.keySplit[0];
+                    d.x1 = d.lower >= _this.x_dom[0] ? _this.x(d.lower) : 0;
+
+                    //upper
+                    d.upper = +d.keySplit[1];
+                    d.x2 = d.upper <= _this.x_dom[1] ? _this.x(d.upper) : _this.plot_width;
+
+                    //width
+                    d.width = d.x2 - d.x1;
+
+                    //tooltip
+                    d.tooltip =
+                        'Normal range: ' +
+                        d.lower +
+                        ' - ' +
+                        d.upper +
+                        ' (' +
+                        d3$1.format('%')(d.values / _this.filtered_data.length) +
+                        ' of records)';
+
+                    //plot if:
+                    //  - at least one of the limits of normal fall within the current x-domain
+                    //  - the lower limit is less than the current x-domain and the upper limit is greater than current the x-domain
+                    d.plot =
+                        (_this.x_dom[0] <= d.lower && d.lower <= _this.x_dom[1]) ||
+                        (_this.x_dom[0] <= d.upper && d.upper <= _this.x_dom[1]) ||
+                        (_this.x_dom[0] >= d.lower && d.upper >= _this.x_dom[1]);
+
+                    return d;
+                })
+                .filter(function(d) {
+                    return d.plot;
+                })
+                .sort(function(a, b) {
+                    return a.lower <= b.lower && a.upper >= b.upper
+                        ? 1 // lesser minimum and greater maximum
+                        : a.lower >= b.lower && a.upper <= b.upper
+                            ? -1 // greater minimum and lesser maximum
+                            : a.lower <= b.lower && a.upper <= b.upper
+                                ? 1 // lesser minimum and lesser maximum
+                                : a.lower >= b.lower && a.upper >= b.upper
+                                    ? -1 // greater minimum and greater maximum
+                                    : 1;
+                }); // sort normal ranges so larger normal ranges plot beneath smaller normal ranges
+
+            //Add rects to chart for each normal range.
+            var rects = this.svg
+                .selectAll('rect.normal-range')
                 .data(normalRanges)
                 .enter()
-                .insert('rect', ':first-child')
+                .insert('rect', '.bar-supergroup')
+                .classed('normal-range', true)
                 .attr({
-                    class: 'normalRange',
                     x: function x(d) {
-                        return chart.x(Math.max(+d.key.split(',')[0], currentRange[0]));
-                    }, // set x to range low
+                        return d.x1;
+                    },
                     y: 0,
                     width: function width(d) {
-                        return Math.min(
-                            chart.plot_width -
-                                chart.x(Math.max(+d.key.split(',')[0], currentRange[0])), // chart width - range low
-
-                            chart.x(+d.key.split(',')[1]) -
-                                chart.x(Math.max(+d.key.split(',')[0], currentRange[0]))
-                        );
-                    }, // range high - range low
-
-                    height: chart.plot_height
+                        return d.width;
+                    },
+                    height: this.plot_height
                 })
                 .style({
                     stroke: 'black',
                     fill: 'black',
                     'stroke-opacity': function strokeOpacity(d) {
-                        return (d.values / chart.filtered_data.length) * 0.75;
-                    }, // opacity as a function of fraction of records with the given normal range
+                        return (d.values / _this.filtered_data.length) * 0.75;
+                    },
                     'fill-opacity': function fillOpacity(d) {
-                        return (d.values / chart.filtered_data.length) * 0.5;
+                        return (d.values / _this.filtered_data.length) * 0.5;
                     }
-                }) // opacity as a function of fraction of records with the given normal range
-                .append('title')
-                .text(function(d) {
-                    return (
-                        'Normal range: ' +
-                        d.key.split(',')[0] +
-                        '-' +
-                        d.key.split(',')[1] +
-                        (chart.config.unit_col
-                            ? '' + chart.filtered_data[0][chart.config.unit_col]
-                            : '') +
-                        (' (' +
-                            d3.format('%')(d.values / chart.filtered_data.length) +
-                            ' of records)')
-                    );
-                });
+                }); // opacity as a function of fraction of records with the given normal range
+
+            //Add tooltips to each normal range rect.
+            var titles = rects.append('title').text(function(d) {
+                return d.tooltip;
+            });
         }
     }
 
@@ -1269,7 +1328,7 @@
 
     function hideDuplicateXaxisTickLabels() {
         this.svg.selectAll('.x.axis .tick').each(function(d, i) {
-            var tick = d3.select(this);
+            var tick = d3$1.select(this);
             var value = +d;
             var text = +tick.select('text').text();
             tick.style('display', value === text ? 'block' : 'none');

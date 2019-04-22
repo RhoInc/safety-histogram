@@ -5,8 +5,11 @@ export default function drawZeroRangeBar() {
             .transition()
             .delay(250) // wait for initial marks to transition
             .attr({
-                x: d => this.x(d.values.x * 0.999),
-                width: d => this.x(d.values.x * 1.001) - this.x(d.values.x * 0.999)
+                x: d => (d.values.x !== 0 ? this.x(d.values.x * 0.999) : this.x(-0.1)),
+                width: d =>
+                    d.values.x !== 0
+                        ? this.x(d.values.x * 1.001) - this.x(d.values.x * 0.999)
+                        : this.x(0.1) - this.x(-0.1)
             });
     }
 }

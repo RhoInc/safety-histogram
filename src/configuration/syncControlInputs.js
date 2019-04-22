@@ -13,5 +13,9 @@ export default function syncControlInputs(controlInputs, settings) {
         });
     }
 
+    //Remove normal range control.
+    if (!settings.normal_range)
+        controlInputs.splice(controlInputs.findIndex(input => input.label === 'Normal Range'), 1);
+
     return controlInputs;
 }

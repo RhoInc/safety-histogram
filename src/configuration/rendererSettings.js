@@ -15,6 +15,7 @@ export default function rendererSettings() {
         //miscellaneous settings
         start_value: null,
         normal_range: true,
-        displayNormalRange: false
+        displayNormalRange: false,
+        bins: 25
     };
 }

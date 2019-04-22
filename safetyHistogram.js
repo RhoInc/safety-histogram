@@ -1396,13 +1396,69 @@
         });
     }
 
-    function hideDuplicateXaxisTickLabels() {
-        this.svg.selectAll('.x.axis .tick').each(function(d, i) {
-            var tick = d3$1.select(this);
-            var value = +d;
-            var text = +tick.select('text').text();
-            tick.style('display', value === text ? 'block' : 'none');
-        });
+    function removeXAxisTicks() {
+        this.svg.selectAll('.x.axis .tick').remove();
+    }
+
+    function annotateBinBoundaries() {
+        var _this = this;
+
+        //Remove bin boundaries.
+        this.svg.selectAll('text.bin-boundary').remove();
+
+        //Define set of bin boundaries.
+        var binBoundaries = d3
+            .set(
+                d3.merge(
+                    this.current_data.map(function(d) {
+                        return [d.rangeLow, d.rangeHigh];
+                    })
+                )
+            )
+            .values()
+            .map(function(value) {
+                return {
+                    value: +value,
+                    value1: _this.config.x.d3format(value),
+                    value2: _this.config.x.d3format1(value)
+                };
+            })
+            .sort(function(a, b) {
+                return a.value - b.value;
+            });
+
+        //Check for repeats of values formatted with lower precision.
+        var repeats = d3
+            .nest()
+            .key(function(d) {
+                return d.value1;
+            })
+            .rollup(function(d) {
+                return d.length;
+            })
+            .entries(binBoundaries)
+            .some(function(d) {
+                return d.values > 1;
+            });
+
+        //Annotate bin boundaries.
+        this.svg
+            .selectAll('text.bin-boundary')
+            .data(binBoundaries)
+            .enter()
+            .append('text')
+            .classed('bin-boundary', true)
+            .attr({
+                x: function x(d) {
+                    return _this.x(d.value);
+                },
+                y: this.y(0),
+                dy: '16px',
+                'text-anchor': 'middle'
+            })
+            .text(function(d) {
+                return repeats ? d.value2 : d.value1;
+            });
     }
 
     function onResize() {
@@ -1421,8 +1477,11 @@
         //Keep highlighted bin highlighted on resize.
         maintainBinHighlighting.call(this);
 
-        //Hide duplicate x-axis tick labels (d3 sometimes draws more ticks than the precision allows).
-        hideDuplicateXaxisTickLabels.call(this);
+        //Remove x-axis ticks.
+        removeXAxisTicks.call(this);
+
+        //Annotate bin boundaries.
+        annotateBinBoundaries.call(this);
     }
 
     function onDestroy() {}

@@ -3,7 +3,8 @@ import addHoverBars from './onResize/addHoverBars';
 import addBinEventListeners from './onResize/addBinEventListeners';
 import drawNormalRanges from './onResize/drawNormalRanges';
 import maintainBinHighlighting from './onResize/maintainBinHighlighting';
-import hideDuplicateXaxisTickLabels from './onResize/hideDuplicateXaxisTickLabels';
+import removeXAxisTicks from './onResize/removeXAxisTicks';
+import annotateBinBoundaries from './onResize/annotateBinBoundaries';
 
 export default function onResize() {
     //Draw custom bin for single observation subsets.
@@ -21,6 +22,9 @@ export default function onResize() {
     //Keep highlighted bin highlighted on resize.
     maintainBinHighlighting.call(this);
 
-    //Hide duplicate x-axis tick labels (d3 sometimes draws more ticks than the precision allows).
-    hideDuplicateXaxisTickLabels.call(this);
+    //Remove x-axis ticks.
+    removeXAxisTicks.call(this);
+
+    //Annotate bin boundaries.
+    annotateBinBoundaries.call(this);
 }

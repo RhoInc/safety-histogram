@@ -5,9 +5,9 @@ d3.csv(
     },
     function(data) {
         var instance = safetyHistogram(
-            '#container',
+            '#container', // element
             {
-            }
+            } // settings
         );
         instance.init(data);
     }

@@ -1,18 +1,17 @@
+import identifyControls from './onLayout/identifyControls';
 import addXdomainResetButton from './onLayout/addXdomainResetButton';
-import classXaxisLimitControls from './onLayout/classXaxisLimitControls';
-import addPopulationCountContainer from './onLayout/addPopulationCountContainer';
+import groupControls from './onLayout/groupControls';
+import addParticipantCountContainer from './onLayout/addParticipantCountContainer';
+import addRemovedRecordsContainer from './onLayout/addRemovedRecordsContainer';
+import addBorderAboveChart from './onLayout/addBorderAboveChart';
 import addFootnoteContainer from './onLayout/addFootnoteContainer';
 
 export default function onLayout() {
-    //Add button that resets x-domain.
+    identifyControls.call(this);
     addXdomainResetButton.call(this);
-
-    //Add x-axis class to x-axis limit controls.
-    classXaxisLimitControls.call(this);
-
-    //Add container for population count.
-    addPopulationCountContainer.call(this);
-
-    //Add container for footnote.
+    groupControls.call(this);
+    addParticipantCountContainer.call(this);
+    addRemovedRecordsContainer.call(this);
+    addBorderAboveChart.call(this);
     addFootnoteContainer.call(this);
 }

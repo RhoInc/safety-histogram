@@ -253,47 +253,46 @@
         return [
             {
                 type: 'subsetter',
+                value_col: 'sh_measure',
                 label: 'Measure',
-                value_col: null, // set in ./syncControlInputs
-                start: null // set in ./syncControlInputs
+                start: null // set in ../callbacks/onInit/checkControls/updateMeasureFilter
+            },
+            {
+                type: 'number',
+                option: 'x.domain[0]',
+                label: 'Lower',
+                require: true
+            },
+            {
+                type: 'number',
+                option: 'x.domain[1]',
+                label: 'Upper',
+                require: true
             },
             {
                 type: 'checkbox',
-                label: 'Normal Range',
-                option: 'displayNormalRange'
-            },
-            {
-                type: 'number',
-                label: 'Lower Limit',
-                option: 'x.domain[0]',
-                require: true
-            },
-            {
-                type: 'number',
-                label: 'Upper Limit',
-                option: 'x.domain[1]',
-                require: true
+                option: 'displayNormalRange',
+                label: 'Normal Range'
             }
         ];
     }
 
     function syncControlInputs(controlInputs, settings) {
-        //Sync measure filter.
-        var measureFilter = controlInputs.find(function(input) {
-            return input.label === 'Measure';
-        });
-        measureFilter.value_col = settings.measure_col;
-        measureFilter.start = settings.start_value;
-
         //Add filters to default controls.
-        if (Array.isArray(settings.filters) && settings.filters.length > 0)
+        if (Array.isArray(settings.filters) && settings.filters.length > 0) {
+            var position = controlInputs.findIndex(function(input) {
+                return input.label === 'Normal Range';
+            });
             settings.filters.forEach(function(filter) {
-                controlInputs.push({
+                var filterObj = {
                     type: 'subsetter',
                     value_col: filter.value_col || filter,
                     label: filter.label || filter.value_col || filter
-                });
+                };
+                controlInputs.splice(position, 0, filterObj);
+                ++position;
             });
+        }
 
         return controlInputs;
     }
@@ -310,63 +309,218 @@
     function countParticipants() {
         var _this = this;
 
-        this.populationCount = d3
-            .set(
-                this.raw_data.map(function(d) {
-                    return d[_this.config.id_col];
-                })
-            )
-            .values().length;
+        this.participantCount = {
+            N: d3
+                .set(
+                    this.raw_data.map(function(d) {
+                        return d[_this.config.id_col];
+                    })
+                )
+                .values()
+                .filter(function(value) {
+                    return !/^\s*$/.test(value);
+                }).length,
+            container: null, // set in ../onLayout/addParticipantCountContainer
+            n: null, // set in ../onDraw/updateParticipantCount
+            percentage: null // set in ../onDraw/updateParticipantCount
+        };
     }
 
-    function cleanData() {
+    function removeMissingResults() {
         var _this = this;
 
-        //Remove missing and non-numeric data.
-        var preclean = this.raw_data;
-        var clean = this.raw_data.filter(function(d) {
-            return /^-?[0-9.]+$/.test(d[_this.config.value_col]);
+        //Split data into records with missing and nonmissing results.
+        var missingResults = [];
+        var nonMissingResults = [];
+        this.raw_data.forEach(function(d) {
+            if (/^\s*$/.test(d[_this.config.value_col])) missingResults.push(d);
+            else nonMissingResults.push(d);
         });
-        var nPreclean = preclean.length;
-        var nClean = clean.length;
-        var nRemoved = nPreclean - nClean;
 
-        //Warn user of removed records.
-        if (nRemoved > 0)
+        //Nest missing and nonmissing results by participant.
+        var participantsWithMissingResults = d3
+            .nest()
+            .key(function(d) {
+                return d[_this.config.id_col];
+            })
+            .rollup(function(d) {
+                return d.length;
+            })
+            .entries(missingResults);
+        var participantsWithNonMissingResults = d3
+            .nest()
+            .key(function(d) {
+                return d[_this.config.id_col];
+            })
+            .rollup(function(d) {
+                return d.length;
+            })
+            .entries(nonMissingResults);
+
+        //Identify placeholder records, i.e. participants with a single missing result.
+        this.removedRecords.placeholderRecords = participantsWithMissingResults
+            .filter(function(d) {
+                return (
+                    participantsWithNonMissingResults
+                        .map(function(d) {
+                            return d.key;
+                        })
+                        .indexOf(d.key) < 0 && d.values === 1
+                );
+            })
+            .map(function(d) {
+                return d.key;
+            });
+        if (this.removedRecords.placeholderRecords.length)
+            console.log(
+                this.removedRecords.placeholderRecords.length +
+                    ' participants without results have been detected.'
+            );
+
+        //Count the number of records with missing results.
+        this.removedRecords.missing = d3.sum(
+            participantsWithMissingResults.filter(function(d) {
+                return _this.removedRecords.placeholderRecords.indexOf(d.key) < 0;
+            }),
+            function(d) {
+                return d.values;
+            }
+        );
+        if (this.removedRecords.missing > 0)
             console.warn(
-                nRemoved +
-                    ' missing or non-numeric result' +
-                    (nRemoved > 1 ? 's have' : ' has') +
+                this.removedRecords.missing +
+                    ' record' +
+                    (this.removedRecords.missing > 1
+                        ? 's with a missing result have'
+                        : ' with a missing result has') +
                     ' been removed.'
             );
 
-        //Preserve cleaned data.
-        this.raw_data = clean;
+        //Update data.
+        this.raw_data = nonMissingResults;
+    }
 
-        //Attach array of continuous measures to chart object.
-        this.measures = d3
-            .set(
-                this.raw_data.map(function(d) {
-                    return d[_this.config.measure_col];
-                })
-            )
-            .values()
-            .sort();
+    function removeNonNumericResults() {
+        var _this = this;
+
+        //Filter out non-numeric results.
+        var numericResults = this.raw_data.filter(function(d) {
+            return /^-?[0-9.]+$/.test(d[_this.config.value_col]);
+        });
+        this.removedRecords.nonNumeric = this.raw_data.length - numericResults.length;
+        if (this.removedRecords.nonNumeric > 0)
+            console.warn(
+                this.removedRecords.nonNumeric +
+                    ' record' +
+                    (this.removedRecords.nonNumeric > 1
+                        ? 's with a non-numeric result have'
+                        : ' with a non-numeric result has') +
+                    ' been removed.'
+            );
+
+        //Update data.
+        this.raw_data = numericResults;
+    }
+
+    function cleanData() {
+        this.removedRecords = {
+            placeholderParticipants: null, // defined in './cleanData/removeMissingResults
+            missing: null, // defined in './cleanData/removeMissingResults
+            nonNumeric: null, // defined in './cleanData/removeNonNumericResults
+            container: null // defined in ../onLayout/addRemovedRecordsContainer
+        };
+        removeMissingResults.call(this);
+        removeNonNumericResults.call(this);
+        this.initial_data = this.raw_data;
     }
 
     function addVariables() {
         var _this = this;
 
         this.raw_data.forEach(function(d) {
+            //Concatenate unit to measure if provided.
             d[_this.config.measure_col] = d[_this.config.measure_col].trim();
+            d.sh_measure = d.hasOwnProperty(_this.config.unit_col)
+                ? d[_this.config.measure_col] + ' (' + d[_this.config.unit_col] + ')'
+                : d[_this.config.measure_col];
         });
     }
 
-    function checkFilters() {
+    function participant() {
+        var _this = this;
+
+        this.participants = d3
+            .set(
+                this.initial_data.map(function(d) {
+                    return d[_this.config.id_col];
+                })
+            )
+            .values()
+            .sort();
+    }
+
+    function measure() {
+        var _this = this;
+
+        this.measures = d3
+            .set(
+                this.initial_data.map(function(d) {
+                    return d[_this.config.measure_col];
+                })
+            )
+            .values()
+            .sort();
+        this.sh_measures = d3
+            .set(
+                this.initial_data.map(function(d) {
+                    return d.sh_measure;
+                })
+            )
+            .values()
+            .sort();
+    }
+
+    function defineSets() {
+        participant.call(this);
+        measure.call(this);
+    }
+
+    function updateMeasureFilter() {
+        this.measure = {};
+        var measureInput = this.controls.config.inputs.find(function(input) {
+            return input.label === 'Measure';
+        });
+        if (
+            this.config.start_value &&
+            this.sh_measures.indexOf(this.config.start_value) < 0 &&
+            this.measures.indexOf(this.config.start_value) < 0
+        ) {
+            measureInput.start = this.sh_measures[0];
+            console.warn(
+                this.config.start_value +
+                    ' is an invalid measure. Defaulting to ' +
+                    measureInput.start +
+                    '.'
+            );
+        } else if (
+            this.config.start_value &&
+            this.sh_measures.indexOf(this.config.start_value) < 0
+        ) {
+            measureInput.start = this.sh_measures[this.measures.indexOf(this.config.start_value)];
+            console.warn(
+                this.config.start_value +
+                    ' is missing the units value. Defaulting to ' +
+                    measureInput.start +
+                    '.'
+            );
+        } else measureInput.start = this.config.start_value || this.sh_measures[0];
+    }
+
+    function removeFilters() {
         var _this = this;
 
         this.controls.config.inputs = this.controls.config.inputs.filter(function(input) {
-            if (input.type != 'subsetter') {
+            if (input.type !== 'subsetter' || input.value_col === 'soe_measure') {
                 return true;
             } else if (!_this.raw_data[0].hasOwnProperty(input.value_col)) {
                 console.warn(
@@ -395,13 +549,9 @@
         });
     }
 
-    function setInitialMeasure() {
-        this.controls.config.inputs.find(function(input) {
-            return input.label === 'Measure';
-        }).start =
-            this.config.start_value && this.measures.indexOf(this.config.start_value) > -1
-                ? this.config.start_value
-                : this.measures[0];
+    function checkControls() {
+        updateMeasureFilter.call(this);
+        removeFilters.call(this);
     }
 
     function onInit() {
@@ -411,14 +561,36 @@
         // 2. Drop missing values and remove measures with any non-numeric results.
         cleanData.call(this);
 
-        // 3a Define additional variables.
+        // 3. Define additional variables.
         addVariables.call(this);
 
-        // 3b Remove filters for nonexistent or single-level variables.
-        checkFilters.call(this);
+        // 4. Define sets.
+        defineSets.call(this);
 
-        // 3c Choose the start value for the Test filter
-        setInitialMeasure.call(this);
+        // 5. Check controls.
+        checkControls.call(this);
+    }
+
+    function identifyControls() {
+        var controlGroups = this.controls.wrap
+            .style('padding-bottom', '8px')
+            .selectAll('.control-group');
+
+        //Give each control a unique ID.
+        controlGroups
+            .attr('id', function(d) {
+                return d.label.toLowerCase().replace(' ', '-');
+            })
+            .each(function(d) {
+                d3.select(this).classed(d.type, true);
+            });
+
+        //Give x-axis controls a common class name.
+        controlGroups
+            .filter(function(d) {
+                return ['x.domain[0]', 'x.domain[1]'].indexOf(d.option) > -1;
+            })
+            .classed('x-axis', true);
     }
 
     function addXdomainResetButton() {
@@ -426,27 +598,29 @@
 
         //Add x-domain reset button container.
         var resetContainer = this.controls.wrap
-            .insert('div', '.control-group:nth-child(3)')
+            .insert('div', '#lower')
             .classed('control-group x-axis', true)
             .datum({
                 type: 'button',
                 option: 'x.domain',
-                label: 'x-axis:'
-            });
+                label: ''
+            })
+            .style('vertical-align', 'bottom');
 
         //Add label.
         resetContainer
             .append('span')
             .attr('class', 'wc-control-label')
             .style('text-align', 'right')
-            .text('X-axis:');
+            .text('Limits');
 
         //Add button.
         resetContainer
             .append('button')
-            .text('Reset Limits')
+            .text(' Reset ')
+            .style('padding', '0px 5px')
             .on('click', function() {
-                _this.config.x.domain = _this.measure_domain;
+                _this.config.x.domain = _this.measure.domain;
 
                 _this.controls.wrap
                     .selectAll('.control-group')
@@ -468,125 +642,212 @@
             });
     }
 
-    function classXaxisLimitControls() {
-        this.controls.wrap
-            .selectAll('.control-group')
-            .filter(function(d) {
-                return ['Lower Limit', 'Upper Limit'].indexOf(d.label) > -1;
+    function insertGrouping(selector, label) {
+        var grouping = this.controls.wrap
+            .insert('div', selector)
+            .style({
+                display: 'inline-block',
+                'margin-right': '5px'
             })
-            .classed('x-axis', true);
+            .append('fieldset')
+            .style('padding', '0px 2px');
+        grouping.append('legend').text(label);
+        this.controls.wrap.selectAll(selector).each(function(d) {
+            this.style.marginTop = '0px';
+            this.style.marginRight = '2px';
+            this.style.marginBottom = '2px';
+            this.style.marginLeft = '2px';
+            grouping.node().appendChild(this);
+        });
     }
 
-    function addPopulationCountContainer() {
-        this.controls.wrap
+    function groupControls() {
+        //Group x-axis controls.
+        insertGrouping.call(this, '.x-axis', 'X-axis');
+
+        //Group filters.
+        if (this.filters.length > 1)
+            insertGrouping.call(this, '.subsetter:not(#measure)', 'Filters');
+    }
+
+    function addParticipantCountContainer() {
+        this.participantCount.container = this.controls.wrap
+            .style('position', 'relative')
             .append('div')
-            .attr('id', 'populationCount')
-            .style('font-style', 'italic');
+            .attr('id', 'participant-count')
+            .style({
+                position: 'absolute',
+                'font-style': 'italic',
+                bottom: '-10px',
+                left: 0
+            });
+    }
+
+    function addRemovedRecordsNote() {
+        var _this = this;
+
+        if (this.removedRecords.missing > 0 || this.removedRecords.nonNumeric > 0) {
+            var message =
+                this.removedRecords.missing > 0 && this.removedRecords.nonNumeric > 0
+                    ? this.removedRecords.missing +
+                      ' record' +
+                      (this.removedRecords.missing > 1 ? 's' : '') +
+                      ' with a missing result and ' +
+                      this.removedRecords.nonNumeric +
+                      ' record' +
+                      (this.removedRecords.nonNumeric > 1 ? 's' : '') +
+                      ' with a non-numeric result were removed.'
+                    : this.removedRecords.missing > 0
+                        ? this.removedRecords.missing +
+                          ' record' +
+                          (this.removedRecords.missing > 1 ? 's' : '') +
+                          ' with a missing result ' +
+                          (this.removedRecords.missing > 1 ? 'were' : 'was') +
+                          ' removed.'
+                        : this.removedRecords.nonNumeric > 0
+                            ? this.removedRecords.nonNumeric +
+                              ' record' +
+                              (this.removedRecords.nonNumeric > 1 ? 's' : '') +
+                              ' with a non-numeric result ' +
+                              (this.removedRecords.nonNumeric > 1 ? 'were' : 'was') +
+                              ' removed.'
+                            : '';
+            this.removedRecords.container = this.controls.wrap
+                .append('div')
+                .style({
+                    position: 'absolute',
+                    'font-style': 'italic',
+                    bottom: '-10px',
+                    right: 0
+                })
+                .text(message);
+            this.removedRecords.container
+                .append('span')
+                .style({
+                    color: 'blue',
+                    'text-decoration': 'underline',
+                    'font-style': 'normal',
+                    'font-weight': 'bold',
+                    cursor: 'pointer',
+                    'font-size': '16px',
+                    'margin-left': '5px'
+                })
+                .html('<sup>x</sup>')
+                .on('click', function() {
+                    return _this.removedRecords.container.style('display', 'none');
+                });
+        }
+    }
+
+    function addBorderAboveChart() {
+        this.wrap.style({
+            'border-top': '1px solid #ccc'
+        });
     }
 
     function addFootnoteContainer() {
         this.wrap
             .insert('p', '.wc-chart')
             .attr('class', 'annote')
+            .style({
+                'border-top': '1px solid #ccc',
+                'padding-top': '10px'
+            })
             .text('Click a bar for details.');
     }
 
     function onLayout() {
-        //Add button that resets x-domain.
+        identifyControls.call(this);
         addXdomainResetButton.call(this);
-
-        //Add x-axis class to x-axis limit controls.
-        classXaxisLimitControls.call(this);
-
-        //Add container for population count.
-        addPopulationCountContainer.call(this);
-
-        //Add container for footnote.
+        groupControls.call(this);
+        addParticipantCountContainer.call(this);
+        addRemovedRecordsNote.call(this);
+        addBorderAboveChart.call(this);
         addFootnoteContainer.call(this);
     }
 
     function getCurrentMeasure() {
-        var _this = this;
-
-        this.previousMeasure = this.currentMeasure;
-        this.currentMeasure = this.filters.find(function(filter) {
-            return filter.col === _this.config.measure_col;
-        }).val;
+        this.measure.previous = this.measure.current;
+        this.measure.current = this.controls.wrap.selectAll('#measure option:checked').text();
     }
 
     function defineMeasureData() {
         var _this = this;
 
-        this.measure_data = this.raw_data.filter(function(d) {
-            return d[_this.config.measure_col] === _this.currentMeasure;
+        this.measure.data = this.initial_data.filter(function(d) {
+            return d.sh_measure === _this.measure.current;
         });
-        this.measure_domain = d3.extent(this.measure_data, function(d) {
-            return +d[_this.config.value_col];
-        });
+        this.measure.unit =
+            this.config.unit_col && this.measure.data[0].hasOwnProperty(this.config.unit_col)
+                ? this.measure.data[0][this.config.unit_col]
+                : null;
+        this.measure.results = this.measure.data
+            .map(function(d) {
+                return +d[_this.config.value_col];
+            })
+            .sort(function(a, b) {
+                return a - b;
+            });
+        this.measure.domain = d3.extent(this.measure.results);
+        this.measure.range = this.measure.domain[1] - this.measure.domain[0];
+        this.measure.log10range = Math.log10(this.measure.range);
+        this.raw_data = this.measure.data.slice();
     }
 
     function setXdomain() {
-        if (this.currentMeasure !== this.previousMeasure)
-            // new measure
-            this.config.x.domain = this.measure_domain;
-        else if (this.config.x.domain[0] > this.config.x.domain[1])
-            // invalid domain
-            this.config.x.domain.reverse();
-        else if (this.config.x.domain[0] === this.config.x.domain[1])
-            // domain with zero range
-            this.config.x.domain = this.config.x.domain.map(function(d, i) {
-                return i === 0 ? d - d * 0.01 : d + d * 0.01;
-            });
+        if (this.measure.current !== this.measure.previous)
+            this.config.x.domain = this.measure.domain;
+        else if (this.config.x.domain[0] > this.config.x.domain[1]) this.config.x.domain.reverse();
     }
 
-    function setXaxisLabel() {
-        this.config.x.label =
-            this.currentMeasure +
-            (this.config.unit_col && this.measure_data[0][this.config.unit_col]
-                ? ' (' + this.measure_data[0][this.config.unit_col] + ')'
-                : '');
-    }
+    function calculateXPrecision() {
+        //define the precision of the x-axis
+        this.config.x.precisionFactor = Math.round(this.measure.log10range);
+        this.config.x.precision = Math.pow(10, this.config.x.precisionFactor);
 
-    function setXprecision() {
-        var _this = this;
-
-        //Calculate range of current measure and the log10 of the range to choose an appropriate precision.
-        this.config.x.range = this.config.x.domain[1] - this.config.x.domain[0];
-        this.config.x.log10range = Math.log10(this.config.x.range);
-        this.config.x.roundedLog10range = Math.round(this.config.x.log10range);
-        this.config.x.precision1 = -1 * (this.config.x.roundedLog10range - 1);
-        this.config.x.precision2 = -1 * (this.config.x.roundedLog10range - 2);
-
-        //Define the format of the x-axis tick labels and x-domain controls.
+        //x-axis format
         this.config.x.format =
-            this.config.x.log10range > 0.5 ? '1f' : '.' + this.config.x.precision1 + 'f';
-        this.config.x.d3_format = d3.format(this.config.x.format);
-        this.config.x.formatted_domain = this.config.x.domain.map(function(d) {
-            return _this.config.x.d3_format(d);
-        });
+            this.config.x.precisionFactor > 0
+                ? '.0f'
+                : '.' + (Math.abs(this.config.x.precisionFactor) + 1) + 'f';
+        this.config.x.d3format = d3.format(this.config.x.format);
 
-        //Define the bin format: one less than the x-axis format.
+        //one more precision please: bin format
         this.config.x.format1 =
-            this.config.x.log10range > 5 ? '1f' : '.' + this.config.x.precision2 + 'f';
-        this.config.x.d3_format1 = d3.format(this.config.x.format1);
+            this.config.x.precisionFactor > 0
+                ? '.1f'
+                : '.' + (Math.abs(this.config.x.precisionFactor) + 2) + 'f';
+        this.config.x.d3format1 = d3.format(this.config.x.format1);
+
+        //define the size of the x-axis limit increments
+        var step = this.measure.range / 15;
+        if (step < 1) {
+            var x10 = 0;
+            do {
+                step = step * 10;
+                ++x10;
+            } while (step < 1);
+            step = Math.round(step) / Math.pow(10, x10);
+        } else step = Math.round(step);
+        this.measure.step = step;
+    }
+
+    function setYaxisLabel() {
+        this.config.x.label = this.measure.current;
     }
 
     function updateXaxisLimitControls() {
-        //Update x-axis limit controls.
         this.controls.wrap
-            .selectAll('.control-group')
-            .filter(function(f) {
-                return f.option === 'x.domain[0]';
-            })
-            .select('input')
-            .property('value', this.config.x.formatted_domain[0]);
+            .selectAll('#lower input')
+            .attr('step', this.measure.step) // set in ./calculateXPrecision
+            .style('box-shadow', 'none')
+            .property('value', this.config.x.domain[0]);
+
         this.controls.wrap
-            .selectAll('.control-group')
-            .filter(function(f) {
-                return f.option === 'x.domain[1]';
-            })
-            .select('input')
-            .property('value', this.config.x.formatted_domain[1]);
+            .selectAll('#upper input')
+            .attr('step', this.measure.step) // set in ./calculateXPrecision
+            .style('box-shadow', 'none')
+            .property('value', this.config.x.domain[1]);
     }
 
     function updateXaxisResetButton() {
@@ -614,50 +875,47 @@
         // 3a Set x-domain given currently selected measure.
         setXdomain.call(this);
 
-        // 3b Set x-axis label to current measure.
-        setXaxisLabel.call(this);
+        // 3b Define precision of measure.
+        calculateXPrecision.call(this);
 
-        // 4a Define precision of measure.
-        setXprecision.call(this);
+        // 3c Set x-axis label to current measure.
+        setYaxisLabel.call(this);
 
-        // 4b Update x-axis reset button when measure changes.
+        // 4a Update x-axis reset button when measure changes.
         updateXaxisResetButton.call(this);
 
-        // 4c Update x-axis limit controls to match y-axis domain.
+        // 4b Update x-axis limit controls to match x-axis domain.
         updateXaxisLimitControls.call(this);
     }
 
     function onDatatransform() {}
 
-    // Takes a webcharts object creates a text annotation giving the
+    function updateParticipantCount() {
+        var _this = this;
 
-    function updateParticipantCount(chart, selector, id_unit) {
         //count the number of unique ids in the current chart and calculate the percentage
-        var currentObs = d3
+        this.participantCount.n = d3
             .set(
-                chart.filtered_data.map(function(d) {
-                    return d[chart.config.id_col];
+                this.filtered_data.map(function(d) {
+                    return d[_this.config.id_col];
                 })
             )
             .values().length;
-        var percentage = d3.format('0.1%')(currentObs / chart.populationCount);
+        this.participantCount.percentage = d3.format('0.1%')(
+            this.participantCount.n / this.participantCount.N
+        );
 
         //clear the annotation
-        var annotation = d3.select(selector);
-        d3.select(selector)
-            .selectAll('*')
-            .remove();
+        this.participantCount.container.selectAll('*').remove();
 
         //update the annotation
-        var units = id_unit ? ' ' + id_unit : ' participant(s)';
-        annotation.text(
+        this.participantCount.container.text(
             '\n' +
-                currentObs +
+                this.participantCount.n +
                 ' of ' +
-                chart.populationCount +
-                units +
-                ' shown (' +
-                percentage +
+                this.participantCount.N +
+                ' participant(s) shown (' +
+                this.participantCount.percentage +
                 ')'
         );
     }
@@ -679,14 +937,7 @@
     }
 
     function onDraw() {
-        //Annotate population count.  This function is called on draw() so that it can access the
-        //filtered data, i.e. the data with the current filters applied.  However the filtered data is
-        //mark-specific, which could cause issues in other scenarios with mark-specific filters via the
-        //marks.[].values setting.  chart.filtered_data is set to the last mark data defined rather
-        //than the full data with filters applied, irrespective of the mark-specific filters.
-        updateParticipantCount(this, '#populationCount');
-
-        //Reset chart and listing.  Doesn't really need to be called on draw() but whatever.
+        updateParticipantCount.call(this);
         resetRenderer.call(this);
     }
 
@@ -714,13 +965,30 @@
         }
     }
 
-    function addBinClickListener() {
+    function addBinEventListeners() {
         var chart = this;
         var config = this.config;
         var bins = this.svg.selectAll('.bar');
         var footnote = this.wrap.select('.annote');
 
         bins.style('cursor', 'pointer')
+            .on('mouseover', function(d) {
+                //Update footnote.
+                if (footnote.classed('tableTitle') === false)
+                    footnote.text(
+                        d.values.raw.length +
+                            ' records with ' +
+                            (chart.measure.current + ' values from ') +
+                            (chart.config.x.d3format1(d.rangeLow) +
+                                ' to ' +
+                                chart.config.x.d3format1(d.rangeHigh))
+                    );
+            })
+            .on('mouseout', function(d) {
+                //Update footnote.
+                if (footnote.classed('tableTitle') === false)
+                    footnote.text('Click a bar for details.');
+            })
             .on('click', function(d) {
                 chart.highlightedBin = d.key;
                 //Update footnote.
@@ -730,12 +998,11 @@
                         'Table displays ' +
                             d.values.raw.length +
                             ' records with ' +
-                            (chart.filtered_data[0][config.measure_col] + ' values from ') +
-                            (chart.config.x.d3_format1(d.rangeLow) +
+                            (chart.measure.current + ' values from ') +
+                            (chart.config.x.d3format1(d.rangeLow) +
                                 ' to ' +
-                                chart.config.x.d3_format1(d.rangeHigh)) +
-                            (config.unit_col ? ' ' + chart.filtered_data[0][config.unit_col] : '') +
-                            '. Click outside a bar to remove details.'
+                                chart.config.x.d3format1(d.rangeHigh) +
+                                '. Click outside a bar to remove details.')
                     );
 
                 //Draw listing.
@@ -745,24 +1012,6 @@
                 //Reduce bin opacity and highlight selected bin.
                 bins.attr('fill-opacity', 0.5);
                 d3.select(this).attr('fill-opacity', 1);
-            })
-            .on('mouseover', function(d) {
-                //Update footnote.
-                if (footnote.classed('tableTitle') === false)
-                    footnote.text(
-                        d.values.raw.length +
-                            ' records with ' +
-                            (chart.filtered_data[0][config.measure_col] + ' values from ') +
-                            (chart.config.x.d3_format1(d.rangeLow) +
-                                ' to ' +
-                                chart.config.x.d3_format1(d.rangeHigh)) +
-                            (config.unit_col ? ' ' + chart.filtered_data[0][config.unit_col] : '')
-                    );
-            })
-            .on('mouseout', function(d) {
-                //Update footnote.
-                if (footnote.classed('tableTitle') === false)
-                    footnote.text('Click a bar for details.');
             });
     }
 
@@ -911,7 +1160,7 @@
         handleSingleObservation.call(this);
 
         //Display data listing on bin click.
-        addBinClickListener.call(this);
+        addBinEventListeners.call(this);
 
         //Visualize normal ranges.
         drawNormalRanges.call(this);

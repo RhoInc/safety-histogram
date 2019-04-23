@@ -2,11 +2,20 @@ export default function syncSettings(settings) {
     settings.x.column = settings.value_col;
     settings.marks[0].per[0] = settings.value_col;
 
+    //update normal range settings if normal_range is set to false
     if (!settings.normal_range) {
         settings.normal_col_low = null;
         settings.normal_col_high = null;
         settings.displayNormalRange = false;
     }
+
+    //handle a string argument to filters
+    if (!(settings.filters instanceof Array))
+        settings.filters = typeof settings.filters === 'string' ? [settings.filters] : [];
+
+    //handle a string argument to details
+    if (!(settings.details instanceof Array))
+        settings.details = typeof settings.details === 'string' ? [settings.details] : [];
 
     //Define default details.
     let defaultDetails = [{ value_col: settings.id_col, label: 'Participant ID' }];

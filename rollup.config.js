@@ -1,3 +1,4 @@
+import json from 'rollup-plugin-json';
 import babel from 'rollup-plugin-babel';
 
 var pkg = require('./package.json');
@@ -26,6 +27,9 @@ module.exports = {
         return Object.keys(dependencies);
     }()),
     plugins: [
+        json({
+            include: ['settings-schema.json']
+        }),
         babel({
             exclude: 'node_modules/**',
             presets: [
@@ -35,7 +39,7 @@ module.exports = {
                 'external-helpers'
             ],
             babelrc: false
-        })
+        }),
     ]
 };
 

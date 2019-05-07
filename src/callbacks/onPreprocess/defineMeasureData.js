@@ -24,6 +24,6 @@ export default function defineMeasureData() {
     calculateStatistics.call(this, this.measure.filtered);
 
     //Update chart config and set chart data to measure data.
-    this.config.x.bin = this.measure.filtered.stats.nBins;
+    this.config.x.bin = this.measure.raw.stats.nBins;
     this.raw_data = this.measure.raw.data.slice();
 }

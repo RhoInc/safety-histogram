@@ -22,6 +22,12 @@ export default function controlInputs() {
             type: 'checkbox',
             option: 'displayNormalRange',
             label: 'Normal Range'
+        },
+        {
+            type: 'number',
+            option: 'x.bin',
+            label: '# of Bins',
+            require: true
         }
     ];
 }

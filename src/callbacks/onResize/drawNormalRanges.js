@@ -88,13 +88,12 @@ export default function drawNormalRanges() {
                 x: d => d.x1,
                 y: 0,
                 width: d => d.width,
-                height: this.plot_height
-            })
-            .style({
-                stroke: 'black',
-                fill: 'black',
-                'stroke-opacity': d => (d.values / this.filtered_data.length) * 0.75,
-                'fill-opacity': d => (d.values / this.filtered_data.length) * 0.5
+                height: this.plot_height,
+                stroke: '#c26683',
+                fill: '#c26683',
+                'stroke-opacity': d => (d.values / this.filtered_data.length) * 0.5,
+                'fill-opacity': d => (d.values / this.filtered_data.length) * 0.25
             }); // opacity as a function of fraction of records with the given normal range
+        console.log(rectangles.node());
     }
 }

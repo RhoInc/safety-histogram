@@ -1,4 +1,6 @@
-import { set, extent, quantile } from 'd3';
+import { set, extent, quantile, layout } from 'd3';
+import calculateFDBins from './calculateStatistics/calculateFDBins';
+import calculateSSBins from './calculateStatistics/calculateSSBins';
 
 export default function calculateStatistics(obj) {
     //Define array of all and unique results.
@@ -20,13 +22,17 @@ export default function calculateStatistics(obj) {
     obj.stats.log10range = obj.stats.range > 0 ? Math.log10(obj.stats.range) : NaN;
     obj.stats.iqr = obj.stats.q75 - obj.stats.q25;
 
-    //Calculate bin width and number of bins.
-    obj.stats.calculatedBinWidth = (2 * obj.stats.iqr) / Math.pow(obj.stats.n, 1.0 / 3.0); // https://en.wikipedia.org/wiki/Freedman%E2%80%93Diaconis_rule
-    obj.stats.calculatedBins =
-        obj.stats.calculatedBinWidth > 0
-            ? Math.ceil(obj.stats.range / obj.stats.calculatedBinWidth)
-            : NaN;
+    //Calculate bin width with Freedman-Diaconis algorithm.
+    calculateFDBins(obj);
     obj.stats.nBins =
-        obj.stats.calculatedBins < obj.stats.nUnique ? obj.stats.calculatedBins : obj.stats.nUnique;
-    obj.stats.binWidth = obj.stats.range / obj.nBins;
+        obj.stats.FDBins < obj.stats.nUnique ? obj.stats.FDBins : obj.stats.nUnique;
+
+    //Calculate bin width with Shimazaki-Shinomoto algorithm.
+    //calculateSSBins(obj);
+    //obj.stats.nBins =
+    //    obj.stats.SSBins < obj.stats.nUnique ? obj.stats.SSBins : obj.stats.nUnique;
+
+    //Calculate bin width.
+    obj.stats.binWidth = obj.stats.range / obj.stats.nBins;
+    obj.stats.bins = layout.histogram().bins(obj.stats.nBins)(obj.results);
 }

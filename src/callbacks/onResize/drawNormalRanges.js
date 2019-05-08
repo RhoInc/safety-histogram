@@ -94,6 +94,5 @@ export default function drawNormalRanges() {
                 'stroke-opacity': d => (d.values / this.filtered_data.length) * 0.5,
                 'fill-opacity': d => (d.values / this.filtered_data.length) * 0.25
             }); // opacity as a function of fraction of records with the given normal range
-        console.log(rectangles.node());
     }
 }

@@ -6,7 +6,7 @@ export default function webchartsSettings() {
             label: null, // set in ../callbacks/onPreprocess/setXaxisLabel
             domain: [null, null], // set in ../callbacks/onPreprocess/setXdomain
             format: null, // set in ../callbacks/onPreprocess/calculateXPrecision
-            bin: 25 // set in ../callbacks/onPreprocess/defineMeasureData
+            bin: null // set in ../callbacks/onPreprocess/defineMeasureData
         },
         y: {
             type: 'linear',

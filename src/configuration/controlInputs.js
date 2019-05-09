@@ -23,11 +23,5 @@ export default function controlInputs() {
             option: 'displayNormalRange',
             label: 'Normal Range'
         },
-        {
-            type: 'number',
-            option: 'x.bin',
-            label: '# of Bins',
-            require: true
-        }
     ];
 }

@@ -1,6 +1,8 @@
 d3.csv(
     'https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinical-trials/renderer-specific/adbds.csv',
     function(d,i) {
+        if (d.STRESN !== '' && !(i%100))
+            d.STRESN = '' + (+d.STRESN*10);
         return d;
     },
     function(data) {

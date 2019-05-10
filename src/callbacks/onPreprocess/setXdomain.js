@@ -3,8 +3,7 @@ import { extent } from 'd3';
 export default function setXdomain() {
     if (this.measure.current !== this.measure.previous)
         this.config.x.domain = this.measure.raw.domain;
-    else if (this.config.x.domain[0] > this.config.x.domain[1])
-        this.config.x.domain.reverse();
+    else if (this.config.x.domain[0] > this.config.x.domain[1]) this.config.x.domain.reverse();
 
     //The x-domain can be in three states:
     //- the extent of all results
@@ -23,11 +22,13 @@ export default function setXdomain() {
     //
     //3 Given a user-defined x-domain, the bin width should be calculated with the results that
     //  fall inside the current domain.
-    this.measure.domain_state = 
-        (this.config.x.domain[0] === this.measure.raw.domain[0] && this.config.x.domain[1] === this.measure.raw.domain[1])
-        || this.measure.previous === undefined
+    this.measure.domain_state =
+        (this.config.x.domain[0] === this.measure.raw.domain[0] &&
+            this.config.x.domain[1] === this.measure.raw.domain[1]) ||
+        this.measure.previous === undefined
             ? 'raw'
-            : this.config.x.domain[0] === this.measure.filtered.domain[0] && this.config.x.domain[1] === this.measure.filtered.domain[1]
+            : this.config.x.domain[0] === this.measure.filtered.domain[0] &&
+              this.config.x.domain[1] === this.measure.filtered.domain[1]
                 ? 'filtered'
                 : 'custom';
 

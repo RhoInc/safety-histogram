@@ -13,7 +13,9 @@ export default function binResults() {
     });
 
     //Define bin boundaries to plot on the x-axis.
-    this.measure.binBoundaries = set(merge(this.measure[this.measure.domain_state].stats.bins.map(d => [d.lower, d.upper])))
+    this.measure.binBoundaries = set(
+        merge(this.measure[this.measure.domain_state].stats.bins.map(d => [d.lower, d.upper]))
+    )
         .values()
         .map(value => {
             return {

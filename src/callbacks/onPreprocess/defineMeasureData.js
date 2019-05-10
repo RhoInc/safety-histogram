@@ -25,11 +25,11 @@ export default function defineMeasureData() {
     if (this.measure.current !== this.measure.previous)
         this.config.x.domain = extent(this.measure.raw.data.map(d => +d[this.config.value_col]));
     this.measure.custom = {
-        data: this.measure.filtered.data
-            .filter(d => (
-                this.config.x.domain[0] <= +d[this.config.value_col]
-                && +d[this.config.value_col] <= this.config.x.domain[1]
-            ))
+        data: this.measure.filtered.data.filter(
+            d =>
+                this.config.x.domain[0] <= +d[this.config.value_col] &&
+                +d[this.config.value_col] <= this.config.x.domain[1]
+        )
     };
 
     //Define arrays of results, unique results, and extent of results.

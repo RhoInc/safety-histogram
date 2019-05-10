@@ -2,7 +2,9 @@ import { format } from 'd3';
 
 export default function calculateXPrecision() {
     //define the precision of the x-axis
-    this.config.x.precisionFactor = Math.round(this.measure[this.measure.domain_state].stats.log10range);
+    this.config.x.precisionFactor = Math.round(
+        this.measure[this.measure.domain_state].stats.log10range
+    );
     this.config.x.precision = Math.pow(10, this.config.x.precisionFactor);
 
     //x-axis format

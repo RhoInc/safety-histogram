@@ -21,9 +21,18 @@ export default function calcualteBinWidth() {
 
         //Calculate bin width.
         obj.stats.binWidth = obj.stats.range / obj.stats.nBins;
-        obj.stats.bins = property !== 'custom'
-            ? layout.histogram().bins(obj.stats.nBins)(obj.results)
-            : layout.histogram().bins(range(this.config.x.domain[0], this.config.x.domain[1], obj.stats.binWidth).concat(this.config.x.domain[1]))(obj.results);;
+        obj.stats.bins =
+            property !== 'custom'
+                ? layout.histogram().bins(obj.stats.nBins)(obj.results)
+                : layout
+                      .histogram()
+                      .bins(
+                          range(
+                              this.config.x.domain[0],
+                              this.config.x.domain[1],
+                              obj.stats.binWidth
+                          ).concat(this.config.x.domain[1])
+                      )(obj.results);
     });
 
     //Update chart config and set chart data to measure data.

@@ -41,6 +41,6 @@ export default function defineMeasureData() {
         obj.uniqueResults = set(obj.results).values();
 
         //Calculate extent of data.
-        obj.domain = extent(obj.results);
+        obj.domain = property !== 'custom' ? extent(obj.results) : this.config.x.domain;
     });
 }

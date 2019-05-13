@@ -5,9 +5,9 @@ import calculateStatistics from './onPreprocess/calculateStatistics';
 import calculateBinWidth from './onPreprocess/calculateBinWidth';
 import calculateXPrecision from './onPreprocess/calculateXPrecision';
 import setXaxisLabel from './onPreprocess/setXaxisLabel';
-import binResults from './onPreprocess/binResults';
 import updateXaxisLimitControls from './onPreprocess/updateXaxisLimitControls';
 import updateXaxisResetButton from './onPreprocess/updateXaxisResetButton';
+import defineBinBoundaries from './onPreprocess/defineBinBoundaries';
 
 export default function onPreprocess() {
     // 1. Capture currently selected measure - needed in 2a.
@@ -34,9 +34,9 @@ export default function onPreprocess() {
     // 4c Calculate bin width - needed in step 5.
     calculateBinWidth.call(this);
 
-    // 4d Define precision of measure.
+    // 4d Define precision of measure - needed in step 5.
     calculateXPrecision.call(this);
 
-    // 5. Manually bin results.
-    binResults.call(this);
+    // 5. Define bin boundaries given bin width and precision.
+    defineBinBoundaries.call(this);
 }

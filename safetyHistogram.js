@@ -1193,7 +1193,7 @@
             obj.uniqueResults = d3.set(obj.results).values();
 
             //Calculate extent of data.
-            obj.domain = d3.extent(obj.results);
+            obj.domain = property !== 'custom' ? d3.extent(obj.results) : _this.config.x.domain;
         });
     }
 
@@ -1278,20 +1278,7 @@
 
             //Calculate bin width.
             obj.stats.binWidth = obj.stats.range / obj.stats.nBins;
-            obj.stats.bins =
-                property !== 'custom'
-                    ? d3.layout.histogram().bins(obj.stats.nBins)(obj.results)
-                    : d3.layout
-                          .histogram()
-                          .bins(
-                              d3
-                                  .range(
-                                      _this.config.x.domain[0],
-                                      _this.config.x.domain[1],
-                                      obj.stats.binWidth
-                                  )
-                                  .concat(_this.config.x.domain[1])
-                          )(obj.results);
+            obj.stats.binBoundaries = d3.range(obj.stats.nBins).concat(obj.domain[1]);
         });
 
         //Update chart config and set chart data to measure data.
@@ -1341,42 +1328,6 @@
         this.config.x.label = this.measure.current;
     }
 
-    function binResults() {
-        var _this = this;
-
-        //Modify bin arrays.
-        this.measure[this.measure.domain_state].stats.bins.forEach(function(bin) {
-            bin.lower = bin.x;
-            bin.lower_fmt = _this.config.x.d3format(bin.lower);
-            bin.lower_fmt1 = _this.config.x.d3format1(bin.lower);
-            bin.upper = bin.x + bin.dx;
-            bin.upper_fmt = _this.config.x.d3format(bin.upper);
-            bin.upper_fmt1 = _this.config.x.d3format1(bin.upper);
-            bin.label = bin.lower_fmt + '-' + bin.upper_fmt;
-        });
-
-        //Define bin boundaries to plot on the x-axis.
-        this.measure.binBoundaries = d3
-            .set(
-                d3.merge(
-                    this.measure[this.measure.domain_state].stats.bins.map(function(d) {
-                        return [d.lower, d.upper];
-                    })
-                )
-            )
-            .values()
-            .map(function(value) {
-                return {
-                    value: +value,
-                    value1: _this.config.x.d3format(value),
-                    value2: _this.config.x.d3format1(value)
-                };
-            })
-            .sort(function(a, b) {
-                return a.value - b.value;
-            });
-    }
-
     function updateXaxisLimitControls() {
         this.controls.wrap
             .selectAll('#lower input')
@@ -1406,6 +1357,20 @@
                 );
     }
 
+    function defineBinBoundaries() {
+        var _this = this;
+
+        var obj = this.measure[this.measure.domain_state];
+        this.measure.binBoundaries = obj.stats.binBoundaries.map(function(d, i) {
+            var value = obj.domain[0] + obj.stats.binWidth * i;
+            return {
+                value: value,
+                value1: _this.config.x.d3format(value),
+                value2: _this.config.x.d3format1(value)
+            };
+        });
+    }
+
     function onPreprocess() {
         // 1. Capture currently selected measure - needed in 2a.
         getCurrentMeasure.call(this);
@@ -1431,11 +1396,11 @@
         // 4c Calculate bin width - needed in step 5.
         calcualteBinWidth.call(this);
 
-        // 4d Define precision of measure.
+        // 4d Define precision of measure - needed in step 5.
         calculateXPrecision.call(this);
 
-        // 5. Manually bin results.
-        binResults.call(this);
+        // 5. Define bin boundaries given bin width and precision.
+        defineBinBoundaries.call(this);
     }
 
     function onDatatransform() {}
@@ -1503,20 +1468,17 @@
     function drawZeroRangeBar() {
         var _this = this;
 
-        if (this.current_data.length === 1) {
+        if (this.current_data.length === 1 && this.measure.domain_state !== 'raw') {
+            var width = this.plot_width / 25;
             this.svg
                 .selectAll('g.bar-group rect')
                 .transition()
                 .delay(250) // wait for initial marks to transition
                 .attr({
                     x: function x(d) {
-                        return d.values.x !== 0 ? _this.x(d.values.x * 0.999) : _this.x(-0.1);
+                        return _this.x(d.values.x) - width / 2;
                     },
-                    width: function width(d) {
-                        return d.values.x !== 0
-                            ? _this.x(d.values.x * 1.001) - _this.x(d.values.x * 0.999)
-                            : _this.x(0.1) - _this.x(-0.1);
-                    }
+                    width: width
                 });
         }
     }
@@ -1810,7 +1772,7 @@
     }
 
     function removeXAxisTicks() {
-        if (this.measure.domain_state !== 'custom') this.svg.selectAll('.x.axis .tick').remove();
+        this.svg.selectAll('.x.axis .tick').remove();
     }
 
     function annotateBinBoundaries() {
@@ -1819,43 +1781,41 @@
         //Remove bin boundaries.
         this.svg.select('g.bin-boundaries').remove();
 
-        if (this.measure.domain_state !== 'custom') {
-            //Check for repeats of values formatted with lower precision.
-            var repeats = d3
-                .nest()
-                .key(function(d) {
-                    return d.value1;
-                })
-                .rollup(function(d) {
-                    return d.length;
-                })
-                .entries(this.measure.binBoundaries)
-                .some(function(d) {
-                    return d.values > 1;
-                });
+        //Check for repeats of values formatted with lower precision.
+        var repeats = d3
+            .nest()
+            .key(function(d) {
+                return d.value1;
+            })
+            .rollup(function(d) {
+                return d.length;
+            })
+            .entries(this.measure.binBoundaries)
+            .some(function(d) {
+                return d.values > 1;
+            });
 
-            //Annotate bin boundaries.
-            var axis = this.svg.append('g').classed('bin-boundaries axis', true);
-            var ticks = axis
-                .selectAll('g.bin-boundary')
-                .data(this.measure.binBoundaries)
-                .enter()
-                .append('g')
-                .classed('bin-boundary tick', true);
-            var texts = ticks
-                .append('text')
-                .attr({
-                    x: function x(d) {
-                        return _this.x(d.value);
-                    },
-                    y: this.y(0),
-                    dy: '16px',
-                    'text-anchor': 'middle'
-                })
-                .text(function(d) {
-                    return repeats ? d.value2 : d.value1;
-                });
-        }
+        //Annotate bin boundaries.
+        var axis = this.svg.append('g').classed('bin-boundaries axis', true);
+        var ticks = axis
+            .selectAll('g.bin-boundary')
+            .data(this.measure.binBoundaries)
+            .enter()
+            .append('g')
+            .classed('bin-boundary tick', true);
+        var texts = ticks
+            .append('text')
+            .attr({
+                x: function x(d) {
+                    return _this.x(d.value);
+                },
+                y: this.y(0),
+                dy: '16px',
+                'text-anchor': 'middle'
+            })
+            .text(function(d) {
+                return repeats ? d.value2 : d.value1;
+            });
     }
 
     function onResize() {

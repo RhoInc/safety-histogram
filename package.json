@@ -20,7 +20,7 @@
   ],
   "dependencies": {
     "d3": "^3",
-    "webcharts": "^1.10"
+    "webcharts": "^1.12"
   },
   "scripts": {
     "build": "npm audit fix && npm run bundle && npm run format && npm run build-wiki && npm run check-settings-schema",

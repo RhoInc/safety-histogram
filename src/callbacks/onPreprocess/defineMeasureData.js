@@ -25,7 +25,7 @@ export default function defineMeasureData() {
     if (this.measure.current !== this.measure.previous)
         this.config.x.domain = extent(this.measure.raw.data.map(d => +d[this.config.value_col]));
     this.measure.custom = {
-        data: this.measure.filtered.data.filter(
+        data: this.measure.raw.data.filter(
             d =>
                 this.config.x.domain[0] <= +d[this.config.value_col] &&
                 +d[this.config.value_col] <= this.config.x.domain[1]
@@ -33,7 +33,7 @@ export default function defineMeasureData() {
     };
 
     //Define arrays of results, unique results, and extent of results.
-    ['raw', 'filtered', 'custom'].forEach(property => {
+    ['raw', 'custom', 'filtered'].forEach(property => {
         const obj = this.measure[property];
 
         //Define array of all and unique results.

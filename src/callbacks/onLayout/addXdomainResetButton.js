@@ -2,25 +2,26 @@ import { extent } from 'd3';
 
 export default function addXdomainResetButton() {
     //Add x-domain reset button container.
-    const resetContainer = this.controls.wrap
-        .insert('div', '#lower')
-        .classed('control-group x-axis', true)
-        .datum({
-            type: 'button',
-            option: 'x.domain',
-            label: ''
-        })
-        .attr('title', 'Reset x-axis limits.')
-        .style('vertical-align', 'bottom');
+    this.controls.reset = {
+        container: this.controls.wrap
+            .insert('div', '#lower')
+            .classed('control-group x-axis', true)
+            .datum({
+                type: 'button',
+                option: 'x.domain',
+                label: ''
+            })
+            .style('vertical-align', 'bottom')
+    };
 
     //Add label.
-    resetContainer
+    this.controls.reset.label = this.controls.reset.container
         .append('span')
         .attr('class', 'wc-control-label')
         .text('');
 
     //Add button.
-    resetContainer
+    this.controls.reset.button = this.controls.reset.container
         .append('button')
         .text(' Reset ')
         .style('padding', '0px 5px')

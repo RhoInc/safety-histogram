@@ -7,7 +7,6 @@ export default function setXdomain() {
 
     //The x-domain can be in three states:
     //- the extent of all results
-    //- the extent of the filtered results
     //- user-defined, e.g. narrower to exclude outliers
     //
     //Bin width is calculated with two variables:
@@ -17,20 +16,14 @@ export default function setXdomain() {
     //1 When the x-domain is set to the extent of all results, the bin width should be calculated
     //  with the unfiltered set of results, regardless of the state of the current filters.
     //
-    //2 When the x-domain is set to the extent of the filtered results, the bin width should be
-    //  calculated with the filtered set of results.
-    //
-    //3 Given a user-defined x-domain, the bin width should be calculated with the results that
+    //2 Given a user-defined x-domain, the bin width should be calculated with the results that
     //  fall inside the current domain.
     this.measure.domain_state =
         (this.config.x.domain[0] === this.measure.raw.domain[0] &&
             this.config.x.domain[1] === this.measure.raw.domain[1]) ||
         this.measure.previous === undefined
             ? 'raw'
-            : this.config.x.domain[0] === this.measure.filtered.domain[0] &&
-              this.config.x.domain[1] === this.measure.filtered.domain[1]
-                ? 'filtered'
-                : 'custom';
+            : 'custom';
 
     //Set chart data to measure data.
     this.raw_data = this.measure[this.measure.domain_state].data.slice();

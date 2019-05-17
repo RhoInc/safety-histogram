@@ -4,7 +4,7 @@ export default function drawNormalRanges() {
     this.controls.wrap.select('.normal-range-list').remove();
     this.svg.select('.normal-ranges').remove();
 
-    if (this.config.displayNormalRange) {
+    if (this.config.displayNormalRange && this.filtered_data.length > 0) {
         //Capture distinct normal ranges in filtered data.
         const normalRanges = nest()
             .key(d => `${d[this.config.normal_col_low]},${d[this.config.normal_col_high]}`) // set key to comma-delimited normal range
@@ -25,11 +25,10 @@ export default function drawNormalRanges() {
                 d.width = d.x2 - d.x1;
 
                 //tooltip
+                d.rate = d.values / this.filtered_data.length;
                 d.tooltip =
                     d.values < this.filtered_data.length
-                        ? `${d.lower} - ${d.upper} (${format('%')(
-                              d.values / this.filtered_data.length
-                          )} of records)`
+                        ? `${d.lower} - ${d.upper} (${format('%')(d.rate)} of records)`
                         : `${d.lower} - ${d.upper}`;
 
                 //plot if:
@@ -42,18 +41,11 @@ export default function drawNormalRanges() {
 
                 return d;
             })
-            .sort(
-                (a, b) =>
-                    a.lower <= b.lower && a.upper >= b.upper
-                        ? 1 // lesser minimum and greater maximum
-                        : a.lower >= b.lower && a.upper <= b.upper
-                            ? -1 // greater minimum and lesser maximum
-                            : a.lower <= b.lower && a.upper <= b.upper
-                                ? 1 // lesser minimum and lesser maximum
-                                : a.lower >= b.lower && a.upper >= b.upper
-                                    ? -1 // greater minimum and greater maximum
-                                    : 1
-            ); // sort normal ranges so larger normal ranges plot beneath smaller normal ranges
+            .sort((a, b) => {
+                const diff_lower = a.lower - b.lower;
+                const diff_upper = a.upper - b.upper;
+                return diff_lower ? diff_lower : diff_upper ? diff_upper : 0;
+            }); // sort normal ranges so larger normal ranges plot beneath smaller normal ranges
 
         //Add tooltip to Normal Range control that lists normal ranges.
         this.controls.wrap

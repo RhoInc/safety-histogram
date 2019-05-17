@@ -23,7 +23,7 @@ export default function annotateBinBoundaries() {
         .append('text')
         .attr({
             x: d => this.x(d.value),
-            y: this.y(0),
+            y: this.plot_height,
             dy: '16px',
             'text-anchor': 'middle'
         })

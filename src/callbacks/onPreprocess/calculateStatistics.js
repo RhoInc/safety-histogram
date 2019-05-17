@@ -1,7 +1,7 @@
 import { quantile } from 'd3';
 
 export default function calculateStatistics(obj) {
-    ['raw', 'filtered', 'custom'].forEach(property => {
+    ['raw', 'custom'].forEach(property => {
         const obj = this.measure[property];
 
         //Calculate statistics.

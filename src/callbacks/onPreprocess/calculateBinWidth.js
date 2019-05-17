@@ -3,7 +3,7 @@ import calculateSSBinWidth from './calculateBinWidth/calculateSSBinWidth';
 import { scale, range } from 'd3';
 
 export default function calcualteBinWidth() {
-    ['raw', 'filtered', 'custom'].forEach(property => {
+    ['raw', 'custom'].forEach(property => {
         const obj = this.measure[property];
 
         //Calculate bin width.

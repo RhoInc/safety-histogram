@@ -6,4 +6,7 @@ export default function groupControls() {
 
     //Group filters.
     if (this.filters.length > 1) insertGrouping.call(this, '.subsetter:not(#measure)', 'Filters');
+
+    //Group bin controls.
+    insertGrouping.call(this, '.bin', 'Bins');
 }

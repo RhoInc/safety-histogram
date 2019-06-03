@@ -1,5 +1,6 @@
 export default function syncSettings(settings) {
     settings.x.column = settings.value_col;
+    settings.x.bin_algorithm = settings.bin_algorithm;
     settings.marks[0].per[0] = settings.value_col;
 
     //update normal range settings if normal_range is set to false

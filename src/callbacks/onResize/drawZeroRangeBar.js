@@ -1,8 +1,7 @@
 export default function drawZeroRangeBar() {
     if (
         this.current_data.length === 1 &&
-        this.current_data[0].rangeLow === this.current_data[0].rangeHigh &&
-        this.measure.domain_state !== 'raw'
+        this.measure.filtered.domain[0] === this.measure.filtered.domain[1]
     ) {
         const width = this.plot_width / 25;
         this.svg

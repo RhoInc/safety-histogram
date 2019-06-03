@@ -12,7 +12,7 @@ d3.csv(
                     {value_col: 'SITEID', label: 'Site ID'},
                     {value_col: 'USUBJID', label: 'Participant ID'},
                 ],
-                displayNormalRange: true
+                displayNormalRange: true,
             } // settings
         );
         instance.init(data);

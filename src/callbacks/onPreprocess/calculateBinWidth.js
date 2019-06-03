@@ -14,7 +14,6 @@ export default function calcualteBinWidth() {
         //Calculate bin width with the selected algorithm.
         switch (this.config.x.bin_algorithm) {
             case 'Square-root choice':
-                console.log(1);
                 calculateSquareRootBinWidth.call(this, obj);
                 obj.stats.nBins =
                     obj.stats.SquareRootBins < obj.stats.nUnique
@@ -22,7 +21,6 @@ export default function calcualteBinWidth() {
                         : obj.stats.nUnique;
                 break;
             case "Sturges' formula":
-                console.log(2);
                 calculateSturgesBinWidth.call(this, obj);
                 obj.stats.nBins =
                     obj.stats.SturgesBins < obj.stats.nUnique
@@ -30,7 +28,6 @@ export default function calcualteBinWidth() {
                         : obj.stats.nUnique;
                 break;
             case 'Rice Rule':
-                console.log(3);
                 calculateRiceBinWidth.call(this, obj);
                 obj.stats.nBins =
                     obj.stats.RiceBins < obj.stats.nUnique ? obj.stats.RiceBins : obj.stats.nUnique;
@@ -42,7 +39,6 @@ export default function calcualteBinWidth() {
             //        obj.stats.DoaneBins < obj.stats.nUnique ? obj.stats.DoaneBins : obj.stats.nUnique;
             //    break;
             case "Scott's normal reference rule":
-                console.log(5);
                 calculateScottBinWidth.call(this, obj);
                 obj.stats.nBins =
                     obj.stats.ScottBins < obj.stats.nUnique
@@ -50,19 +46,16 @@ export default function calcualteBinWidth() {
                         : obj.stats.nUnique;
                 break;
             case "Freedman-Diaconis' choice":
-                console.log(6);
                 calculateFDBinWidth.call(this, obj);
                 obj.stats.nBins =
                     obj.stats.FDBins < obj.stats.nUnique ? obj.stats.FDBins : obj.stats.nUnique;
                 break;
             case "Shimazaki and Shinomoto's choice":
-                console.log(7);
                 calculateSSBinWidth.call(this, obj);
                 obj.stats.nBins =
                     obj.stats.SSBins < obj.stats.nUnique ? obj.stats.SSBins : obj.stats.nUnique;
                 break;
             default:
-                console.log(8);
                 //Handle custom number of bins.
                 obj.stats.nBins = this.config.x.bin;
             //obj.stats.binWidth = this.config.x.domain[1] - this.config.x.domain[0] / this.config.x.bin;

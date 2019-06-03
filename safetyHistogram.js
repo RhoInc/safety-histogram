@@ -300,11 +300,6 @@
                 require: true
             },
             {
-                type: 'checkbox',
-                option: 'displayNormalRange',
-                label: 'Normal Range'
-            },
-            {
                 type: 'dropdown',
                 option: 'x.bin_algorithm',
                 label: 'Algorithm',
@@ -329,6 +324,11 @@
                 type: 'number',
                 option: 'x.bin_width',
                 label: 'Width'
+            },
+            {
+                type: 'checkbox',
+                option: 'displayNormalRange',
+                label: 'Normal Range'
             }
         ];
     }
@@ -1451,7 +1451,6 @@
             //Calculate bin width with the selected algorithm.
             switch (_this.config.x.bin_algorithm) {
                 case 'Square-root choice':
-                    console.log(1);
                     calculateSquareRootBinWidth.call(_this, obj);
                     obj.stats.nBins =
                         obj.stats.SquareRootBins < obj.stats.nUnique
@@ -1459,7 +1458,6 @@
                             : obj.stats.nUnique;
                     break;
                 case "Sturges' formula":
-                    console.log(2);
                     calculateSturgesBinWidth.call(_this, obj);
                     obj.stats.nBins =
                         obj.stats.SturgesBins < obj.stats.nUnique
@@ -1467,7 +1465,6 @@
                             : obj.stats.nUnique;
                     break;
                 case 'Rice Rule':
-                    console.log(3);
                     calculateRiceBinWidth.call(_this, obj);
                     obj.stats.nBins =
                         obj.stats.RiceBins < obj.stats.nUnique
@@ -1481,7 +1478,6 @@
                 //        obj.stats.DoaneBins < obj.stats.nUnique ? obj.stats.DoaneBins : obj.stats.nUnique;
                 //    break;
                 case "Scott's normal reference rule":
-                    console.log(5);
                     calculateScottBinWidth.call(_this, obj);
                     obj.stats.nBins =
                         obj.stats.ScottBins < obj.stats.nUnique
@@ -1489,19 +1485,16 @@
                             : obj.stats.nUnique;
                     break;
                 case "Freedman-Diaconis' choice":
-                    console.log(6);
                     calculateFDBinWidth.call(_this, obj);
                     obj.stats.nBins =
                         obj.stats.FDBins < obj.stats.nUnique ? obj.stats.FDBins : obj.stats.nUnique;
                     break;
                 case "Shimazaki and Shinomoto's choice":
-                    console.log(7);
                     calculateSSBinWidth.call(_this, obj);
                     obj.stats.nBins =
                         obj.stats.SSBins < obj.stats.nUnique ? obj.stats.SSBins : obj.stats.nUnique;
                     break;
                 default:
-                    console.log(8);
                     //Handle custom number of bins.
                     obj.stats.nBins = _this.config.x.bin;
                 //obj.stats.binWidth = this.config.x.domain[1] - this.config.x.domain[0] / this.config.x.bin;
@@ -2051,6 +2044,26 @@
             .text(function(d) {
                 return repeats ? d.value2 : d.value1;
             });
+
+        //Thin ticks.
+        var textDimensions = [];
+        texts.each(function(d) {
+            var text = d3.select(this);
+            var bbox = this.getBBox();
+            if (
+                textDimensions.some(function(textDimension) {
+                    return textDimension.x + textDimension.width > bbox.x - 5;
+                })
+            )
+                text.remove();
+            else
+                textDimensions.push({
+                    x: bbox.x,
+                    width: bbox.width,
+                    y: bbox.y,
+                    height: bbox.height
+                });
+        });
     }
 
     function onResize() {

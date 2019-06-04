@@ -43,7 +43,7 @@ export default function safetyHistogram(element = 'body', settings = {}) {
 
     //Initialize listing and hide initially.
     chart.listing.init([]);
-    chart.listing.wrap.selectAll('*').style('display', 'none');
+    chart.listing.wrap.style('display', 'none');
 
     return chart;
 }

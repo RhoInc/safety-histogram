@@ -23,5 +23,5 @@ export default function resetRenderer() {
 
     //Reset listing.
     this.listing.draw([]);
-    this.listing.wrap.selectAll('*').style('display', 'none');
+    this.listing.wrap.style('display', 'none');
 }

@@ -1703,7 +1703,7 @@
 
         //Reset listing.
         this.listing.draw([]);
-        this.listing.wrap.selectAll('*').style('display', 'none');
+        this.listing.wrap.style('display', 'none');
     }
 
     function increasePrecision() {
@@ -1809,7 +1809,7 @@
 
         //Highlight bar.
         var selection = d3$1.select(element);
-        selection.moveToFront();
+        if (!/trident/i.test(navigator.userAgent)) selection.moveToFront();
         selection.selectAll('.bar').attr('stroke', 'black');
     }
 
@@ -1841,14 +1841,14 @@
 
         //Draw listing.
         this.listing.draw(d.values.raw);
-        this.listing.wrap.selectAll('*').style('display', null);
+        this.listing.wrap.style('display', 'inline-block');
     }
 
     function deselect(element, d) {
         delete this.highlightedBin;
         delete this.highlighteD;
         this.listing.draw([]);
-        this.listing.wrap.selectAll('*').style('display', 'none');
+        this.listing.wrap.style('display', 'none');
         this.svg.selectAll('.bar').attr('fill-opacity', 0.75);
 
         this.footnotes.barClick
@@ -2179,7 +2179,7 @@
 
         //Initialize listing and hide initially.
         chart.listing.init([]);
-        chart.listing.wrap.selectAll('*').style('display', 'none');
+        chart.listing.wrap.style('display', 'none');
 
         return chart;
     }

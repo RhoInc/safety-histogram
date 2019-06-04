@@ -13,7 +13,6 @@ d3.csv(
                     {value_col: 'USUBJID', label: 'Participant ID'},
                 ],
                 displayNormalRange: true,
-                start_value: 'RBC count',
             } // settings
         );
         instance.init(data);

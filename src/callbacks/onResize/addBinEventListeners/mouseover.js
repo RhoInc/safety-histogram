@@ -7,6 +7,6 @@ export default function mouseover(element, d) {
 
     //Highlight bar.
     const selection = select(element);
-    selection.moveToFront();
+    if (!/trident/i.test(navigator.userAgent)) selection.moveToFront();
     selection.selectAll('.bar').attr('stroke', 'black');
 }

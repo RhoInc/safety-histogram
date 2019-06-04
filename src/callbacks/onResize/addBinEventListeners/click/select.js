@@ -27,5 +27,5 @@ export default function select(element, d) {
 
     //Draw listing.
     this.listing.draw(d.values.raw);
-    this.listing.wrap.selectAll('*').style('display', null);
+    this.listing.wrap.style('display', 'inline-block');
 }

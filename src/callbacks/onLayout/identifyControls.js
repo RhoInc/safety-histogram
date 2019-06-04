@@ -9,7 +9,7 @@ export default function identifyControls() {
 
     //Give each control a unique ID.
     controlGroups.attr('id', d => d.label.toLowerCase().replace(/ /g, '-')).each(function(d) {
-        const controlGroup = d3.select(this);
+        const controlGroup = select(this);
         controlGroup.classed(d.type, true);
         context.controls[d.label] = controlGroup;
     });

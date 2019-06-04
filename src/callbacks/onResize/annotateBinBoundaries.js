@@ -1,4 +1,4 @@
-import { set, nest } from 'd3';
+import { set, nest, select } from 'd3';
 
 export default function annotateBinBoundaries() {
     //Remove bin boundaries.
@@ -32,7 +32,7 @@ export default function annotateBinBoundaries() {
     //Thin ticks.
     const textDimensions = [];
     texts.each(function(d) {
-        const text = d3.select(this);
+        const text = select(this);
         const bbox = this.getBBox();
         if (
             textDimensions.some(textDimension => textDimension.x + textDimension.width > bbox.x - 5)

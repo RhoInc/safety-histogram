@@ -4,7 +4,7 @@
         : typeof define === 'function' && define.amd
             ? define(['d3', 'webcharts'], factory)
             : (global.safetyHistogram = factory(global.d3, global.webCharts));
-})(this, function(d3$1, webcharts) {
+})(this, function(d3, webcharts) {
     'use strict';
 
     if (typeof Object.assign != 'function') {
@@ -133,13 +133,13 @@
         };
 
     // https://github.com/wbkd/d3-extended
-    d3$1.selection.prototype.moveToFront = function() {
+    d3.selection.prototype.moveToFront = function() {
         return this.each(function() {
             this.parentNode.appendChild(this);
         });
     };
 
-    d3$1.selection.prototype.moveToBack = function() {
+    d3.selection.prototype.moveToBack = function() {
         return this.each(function() {
             var firstChild = this.parentNode.firstChild;
             if (firstChild) {
@@ -526,7 +526,7 @@
                 console.error(errorText.replace(/<.+?>/g, ''));
 
                 //Print error to containing element.
-                var div = d3$1.select(_this.div);
+                var div = d3.select(_this.div);
                 div.append('p')
                     .html(errorText)
                     .style('color', 'red');
@@ -619,7 +619,7 @@
         var _this = this;
 
         this.participantCount = {
-            N: d3$1
+            N: d3
                 .set(
                     this.raw_data.map(function(d) {
                         return d[_this.config.id_col];
@@ -647,7 +647,7 @@
         });
 
         //Nest missing and nonmissing results by participant.
-        var participantsWithMissingResults = d3$1
+        var participantsWithMissingResults = d3
             .nest()
             .key(function(d) {
                 return d[_this.config.id_col];
@@ -656,7 +656,7 @@
                 return d.length;
             })
             .entries(missingResults);
-        var participantsWithNonMissingResults = d3$1
+        var participantsWithNonMissingResults = d3
             .nest()
             .key(function(d) {
                 return d[_this.config.id_col];
@@ -687,7 +687,7 @@
             );
 
         //Count the number of records with missing results.
-        this.removedRecords.missing = d3$1.sum(
+        this.removedRecords.missing = d3.sum(
             participantsWithMissingResults.filter(function(d) {
                 return _this.removedRecords.placeholderRecords.indexOf(d.key) < 0;
             }),
@@ -758,7 +758,7 @@
     function participant() {
         var _this = this;
 
-        this.participants = d3$1
+        this.participants = d3
             .set(
                 this.initial_data.map(function(d) {
                     return d[_this.config.id_col];
@@ -771,7 +771,7 @@
     function measure() {
         var _this = this;
 
-        this.measures = d3$1
+        this.measures = d3
             .set(
                 this.initial_data.map(function(d) {
                     return d[_this.config.measure_col];
@@ -779,7 +779,7 @@
             )
             .values()
             .sort();
-        this.sh_measures = d3$1
+        this.sh_measures = d3
             .set(
                 this.initial_data.map(function(d) {
                     return d.sh_measure;
@@ -838,7 +838,7 @@
                         ' ] filter has been removed because the variable does not exist.'
                 );
             } else {
-                var levels = d3$1
+                var levels = d3
                     .set(
                         _this.raw_data.map(function(d) {
                             return d[input.value_col];
@@ -1248,7 +1248,7 @@
 
         //Filter results on current x-domain.
         if (this.measure.current !== this.measure.previous)
-            this.config.x.domain = d3$1.extent(
+            this.config.x.domain = d3.extent(
                 this.measure.raw.data.map(function(d) {
                     return +d[_this.config.value_col];
                 })
@@ -1274,10 +1274,10 @@
                 .sort(function(a, b) {
                     return a - b;
                 });
-            obj.uniqueResults = d3$1.set(obj.results).values();
+            obj.uniqueResults = d3.set(obj.results).values();
 
             //Calculate extent of data.
-            obj.domain = property !== 'custom' ? d3$1.extent(obj.results) : _this.config.x.domain;
+            obj.domain = property !== 'custom' ? d3.extent(obj.results) : _this.config.x.domain;
         });
     }
 
@@ -1321,12 +1321,12 @@
                 n: obj.results.length,
                 nUnique: obj.uniqueResults.length,
                 min: obj.domain[0],
-                q25: d3$1.quantile(obj.results, 0.25),
-                median: d3$1.quantile(obj.results, 0.5),
-                q75: d3$1.quantile(obj.results, 0.75),
+                q25: d3.quantile(obj.results, 0.25),
+                median: d3.quantile(obj.results, 0.5),
+                q75: d3.quantile(obj.results, 0.75),
                 max: obj.domain[1],
                 range: obj.domain[1] - obj.domain[0],
-                std: d3$1.deviation(obj.results)
+                std: d3.deviation(obj.results)
             };
             obj.stats.log10range = obj.stats.range > 0 ? Math.log10(obj.stats.range) : NaN;
             obj.stats.iqr = obj.stats.q75 - obj.stats.q25;
@@ -1358,12 +1358,10 @@
         //https://en.wikipedia.org/wiki/Histogram#Scott's_normal_reference_rule
         var range = this.config.x.domain[1] - this.config.x.domain[0];
         obj.stats.ScottBinWidth = (3.5 * obj.stats.std) / Math.pow(obj.stats.n, 1.0 / 3.0);
-        console.log(obj.stats.ScottBinWidth);
         obj.stats.ScottBins =
             obj.stats.ScottBinWidth > 0
                 ? Math.max(Math.ceil(range / obj.stats.ScottBinWidth), 5)
                 : NaN;
-        console.log(obj.stats.ScottBins);
     }
 
     function calculateFDBinWidth(obj) {
@@ -1386,8 +1384,8 @@
 
     function calculateSSBinWidth(obj) {
         //https://en.wikipedia.org/wiki/Histogram#Shimazaki_and_Shinomoto's_choice
-        var nBins = d3$1.range(2, 100); // number of bins
-        var cost = d3$1.range(nBins.length); // cost function results
+        var nBins = d3.range(2, 100); // number of bins
+        var cost = d3.range(nBins.length); // cost function results
         var binWidths = [].concat(toConsumableArray(cost)); // bin widths
         var binBoundaries = [].concat(toConsumableArray(cost)); // bin boundaries
         var bins = [].concat(toConsumableArray(cost)); // bins
@@ -1397,16 +1395,16 @@
 
         var _loop = function _loop(i) {
             binWidths[i] = obj.stats.range / nBins[i];
-            binBoundaries[i] = d3$1.range(obj.stats.min, obj.stats.max, obj.stats.range / nBins[i]);
-            bins[i] = d3$1.layout.histogram().bins(nBins[i] - 1)(
+            binBoundaries[i] = d3.range(obj.stats.min, obj.stats.max, obj.stats.range / nBins[i]);
+            bins[i] = d3.layout.histogram().bins(nBins[i] - 1)(
                 /*.bins(binBoundaries[i])*/ obj.results
             );
             binSizes[i] = bins[i].map(function(arr) {
                 return arr.length;
             });
-            meanBinSizes[i] = d3$1.mean(binSizes[i]);
+            meanBinSizes[i] = d3.mean(binSizes[i]);
             residuals[i] =
-                d3$1.sum(
+                d3.sum(
                     binSizes[i].map(function(binSize) {
                         return Math.pow(binSize - meanBinSizes[i], 2);
                     })
@@ -1432,7 +1430,7 @@
         //    5
         //);
 
-        var minCost = d3$1.min(cost);
+        var minCost = d3.min(cost);
         var idx = cost.findIndex(function(c) {
             return c === minCost;
         });
@@ -1502,7 +1500,7 @@
 
             //Calculate bin width.
             obj.stats.binWidth = obj.stats.range / obj.stats.nBins;
-            obj.stats.binBoundaries = d3$1.range(obj.stats.nBins).concat(obj.domain[1]);
+            obj.stats.binBoundaries = d3.range(obj.stats.nBins).concat(obj.domain[1]);
         });
 
         //Update chart config and set chart data to measure data.
@@ -1522,14 +1520,14 @@
             this.config.x.precisionFactor > 0
                 ? '.0f'
                 : '.' + (Math.abs(this.config.x.precisionFactor) + 1) + 'f';
-        this.config.x.d3format = d3$1.format(this.config.x.format);
+        this.config.x.d3format = d3.format(this.config.x.format);
 
         //one more precision please: bin format
         this.config.x.format1 =
             this.config.x.precisionFactor > 0
                 ? '.1f'
                 : '.' + (Math.abs(this.config.x.precisionFactor) + 2) + 'f';
-        this.config.x.d3format1 = d3$1.format(this.config.x.format1);
+        this.config.x.d3format1 = d3.format(this.config.x.format1);
 
         //define the size of the x-axis limit increments
         var step =
@@ -1653,14 +1651,14 @@
         var _this = this;
 
         //count the number of unique ids in the current chart and calculate the percentage
-        this.participantCount.n = d3$1
+        this.participantCount.n = d3
             .set(
                 this.filtered_data.map(function(d) {
                     return d[_this.config.id_col];
                 })
             )
             .values().length;
-        this.participantCount.percentage = d3$1.format('0.1%')(
+        this.participantCount.percentage = d3.format('0.1%')(
             this.participantCount.n / this.participantCount.N
         );
 
@@ -1737,7 +1735,7 @@
         var context = this;
 
         var bins = this.svg.selectAll('.bar-group').each(function(d) {
-            var g = d3$1.select(this);
+            var g = d3.select(this);
             g.selectAll('.hover-bar').remove();
 
             //Drawing a path instead of a rect because Webcharts messes up the original rect on resize.
@@ -1776,7 +1774,7 @@
         );
 
         //Remove bar highlight.
-        var selection = d3$1.select(element);
+        var selection = d3.select(element);
         selection.selectAll('.bar').attr('stroke', this.colorScale());
     }
 
@@ -1785,7 +1783,7 @@
         this.footnotes.barDetails.html('Bar encompasses ' + d.footnote + '.');
 
         //Highlight bar.
-        var selection = d3$1.select(element);
+        var selection = d3.select(element);
         selection.moveToFront();
         selection.selectAll('.bar').attr('stroke', 'black');
     }
@@ -1798,7 +1796,7 @@
             .selectAll('.bar-group')
             .selectAll('.bar')
             .attr('fill-opacity', 0.5);
-        d3$1.select(element)
+        d3.select(element)
             .select('.bar')
             .attr('fill-opacity', 1);
 
@@ -1847,7 +1845,7 @@
     function click(element, d) {
         this.highlightedBin = d.key;
         this.highlighteD = d;
-        var selection = d3$1.select(element);
+        var selection = d3.select(element);
         var selected = selection.classed('selected');
         this.svg.selectAll('.bar-group').classed('selected', false);
         selection.classed('selected', !selected);
@@ -1881,7 +1879,7 @@
 
         if (this.config.displayNormalRange && this.filtered_data.length > 0) {
             //Capture distinct normal ranges in filtered data.
-            var normalRanges = d3$1
+            var normalRanges = d3
                 .nest()
                 .key(function(d) {
                     return d[_this.config.normal_col_low] + ',' + d[_this.config.normal_col_high];
@@ -1912,7 +1910,7 @@
                               ' - ' +
                               d.upper +
                               ' (' +
-                              d3$1.format('%')(d.rate) +
+                              d3.format('%')(d.rate) +
                               ' of records)'
                             : d.lower + ' - ' + d.upper;
 
@@ -2013,7 +2011,7 @@
         this.svg.select('g.bin-boundaries').remove();
 
         //Check for repeats of values formatted with lower precision.
-        var repeats = d3$1
+        var repeats = d3
             .nest()
             .key(function(d) {
                 return d.value1;
@@ -2094,7 +2092,7 @@
 
     function onDestroy() {
         this.listing.destroy();
-        d3$1.select(this.div)
+        d3.select(this.div)
             .selectAll('.loader')
             .remove();
     }

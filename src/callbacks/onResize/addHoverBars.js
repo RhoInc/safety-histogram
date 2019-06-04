@@ -23,10 +23,10 @@ export default function addHoverBars() {
                 'stroke-opacity': 0
             });
         d.footnote =
-            `${d.values.raw.length} records with ` +
-            `${context.measure.current} values greater than or equal to ` +
-            `${context.config.x.d3format1(d.rangeLow)} and less than ${
-                d.rangeHigh < context.config.x.domain[1] ? '' : 'or equal to '
-            }${context.config.x.d3format1(d.rangeHigh)}`;
+            `<span style = 'font-weight: bold'>${d.values.raw.length} records</span> with ` +
+            `${context.measure.current} values &ge;<span style = 'font-weight: bold'>` +
+            `${context.config.x.d3format1(d.rangeLow)}</span> and ${
+                d.rangeHigh < context.config.x.domain[1] ? '&lt;' : '&le;'
+            }<span style = 'font-weight: bold'>${context.config.x.d3format1(d.rangeHigh)}</span>`;
     });
 }

@@ -3,7 +3,7 @@ import mouseout from './mouseout';
 
 export default function mouseover(element, d) {
     //Update bar details footnote.
-    this.footnotes.barDetails.text(`Bar encompasses ${d.footnote}.`);
+    this.footnotes.barDetails.html(`Bar encompasses ${d.footnote}.`);
 
     //Highlight bar.
     const selection = select(element);

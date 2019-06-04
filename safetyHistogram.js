@@ -337,7 +337,7 @@
         //Add filters to default controls.
         if (Array.isArray(settings.filters) && settings.filters.length > 0) {
             var position = controlInputs.findIndex(function(input) {
-                return input.label === 'Normal Range';
+                return input.label === 'Algorithm';
             });
             settings.filters.forEach(function(filter) {
                 var filterObj = {
@@ -1756,19 +1756,22 @@
                     'stroke-opacity': 0
                 });
             d.footnote =
+                "<span style = 'font-weight: bold'>" +
                 d.values.raw.length +
-                ' records with ' +
-                (context.measure.current + ' values greater than or equal to ') +
+                ' records</span> with ' +
+                (context.measure.current + " values &ge;<span style = 'font-weight: bold'>") +
                 (context.config.x.d3format1(d.rangeLow) +
-                    ' and less than ' +
-                    (d.rangeHigh < context.config.x.domain[1] ? '' : 'or equal to ') +
-                    context.config.x.d3format1(d.rangeHigh));
+                    '</span> and ' +
+                    (d.rangeHigh < context.config.x.domain[1] ? '&lt;' : '&le;') +
+                    "<span style = 'font-weight: bold'>" +
+                    context.config.x.d3format1(d.rangeHigh) +
+                    '</span>');
         });
     }
 
     function mouseout(element, d) {
         //Update footnote.
-        this.footnotes.barDetails.text(
+        this.footnotes.barDetails.html(
             this.highlightedBin ? 'Table displays ' + d.footnote + '.' : ''
         );
 
@@ -1779,7 +1782,7 @@
 
     function mouseover(element, d) {
         //Update bar details footnote.
-        this.footnotes.barDetails.text('Bar encompasses ' + d.footnote + '.');
+        this.footnotes.barDetails.html('Bar encompasses ' + d.footnote + '.');
 
         //Highlight bar.
         var selection = d3$1.select(element);
@@ -1811,7 +1814,7 @@
             });
 
         //Update bar details footnote.
-        this.footnotes.barDetails.text('Table displays ' + d.footnote + '.');
+        this.footnotes.barDetails.html('Table displays ' + d.footnote + '.');
 
         //Draw listing.
         this.listing.draw(d.values.raw);

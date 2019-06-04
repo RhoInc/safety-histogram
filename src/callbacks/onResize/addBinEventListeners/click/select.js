@@ -23,7 +23,7 @@ export default function select(element, d) {
         });
 
     //Update bar details footnote.
-    this.footnotes.barDetails.text(`Table displays ${d.footnote}.`);
+    this.footnotes.barDetails.html(`Table displays ${d.footnote}.`);
 
     //Draw listing.
     this.listing.draw(d.values.raw);

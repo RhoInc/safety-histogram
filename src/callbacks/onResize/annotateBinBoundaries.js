@@ -36,7 +36,9 @@ export default function annotateBinBoundaries() {
             const text = select(this);
             const bbox = this.getBBox();
             if (
-                textDimensions.some(textDimension => textDimension.x + textDimension.width > bbox.x - 5)
+                textDimensions.some(
+                    textDimension => textDimension.x + textDimension.width > bbox.x - 5
+                )
             )
                 text.remove();
             else

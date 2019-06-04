@@ -17,6 +17,6 @@ export default function rendererSettings() {
         normal_range: true,
         displayNormalRange: false,
         bin_algorithm: "Scott's normal reference rule",
-        annotate_bin_boundaries: false,
+        annotate_bin_boundaries: false
     };
 }

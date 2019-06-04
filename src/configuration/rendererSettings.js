@@ -16,6 +16,7 @@ export default function rendererSettings() {
         start_value: null,
         normal_range: true,
         displayNormalRange: false,
-        bin_algorithm: "Scott's normal reference rule"
+        bin_algorithm: "Scott's normal reference rule",
+        annotate_bin_boundaries: false,
     };
 }

@@ -48,6 +48,13 @@ export default function controlInputs() {
             type: 'checkbox',
             option: 'displayNormalRange',
             label: 'Normal Range'
+        },
+        {
+            type: 'radio',
+            option: 'annotate_bin_boundaries',
+            label: 'X-axis Ticks',
+            values: [false, true],
+            relabels: ['linear', 'bin boundaries']
         }
     ];
 }

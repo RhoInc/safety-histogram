@@ -1,8 +1,9 @@
+import { nest } from 'd3';
+
 export default function increasePrecision() {
     const ticks = this.x.ticks().map(d => this.config.x.d3format(d));
     if (
-        d3
-            .nest()
+        nest()
             .key(d => d)
             .rollup(d => d.length)
             .entries(ticks)

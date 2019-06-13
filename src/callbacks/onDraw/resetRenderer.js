@@ -2,6 +2,9 @@ export default function resetRenderer() {
     delete this.highlightedBin;
     delete this.highlighteD;
 
+    //Remove bin boundaries.
+    this.svg.select('g.bin-boundaries').remove();
+
     //Reset bar highlighting.
     this.svg
         .selectAll('.bar-group')

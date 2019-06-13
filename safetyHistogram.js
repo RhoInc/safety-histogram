@@ -191,8 +191,8 @@
                 {
                     per: [], // set in ./syncSettings
                     type: 'bar',
-                    summarizeY: 'count',
                     summarizeX: 'mean',
+                    summarizeY: 'count',
                     attributes: { 'fill-opacity': 0.75 }
                 }
             ],
@@ -222,16 +222,20 @@
         //Define default details.
         var defaultDetails = [{ value_col: settings.id_col, label: 'Participant ID' }];
         if (Array.isArray(settings.filters))
-            settings.filters.forEach(function(filter) {
-                return defaultDetails.push({
-                    value_col: filter.value_col ? filter.value_col : filter,
-                    label: filter.label
-                        ? filter.label
-                        : filter.value_col
-                            ? filter.value_col
-                            : filter
+            settings.filters
+                .filter(function(filter) {
+                    return filter.value_col !== settings.id_col;
+                })
+                .forEach(function(filter) {
+                    return defaultDetails.push({
+                        value_col: filter.value_col ? filter.value_col : filter,
+                        label: filter.label
+                            ? filter.label
+                            : filter.value_col
+                                ? filter.value_col
+                                : filter
+                    });
                 });
-            });
         defaultDetails.push({ value_col: settings.value_col, label: 'Result' });
         if (settings.normal_col_low)
             defaultDetails.push({
@@ -877,25 +881,26 @@
         var _this = this;
 
         //Add x-domain reset button container.
-        var resetContainer = this.controls.wrap
-            .insert('div', '#lower')
-            .classed('control-group x-axis', true)
-            .datum({
-                type: 'button',
-                option: 'x.domain',
-                label: ''
-            })
-            .attr('title', 'Reset x-axis limits.')
-            .style('vertical-align', 'bottom');
+        this.controls.reset = {
+            container: this.controls.wrap
+                .insert('div', '#lower')
+                .classed('control-group x-axis', true)
+                .datum({
+                    type: 'button',
+                    option: 'x.domain',
+                    label: ''
+                })
+                .style('vertical-align', 'bottom')
+        };
 
         //Add label.
-        resetContainer
+        this.controls.reset.label = this.controls.reset.container
             .append('span')
             .attr('class', 'wc-control-label')
             .text('');
 
         //Add button.
-        resetContainer
+        this.controls.reset.button = this.controls.reset.container
             .append('button')
             .text(' Reset ')
             .style('padding', '0px 5px')
@@ -1132,47 +1137,7 @@
     function getCurrentMeasure() {
         this.measure.previous = this.measure.current;
         this.measure.current = this.controls.wrap.selectAll('#measure option:checked').text();
-    }
-
-    function calculateStatistics(obj) {
-        var _this = this;
-
-        //Define array of all and unique results.
-        obj.results = obj.data
-            .map(function(d) {
-                return +d[_this.config.value_col];
-            })
-            .sort(function(a, b) {
-                return a - b;
-            });
-        obj.uniqueResults = d3.set(obj.results).values();
-
-        //Calculate statistics.
-        obj.domain = d3.extent(obj.results);
-        obj.stats = {
-            n: obj.results.length,
-            nUnique: obj.uniqueResults.length,
-            min: obj.domain[0],
-            q25: d3.quantile(obj.results, 0.25),
-            median: d3.quantile(obj.results, 0.5),
-            q75: d3.quantile(obj.results, 0.75),
-            max: obj.domain[1],
-            range: obj.domain[1] - obj.domain[0]
-        };
-        obj.stats.log10range = obj.stats.range > 0 ? Math.log10(obj.stats.range) : NaN;
-        obj.stats.iqr = obj.stats.q75 - obj.stats.q25;
-
-        //Calculate bin width and number of bins.
-        obj.stats.calculatedBinWidth = (2 * obj.stats.iqr) / Math.pow(obj.stats.n, 1.0 / 3.0); // https://en.wikipedia.org/wiki/Freedman%E2%80%93Diaconis_rule
-        obj.stats.calculatedBins =
-            obj.stats.calculatedBinWidth > 0
-                ? Math.ceil(obj.stats.range / obj.stats.calculatedBinWidth)
-                : NaN;
-        obj.stats.nBins =
-            obj.stats.calculatedBins < obj.stats.nUnique
-                ? obj.stats.calculatedBins
-                : obj.stats.nUnique;
-        obj.stats.binWidth = obj.stats.range / obj.nBins;
+        this.config.x.label = this.measure.current;
     }
 
     function defineMeasureData() {
@@ -1184,7 +1149,6 @@
                 return d.sh_measure === _this.measure.current;
             })
         };
-        calculateStatistics.call(this, this.measure.raw);
 
         //Apply other filters to measure data.
         this.measure.filtered = {
@@ -1199,22 +1163,129 @@
                         : filter.val === d[filter.col];
             });
         });
-        calculateStatistics.call(this, this.measure.filtered);
 
-        //Update chart config and set chart data to measure data.
-        this.config.x.bin = this.measure.filtered.stats.nBins;
-        this.raw_data = this.measure.raw.data.slice();
+        //Filter results on current x-domain.
+        if (this.measure.current !== this.measure.previous)
+            this.config.x.domain = d3.extent(
+                this.measure.raw.data.map(function(d) {
+                    return +d[_this.config.value_col];
+                })
+            );
+        this.measure.custom = {
+            data: this.measure.raw.data.filter(function(d) {
+                return (
+                    _this.config.x.domain[0] <= +d[_this.config.value_col] &&
+                    +d[_this.config.value_col] <= _this.config.x.domain[1]
+                );
+            })
+        };
+
+        //Define arrays of results, unique results, and extent of results.
+        ['raw', 'custom', 'filtered'].forEach(function(property) {
+            var obj = _this.measure[property];
+
+            //Define array of all and unique results.
+            obj.results = obj.data
+                .map(function(d) {
+                    return +d[_this.config.value_col];
+                })
+                .sort(function(a, b) {
+                    return a - b;
+                });
+            obj.uniqueResults = d3.set(obj.results).values();
+
+            //Calculate extent of data.
+            obj.domain = property !== 'custom' ? d3.extent(obj.results) : _this.config.x.domain;
+        });
     }
 
     function setXdomain() {
         if (this.measure.current !== this.measure.previous)
             this.config.x.domain = this.measure.raw.domain;
         else if (this.config.x.domain[0] > this.config.x.domain[1]) this.config.x.domain.reverse();
+
+        //The x-domain can be in three states:
+        //- the extent of all results
+        //- user-defined, e.g. narrower to exclude outliers
+        //
+        //Bin width is calculated with two variables:
+        //- the interquartile range
+        //- the number of results
+        //
+        //1 When the x-domain is set to the extent of all results, the bin width should be calculated
+        //  with the unfiltered set of results, regardless of the state of the current filters.
+        //
+        //2 Given a user-defined x-domain, the bin width should be calculated with the results that
+        //  fall inside the current domain.
+        this.measure.domain_state =
+            (this.config.x.domain[0] === this.measure.raw.domain[0] &&
+                this.config.x.domain[1] === this.measure.raw.domain[1]) ||
+            this.measure.previous === undefined
+                ? 'raw'
+                : 'custom';
+
+        //Set chart data to measure data.
+        this.raw_data = this.measure[this.measure.domain_state].data.slice();
+    }
+
+    function calculateStatistics(obj) {
+        var _this = this;
+
+        ['raw', 'custom'].forEach(function(property) {
+            var obj = _this.measure[property];
+
+            //Calculate statistics.
+            obj.stats = {
+                n: obj.results.length,
+                nUnique: obj.uniqueResults.length,
+                min: obj.domain[0],
+                q25: d3.quantile(obj.results, 0.25),
+                median: d3.quantile(obj.results, 0.5),
+                q75: d3.quantile(obj.results, 0.75),
+                max: obj.domain[1],
+                range: obj.domain[1] - obj.domain[0]
+            };
+            obj.stats.log10range = obj.stats.range > 0 ? Math.log10(obj.stats.range) : NaN;
+            obj.stats.iqr = obj.stats.q75 - obj.stats.q25;
+        });
+    }
+
+    function calculateFDBinWidth(obj) {
+        //https://en.wikipedia.org/wiki/Histogram#Freedman%E2%80%93Diaconis'_choice
+        var range = this.config.x.domain[1] - this.config.x.domain[0];
+        obj.stats.FDBinWidth = (2 * obj.stats.iqr) / Math.pow(obj.stats.n, 1.0 / 3.0);
+        obj.stats.FDBins =
+            obj.stats.FDBinWidth > 0 ? Math.max(Math.ceil(range / obj.stats.FDBinWidth), 5) : NaN;
+    }
+
+    function calcualteBinWidth() {
+        var _this = this;
+
+        ['raw', 'custom'].forEach(function(property) {
+            var obj = _this.measure[property];
+
+            //Calculate bin width.
+            {
+                //Calculate bin width with Freedman-Diaconis algorithm.
+                calculateFDBinWidth.call(_this, obj);
+                obj.stats.nBins =
+                    obj.stats.FDBins < obj.stats.nUnique ? obj.stats.FDBins : obj.stats.nUnique;
+            }
+
+            //Calculate bin width.
+            obj.stats.binWidth = obj.stats.range / obj.stats.nBins;
+            obj.stats.binBoundaries = d3.range(obj.stats.nBins).concat(obj.domain[1]);
+        });
+
+        //Update chart config and set chart data to measure data.
+        this.config.x.bin = this.measure[this.measure.domain_state].stats.nBins;
     }
 
     function calculateXPrecision() {
         //define the precision of the x-axis
-        this.config.x.precisionFactor = Math.round(this.measure.raw.stats.log10range);
+        this.config.x.precisionFactor = Math.round(
+            this.measure[this.measure.domain_state].stats.log10range
+        );
         this.config.x.precision = Math.pow(10, this.config.x.precisionFactor);
 
         //x-axis format
@@ -1233,10 +1304,10 @@
 
         //define the size of the x-axis limit increments
         var step =
-            this.measure.raw.stats.range > 0
-                ? Math.abs(this.measure.raw.stats.range / 15) // non-zero range
-                : this.measure.raw.results[0] !== 0
-                    ? Math.abs(this.measure.raw.results[0] / 15) // zero range, non-zero result(s)
+            this.measure[this.measure.domain_state].stats.range > 0
+                ? Math.abs(this.measure[this.measure.domain_state].stats.range / 15) // non-zero range
+                : this.measure[this.measure.domain_state].results[0] !== 0
+                    ? Math.abs(this.measure[this.measure.domain_state].results[0] / 15) // zero range, non-zero result(s)
                     : 1; // zero range, zero result(s)
         if (step < 1) {
             var x10 = 0;
@@ -1249,60 +1320,75 @@
         this.measure.step = step || 1;
     }
 
-    function setYaxisLabel() {
-        this.config.x.label = this.measure.current;
-    }
-
     function updateXaxisLimitControls() {
         this.controls.wrap
             .selectAll('#lower input')
             .attr('step', this.measure.step) // set in ./calculateXPrecision
             .style('box-shadow', 'none')
-            .property('value', this.config.x.domain[0]);
+            .property('value', this.config.x.d3format1(this.config.x.domain[0]));
 
         this.controls.wrap
             .selectAll('#upper input')
             .attr('step', this.measure.step) // set in ./calculateXPrecision
             .style('box-shadow', 'none')
-            .property('value', this.config.x.domain[1]);
+            .property('value', this.config.x.d3format1(this.config.x.domain[1]));
     }
 
     function updateXaxisResetButton() {
         //Update tooltip of x-axis domain reset button.
-        if (this.currentMeasure !== this.previousMeasure)
-            this.controls.wrap
-                .selectAll('.x-axis')
-                .property(
-                    'title',
-                    'Initial Limits: [' +
-                        this.config.x.domain[0] +
-                        ' - ' +
-                        this.config.x.domain[1] +
-                        ']'
-                );
+        if (this.measure.current !== this.measure.previous) {
+            this.controls.reset.container.attr(
+                'title',
+                'Initial Limits: [' +
+                    this.config.x.d3format1(this.config.x.domain[0]) +
+                    ' - ' +
+                    this.config.x.d3format1(this.config.x.domain[1]) +
+                    ']'
+            );
+        }
+    }
+
+    function defineBinBoundaries() {
+        var _this = this;
+
+        var obj = this.measure[this.measure.domain_state];
+        this.measure.binBoundaries = obj.stats.binBoundaries.map(function(d, i) {
+            var value = obj.domain[0] + obj.stats.binWidth * i;
+            return {
+                value: value,
+                value1: _this.config.x.d3format(value),
+                value2: _this.config.x.d3format1(value)
+            };
+        });
     }
 
     function onPreprocess() {
-        // 1. Capture currently selected measure.
+        // 1. Capture currently selected measure - needed in 2a.
         getCurrentMeasure.call(this);
 
-        // 2. Filter data on currently selected measure.
+        // 2. Filter data on currently selected measure - needed in 3a and 3b.
         defineMeasureData.call(this);
 
-        // 3a Set x-domain given currently selected measure.
+        // 3a Set x-domain given currently selected measure - needed in 4a and 4b.
         setXdomain.call(this);
 
-        // 3b Define precision of measure.
+        // 3b Calculate statistics - needed in 4a and 4b.
+        calculateStatistics.call(this);
+
+        // 4a Define precision of measure - needed in step 5a, 5b, and 5c.
         calculateXPrecision.call(this);
 
-        // 3c Set x-axis label to current measure.
-        setYaxisLabel.call(this);
+        // 4b Calculate bin width - needed in step 5c.
+        calcualteBinWidth.call(this);
 
-        // 4a Update x-axis reset button when measure changes.
+        // 5a Update x-axis reset button when measure changes.
         updateXaxisResetButton.call(this);
 
-        // 4b Update x-axis limit controls to match x-axis domain.
+        // 5b Update x-axis limit controls to match x-axis domain.
         updateXaxisLimitControls.call(this);
+
+        // 5c Define bin boundaries given bin width and precision.
+        defineBinBoundaries.call(this);
     }
 
     function onDatatransform() {}
@@ -1341,6 +1427,9 @@
         delete this.highlightedBin;
         delete this.highlighteD;
 
+        //Remove bin boundaries.
+        this.svg.select('g.bin-boundaries').remove();
+
         //Reset bar highlighting.
         this.svg
             .selectAll('.bar-group')
@@ -1370,20 +1459,20 @@
     function drawZeroRangeBar() {
         var _this = this;
 
-        if (this.current_data.length === 1) {
+        if (
+            this.current_data.length === 1 &&
+            this.measure.filtered.domain[0] === this.measure.filtered.domain[1]
+        ) {
+            var width = this.plot_width / 25;
             this.svg
                 .selectAll('g.bar-group rect')
                 .transition()
                 .delay(250) // wait for initial marks to transition
                 .attr({
                     x: function x(d) {
-                        return d.values.x !== 0 ? _this.x(d.values.x * 0.999) : _this.x(-0.1);
+                        return _this.x(d.values.x) - width / 2;
                     },
-                    width: function width(d) {
-                        return d.values.x !== 0
-                            ? _this.x(d.values.x * 1.001) - _this.x(d.values.x * 0.999)
-                            : _this.x(0.1) - _this.x(-0.1);
-                    }
+                    width: width
                 });
         }
     }
@@ -1548,7 +1637,7 @@
         this.controls.wrap.select('.normal-range-list').remove();
         this.svg.select('.normal-ranges').remove();
 
-        if (this.config.displayNormalRange) {
+        if (this.config.displayNormalRange && this.filtered_data.length > 0) {
             //Capture distinct normal ranges in filtered data.
             var normalRanges = d3
                 .nest()
@@ -1574,13 +1663,14 @@
                     d.width = d.x2 - d.x1;
 
                     //tooltip
+                    d.rate = d.values / _this.filtered_data.length;
                     d.tooltip =
                         d.values < _this.filtered_data.length
                             ? d.lower +
                               ' - ' +
                               d.upper +
                               ' (' +
-                              d3.format('%')(d.values / _this.filtered_data.length) +
+                              d3.format('%')(d.rate) +
                               ' of records)'
                             : d.lower + ' - ' + d.upper;
 
@@ -1595,15 +1685,9 @@
                     return d;
                 })
                 .sort(function(a, b) {
-                    return a.lower <= b.lower && a.upper >= b.upper
-                        ? 1 // lesser minimum and greater maximum
-                        : a.lower >= b.lower && a.upper <= b.upper
-                            ? -1 // greater minimum and lesser maximum
-                            : a.lower <= b.lower && a.upper <= b.upper
-                                ? 1 // lesser minimum and lesser maximum
-                                : a.lower >= b.lower && a.upper >= b.upper
-                                    ? -1 // greater minimum and greater maximum
-                                    : 1;
+                    var diff_lower = a.lower - b.lower;
+                    var diff_upper = a.upper - b.upper;
+                    return diff_lower ? diff_lower : diff_upper ? diff_upper : 0;
                 }); // sort normal ranges so larger normal ranges plot beneath smaller normal ranges
 
             //Add tooltip to Normal Range control that lists normal ranges.
@@ -1651,16 +1735,14 @@
                     width: function width(d) {
                         return d.width;
                     },
-                    height: this.plot_height
-                })
-                .style({
-                    stroke: 'black',
-                    fill: 'black',
+                    height: this.plot_height,
+                    stroke: '#c26683',
+                    fill: '#c26683',
                     'stroke-opacity': function strokeOpacity(d) {
-                        return (d.values / _this.filtered_data.length) * 0.75;
+                        return (d.values / _this.filtered_data.length) * 0.5;
                     },
                     'fill-opacity': function fillOpacity(d) {
-                        return (d.values / _this.filtered_data.length) * 0.5;
+                        return (d.values / _this.filtered_data.length) * 0.25;
                     }
                 }); // opacity as a function of fraction of records with the given normal range
         }
@@ -1688,27 +1770,6 @@
         //Remove bin boundaries.
         this.svg.select('g.bin-boundaries').remove();
 
-        //Define set of bin boundaries.
-        var binBoundaries = d3
-            .set(
-                d3.merge(
-                    this.current_data.map(function(d) {
-                        return [d.rangeLow, d.rangeHigh];
-                    })
-                )
-            )
-            .values()
-            .map(function(value) {
-                return {
-                    value: +value,
-                    value1: _this.config.x.d3format(value),
-                    value2: _this.config.x.d3format1(value)
-                };
-            })
-            .sort(function(a, b) {
-                return a.value - b.value;
-            });
-
         //Check for repeats of values formatted with lower precision.
         var repeats = d3
             .nest()
@@ -1718,7 +1779,7 @@
             .rollup(function(d) {
                 return d.length;
             })
-            .entries(binBoundaries)
+            .entries(this.measure.binBoundaries)
             .some(function(d) {
                 return d.values > 1;
             });
@@ -1727,7 +1788,7 @@
         var axis = this.svg.append('g').classed('bin-boundaries axis', true);
         var ticks = axis
             .selectAll('g.bin-boundary')
-            .data(binBoundaries)
+            .data(this.measure.binBoundaries)
             .enter()
             .append('g')
             .classed('bin-boundary tick', true);
@@ -1737,7 +1798,7 @@
                 x: function x(d) {
                     return _this.x(d.value);
                 },
-                y: this.y(0),
+                y: this.plot_height,
                 dy: '16px',
                 'text-anchor': 'middle'
             })

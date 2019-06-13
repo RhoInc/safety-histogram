@@ -163,8 +163,8 @@ The object below contains Webcharts settings that define the safety-histogram ch
         {
             "per": [],
             "type": "bar",
-            "summarizeY": "count",
             "summarizeX": "mean",
+            "summarizeY": "count",
             "attributes": {
                 "fill-opacity": 0.75
             }

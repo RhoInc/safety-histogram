@@ -20,8 +20,8 @@ export default function webchartsSettings() {
             {
                 per: [], // set in ./syncSettings
                 type: 'bar',
-                summarizeY: 'count',
                 summarizeX: 'mean',
+                summarizeY: 'count',
                 attributes: { 'fill-opacity': 0.75 }
             }
         ],

@@ -1,33 +1,21 @@
-import { set, merge, nest } from 'd3';
+import { set, nest } from 'd3';
 
 export default function annotateBinBoundaries() {
     //Remove bin boundaries.
     this.svg.select('g.bin-boundaries').remove();
 
-    //Define set of bin boundaries.
-    const binBoundaries = set(merge(this.current_data.map(d => [d.rangeLow, d.rangeHigh])))
-        .values()
-        .map(value => {
-            return {
-                value: +value,
-                value1: this.config.x.d3format(value),
-                value2: this.config.x.d3format1(value)
-            };
-        })
-        .sort((a, b) => a.value - b.value);
-
     //Check for repeats of values formatted with lower precision.
     const repeats = nest()
         .key(d => d.value1)
         .rollup(d => d.length)
-        .entries(binBoundaries)
+        .entries(this.measure.binBoundaries)
         .some(d => d.values > 1);
 
     //Annotate bin boundaries.
     const axis = this.svg.append('g').classed('bin-boundaries axis', true);
     const ticks = axis
         .selectAll('g.bin-boundary')
-        .data(binBoundaries)
+        .data(this.measure.binBoundaries)
         .enter()
         .append('g')
         .classed('bin-boundary tick', true);
@@ -35,7 +23,7 @@ export default function annotateBinBoundaries() {
         .append('text')
         .attr({
             x: d => this.x(d.value),
-            y: this.y(0),
+            y: this.plot_height,
             dy: '16px',
             'text-anchor': 'middle'
         })

@@ -1,4 +1,4 @@
-export default function updateXaxisLimitControls() {
+export default function updateXAxisLimits() {
     this.controls.wrap
         .selectAll('#lower input')
         .attr('step', this.measure.step) // set in ./calculateXPrecision

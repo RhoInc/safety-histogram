@@ -1,4 +1,4 @@
-import { quantile } from 'd3';
+import { quantile, deviation } from 'd3';
 
 export default function calculateStatistics(obj) {
     ['raw', 'custom'].forEach(property => {
@@ -13,7 +13,8 @@ export default function calculateStatistics(obj) {
             median: quantile(obj.results, 0.5),
             q75: quantile(obj.results, 0.75),
             max: obj.domain[1],
-            range: obj.domain[1] - obj.domain[0]
+            range: obj.domain[1] - obj.domain[0],
+            std: deviation(obj.results)
         };
         obj.stats.log10range = obj.stats.range > 0 ? Math.log10(obj.stats.range) : NaN;
         obj.stats.iqr = obj.stats.q75 - obj.stats.q25;

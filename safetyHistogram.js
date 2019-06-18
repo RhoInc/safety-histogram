@@ -166,7 +166,8 @@
             start_value: null,
             normal_range: true,
             displayNormalRange: false,
-            bin_algorithm: "Scott's normal reference rule"
+            bin_algorithm: "Scott's normal reference rule",
+            annotate_bin_boundaries: false
         };
     }
 
@@ -1093,6 +1094,7 @@
             })
             .on('change', function(d) {
                 if (this.value < 1) this.value = 1;
+                if (this.value % 1) this.value = Math.round(this.value);
                 context.config.x.bin = this.value;
                 context.config.x.bin_algorithm = 'Custom';
                 context.controls.Algorithm.selectAll('option').property('selected', function(di) {
@@ -1702,12 +1704,36 @@
 
         //Reset listing.
         this.listing.draw([]);
-        this.listing.wrap.selectAll('*').style('display', 'none');
+        this.listing.wrap.style('display', 'none');
+    }
+
+    function increasePrecision() {
+        var _this = this;
+
+        var ticks = this.x.ticks().map(function(d) {
+            return _this.config.x.d3format(d);
+        });
+        if (
+            d3
+                .nest()
+                .key(function(d) {
+                    return d;
+                })
+                .rollup(function(d) {
+                    return d.length;
+                })
+                .entries(ticks)
+                .some(function(d) {
+                    return d.values > 1;
+                })
+        )
+            this.config.x.format = this.config.x.format1;
     }
 
     function onDraw() {
         updateParticipantCount.call(this);
         resetRenderer.call(this);
+        increasePrecision.call(this);
     }
 
     function drawZeroRangeBar() {
@@ -1770,7 +1796,7 @@
     function mouseout(element, d) {
         //Update footnote.
         this.footnotes.barDetails.html(
-            this.highlightedBin ? 'Table displays ' + d.footnote + '.' : ''
+            this.highlightedBin ? 'Table displays ' + this.highlighteD.footnote + '.' : ''
         );
 
         //Remove bar highlight.
@@ -1784,7 +1810,7 @@
 
         //Highlight bar.
         var selection = d3.select(element);
-        selection.moveToFront();
+        if (!/trident/i.test(navigator.userAgent)) selection.moveToFront();
         selection.selectAll('.bar').attr('stroke', 'black');
     }
 
@@ -1816,14 +1842,14 @@
 
         //Draw listing.
         this.listing.draw(d.values.raw);
-        this.listing.wrap.selectAll('*').style('display', null);
+        this.listing.wrap.style('display', 'inline-block');
     }
 
     function deselect(element, d) {
         delete this.highlightedBin;
         delete this.highlighteD;
         this.listing.draw([]);
-        this.listing.wrap.selectAll('*').style('display', 'none');
+        this.listing.wrap.style('display', 'none');
         this.svg.selectAll('.bar').attr('fill-opacity', 0.75);
 
         this.footnotes.barClick
@@ -2001,70 +2027,72 @@
     }
 
     function removeXAxisTicks() {
-        this.svg.selectAll('.x.axis .tick').remove();
+        if (this.config.annotate_bin_boundaries) this.svg.selectAll('.x.axis .tick').remove();
     }
 
     function annotateBinBoundaries() {
         var _this = this;
 
-        //Remove bin boundaries.
-        this.svg.select('g.bin-boundaries').remove();
+        if (this.config.annotate_bin_boundaries) {
+            //Remove bin boundaries.
+            this.svg.select('g.bin-boundaries').remove();
 
-        //Check for repeats of values formatted with lower precision.
-        var repeats = d3
-            .nest()
-            .key(function(d) {
-                return d.value1;
-            })
-            .rollup(function(d) {
-                return d.length;
-            })
-            .entries(this.measure.binBoundaries)
-            .some(function(d) {
-                return d.values > 1;
-            });
-
-        //Annotate bin boundaries.
-        var axis = this.svg.append('g').classed('bin-boundaries axis', true);
-        var ticks = axis
-            .selectAll('g.bin-boundary')
-            .data(this.measure.binBoundaries)
-            .enter()
-            .append('g')
-            .classed('bin-boundary tick', true);
-        var texts = ticks
-            .append('text')
-            .attr({
-                x: function x(d) {
-                    return _this.x(d.value);
-                },
-                y: this.plot_height,
-                dy: '16px',
-                'text-anchor': 'middle'
-            })
-            .text(function(d) {
-                return repeats ? d.value2 : d.value1;
-            });
-
-        //Thin ticks.
-        var textDimensions = [];
-        texts.each(function(d) {
-            var text = d3.select(this);
-            var bbox = this.getBBox();
-            if (
-                textDimensions.some(function(textDimension) {
-                    return textDimension.x + textDimension.width > bbox.x - 5;
+            //Check for repeats of values formatted with lower precision.
+            var repeats = d3
+                .nest()
+                .key(function(d) {
+                    return d.value1;
                 })
-            )
-                text.remove();
-            else
-                textDimensions.push({
-                    x: bbox.x,
-                    width: bbox.width,
-                    y: bbox.y,
-                    height: bbox.height
+                .rollup(function(d) {
+                    return d.length;
+                })
+                .entries(this.measure.binBoundaries)
+                .some(function(d) {
+                    return d.values > 1;
                 });
-        });
+
+            //Annotate bin boundaries.
+            var axis = this.svg.append('g').classed('bin-boundaries axis', true);
+            var ticks = axis
+                .selectAll('g.bin-boundary')
+                .data(this.measure.binBoundaries)
+                .enter()
+                .append('g')
+                .classed('bin-boundary tick', true);
+            var texts = ticks
+                .append('text')
+                .attr({
+                    x: function x(d) {
+                        return _this.x(d.value);
+                    },
+                    y: this.plot_height,
+                    dy: '16px',
+                    'text-anchor': 'middle'
+                })
+                .text(function(d) {
+                    return repeats ? d.value2 : d.value1;
+                });
+
+            //Thin ticks.
+            var textDimensions = [];
+            texts.each(function(d) {
+                var text = d3.select(this);
+                var bbox = this.getBBox();
+                if (
+                    textDimensions.some(function(textDimension) {
+                        return textDimension.x + textDimension.width > bbox.x - 5;
+                    })
+                )
+                    text.remove();
+                else
+                    textDimensions.push({
+                        x: bbox.x,
+                        width: bbox.width,
+                        y: bbox.y,
+                        height: bbox.height
+                    });
+            });
+        }
     }
 
     function onResize() {
@@ -2152,7 +2180,13 @@
 
         //Initialize listing and hide initially.
         chart.listing.init([]);
-        chart.listing.wrap.selectAll('*').style('display', 'none');
+        chart.listing.wrap.style('display', 'none');
+        chart.listing.wrap.selectAll('.table-top,table,.table-bottom').style({
+            float: 'left',
+            clear: 'left',
+            width: '100%'
+        });
+        chart.listing.table.style('white-space', 'nowrap');
 
         return chart;
     }

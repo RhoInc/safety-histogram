@@ -22,6 +22,7 @@ export default function customizeBinsEventListener() {
         })
         .on('change', function(d) {
             if (this.value < 1) this.value = 1;
+            if (this.value % 1) this.value = Math.round(this.value);
             context.config.x.bin = this.value;
             context.config.x.bin_algorithm = 'Custom';
             context.controls.Algorithm.selectAll('option').property(

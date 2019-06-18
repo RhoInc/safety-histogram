@@ -1,3 +1,3 @@
 export default function removeXAxisTicks() {
-    this.svg.selectAll('.x.axis .tick').remove();
+    if (this.config.annotate_bin_boundaries) this.svg.selectAll('.x.axis .tick').remove();
 }

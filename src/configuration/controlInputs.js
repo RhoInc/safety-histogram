@@ -19,11 +19,6 @@ export default function controlInputs() {
             require: true
         },
         {
-            type: 'checkbox',
-            option: 'displayNormalRange',
-            label: 'Normal Range'
-        },
-        {
             type: 'dropdown',
             option: 'x.bin_algorithm',
             label: 'Algorithm',
@@ -48,6 +43,11 @@ export default function controlInputs() {
             type: 'number',
             option: 'x.bin_width',
             label: 'Width'
+        },
+        {
+            type: 'checkbox',
+            option: 'displayNormalRange',
+            label: 'Normal Range'
         }
     ];
 }

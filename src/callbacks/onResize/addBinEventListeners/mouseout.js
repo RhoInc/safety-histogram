@@ -2,7 +2,7 @@ import { select } from 'd3';
 
 export default function mouseout(element, d) {
     //Update footnote.
-    this.footnotes.barDetails.text(this.highlightedBin ? `Table displays ${d.footnote}.` : '');
+    this.footnotes.barDetails.html(this.highlightedBin ? `Table displays ${d.footnote}.` : '');
 
     //Remove bar highlight.
     const selection = select(element);

@@ -1,4 +1,4 @@
-import { set, nest } from 'd3';
+import { set, nest, select } from 'd3';
 
 export default function annotateBinBoundaries() {
     //Remove bin boundaries.
@@ -28,4 +28,22 @@ export default function annotateBinBoundaries() {
             'text-anchor': 'middle'
         })
         .text(d => (repeats ? d.value2 : d.value1));
+
+    //Thin ticks.
+    const textDimensions = [];
+    texts.each(function(d) {
+        const text = select(this);
+        const bbox = this.getBBox();
+        if (
+            textDimensions.some(textDimension => textDimension.x + textDimension.width > bbox.x - 5)
+        )
+            text.remove();
+        else
+            textDimensions.push({
+                x: bbox.x,
+                width: bbox.width,
+                y: bbox.y,
+                height: bbox.height
+            });
+    });
 }

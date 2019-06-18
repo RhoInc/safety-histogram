@@ -19,11 +19,20 @@ export default function calcualteBinWidth() {
                 obj.stats.SSBins < obj.stats.nUnique ? obj.stats.SSBins : obj.stats.nUnique;
         }
 
+        //Handle custom number of bins.
+        if (this.config.x.custom_bin) obj.stats.nBins = this.config.x.bin;
+
         //Calculate bin width.
         obj.stats.binWidth = obj.stats.range / obj.stats.nBins;
         obj.stats.binBoundaries = range(obj.stats.nBins).concat(obj.domain[1]);
     });
 
     //Update chart config and set chart data to measure data.
-    this.config.x.bin = this.measure[this.measure.domain_state].stats.nBins;
+    if (!this.config.x.custom_bin) {
+        this.config.x.bin = this.measure[this.measure.domain_state].stats.nBins;
+        this.controls.wrap
+            .selectAll('.control-group#bins')
+            .selectAll('input')
+            .property('value', this.config.x.bin);
+    }
 }

@@ -22,5 +22,11 @@ export default function addHoverBars() {
                 stroke: 'black',
                 'stroke-opacity': 0
             });
+        d.footnote =
+            `${d.values.raw.length} records with ` +
+            `${context.measure.current} values greater than or equal to ` +
+            `${context.config.x.d3format1(d.rangeLow)} and less than ${
+                d.rangeHigh < context.config.x.domain[1] ? '' : 'or equal to '
+            }${context.config.x.d3format1(d.rangeHigh)}`;
     });
 }

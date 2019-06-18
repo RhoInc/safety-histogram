@@ -1762,22 +1762,21 @@
                     stroke: 'black',
                     'stroke-opacity': 0
                 });
+            d.footnote =
+                d.values.raw.length +
+                ' records with ' +
+                (context.measure.current + ' values greater than or equal to ') +
+                (context.config.x.d3format1(d.rangeLow) +
+                    ' and less than ' +
+                    (d.rangeHigh < context.config.x.domain[1] ? '' : 'or equal to ') +
+                    context.config.x.d3format1(d.rangeHigh));
         });
     }
 
     function mouseout(element, d) {
         //Update footnote.
         this.footnotes.barDetails.text(
-            this.highlightedBin
-                ? 'Table displays ' +
-                  this.highlighteD.values.raw.length +
-                  ' records with ' +
-                  (this.measure.current + ' values from ') +
-                  (this.config.x.d3format1(this.highlighteD.rangeLow) +
-                      ' to ' +
-                      this.config.x.d3format1(this.highlighteD.rangeHigh) +
-                      '.')
-                : ''
+            this.highlightedBin ? 'Table displays ' + d.footnote + '.' : ''
         );
 
         //Remove bar highlight.
@@ -1786,15 +1785,8 @@
     }
 
     function mouseover(element, d) {
-        //Update footnote.
-        this.footnotes.barDetails.text(
-            d.values.raw.length +
-                ' records with ' +
-                (this.measure.current + ' values from ') +
-                (this.config.x.d3format1(d.rangeLow) +
-                    ' to ' +
-                    this.config.x.d3format1(d.rangeHigh))
-        );
+        //Update bar details footnote.
+        this.footnotes.barDetails.text('Bar encompasses ' + d.footnote + '.');
 
         //Highlight bar.
         var selection = d3$1.select(element);
@@ -1825,17 +1817,8 @@
                 resetRenderer.call(_this);
             });
 
-        //Update bar details footnotes.
-        this.footnotes.barDetails.text(
-            'Table displays ' +
-                d.values.raw.length +
-                ' records with ' +
-                (this.measure.current + ' values from ') +
-                (this.config.x.d3format1(d.rangeLow) +
-                    ' to ' +
-                    this.config.x.d3format1(d.rangeHigh) +
-                    '.')
-        );
+        //Update bar details footnote.
+        this.footnotes.barDetails.text('Table displays ' + d.footnote + '.');
 
         //Draw listing.
         this.listing.draw(d.values.raw);

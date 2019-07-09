@@ -22,14 +22,10 @@ export default function select(element, d) {
             resetRenderer.call(this);
         });
 
-    //Update bar details footnotes.
-    this.footnotes.barDetails.text(
-        `Table displays ${d.values.raw.length} records with ` +
-            `${this.measure.current} values from ` +
-            `${this.config.x.d3format1(d.rangeLow)} to ${this.config.x.d3format1(d.rangeHigh)}.`
-    );
+    //Update bar details footnote.
+    this.footnotes.barDetails.html(`Table displays ${d.footnote}.`);
 
     //Draw listing.
     this.listing.draw(d.values.raw);
-    this.listing.wrap.selectAll('*').style('display', null);
+    this.listing.wrap.style('display', 'inline-block');
 }

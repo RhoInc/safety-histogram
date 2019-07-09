@@ -1,7 +1,7 @@
 export default function syncControlInputs(controlInputs, settings) {
     //Add filters to default controls.
     if (Array.isArray(settings.filters) && settings.filters.length > 0) {
-        let position = controlInputs.findIndex(input => input.label === 'Normal Range');
+        let position = controlInputs.findIndex(input => input.label === 'Algorithm');
         settings.filters.forEach(filter => {
             const filterObj = {
                 type: 'subsetter',

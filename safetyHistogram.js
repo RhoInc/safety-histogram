@@ -165,7 +165,9 @@
             //miscellaneous settings
             start_value: null,
             normal_range: true,
-            displayNormalRange: false
+            displayNormalRange: false,
+            bin_algorithm: "Scott's normal reference rule",
+            annotate_bin_boundaries: false
         };
     }
 
@@ -202,6 +204,7 @@
 
     function syncSettings(settings) {
         settings.x.column = settings.value_col;
+        settings.x.bin_algorithm = settings.bin_algorithm;
         settings.marks[0].per[0] = settings.value_col;
 
         //update normal range settings if normal_range is set to false
@@ -298,9 +301,42 @@
                 require: true
             },
             {
+                type: 'dropdown',
+                option: 'x.bin_algorithm',
+                label: 'Algorithm',
+                values: [
+                    'Square-root choice',
+                    "Sturges' formula",
+                    'Rice Rule',
+                    //'Doane\'s formula',
+                    "Scott's normal reference rule",
+                    "Freedman-Diaconis' choice",
+                    "Shimazaki and Shinomoto's choice",
+                    'Custom'
+                ],
+                require: true
+            },
+            {
+                type: 'number',
+                option: 'x.bin',
+                label: 'Quantity'
+            },
+            {
+                type: 'number',
+                option: 'x.bin_width',
+                label: 'Width'
+            },
+            {
                 type: 'checkbox',
                 option: 'displayNormalRange',
                 label: 'Normal Range'
+            },
+            {
+                type: 'radio',
+                option: 'annotate_bin_boundaries',
+                label: 'X-axis Ticks',
+                values: [false, true],
+                relabels: ['linear', 'bin boundaries']
             }
         ];
     }
@@ -309,7 +345,7 @@
         //Add filters to default controls.
         if (Array.isArray(settings.filters) && settings.filters.length > 0) {
             var position = controlInputs.findIndex(function(input) {
-                return input.label === 'Normal Range';
+                return input.label === 'Algorithm';
             });
             settings.filters.forEach(function(filter) {
                 var filterObj = {
@@ -856,6 +892,8 @@
     }
 
     function identifyControls() {
+        var context = this;
+
         var controlGroups = this.controls.wrap
             .style('padding-bottom', '8px')
             .selectAll('.control-group');
@@ -863,10 +901,12 @@
         //Give each control a unique ID.
         controlGroups
             .attr('id', function(d) {
-                return d.label.toLowerCase().replace(' ', '-');
+                return d.label.toLowerCase().replace(/ /g, '-');
             })
             .each(function(d) {
-                d3.select(this).classed(d.type, true);
+                var controlGroup = d3.select(this);
+                controlGroup.classed(d.type, true);
+                context.controls[d.label] = controlGroup;
             });
 
         //Give x-axis controls a common class name.
@@ -875,6 +915,13 @@
                 return ['x.domain[0]', 'x.domain[1]'].indexOf(d.option) > -1;
             })
             .classed('x-axis', true);
+
+        //Give binning controls a common class name.
+        controlGroups
+            .filter(function(d) {
+                return ['x.bin_algorithm', 'x.bin', 'x.bin_width'].indexOf(d.option) > -1;
+            })
+            .classed('bin', true);
     }
 
     function addXdomainResetButton() {
@@ -960,6 +1007,9 @@
         //Group filters.
         if (this.filters.length > 1)
             insertGrouping.call(this, '.subsetter:not(#measure)', 'Filters');
+
+        //Group bin controls.
+        insertGrouping.call(this, '.bin', 'Bins');
     }
 
     function addXdomainZoomButton() {
@@ -1022,6 +1072,45 @@
                     _this.draw();
                 });
         }
+    }
+
+    function customizeBinsEventListener() {
+        var _this = this;
+
+        var context = this;
+
+        this.controls.Algorithm.selectAll('.wc-control-label')
+            .append('span')
+            .classed('algorithm-explanation', true)
+            .html(' &#9432')
+            .style('cursor', 'pointer')
+            .on('click', function() {
+                if (_this.config.x.bin_algorithm !== 'Custom')
+                    window.open(
+                        'https://en.wikipedia.org/wiki/Histogram#' +
+                            _this.config.x.bin_algorithm
+                                .replace(/ /g, '_')
+                                .replace('Freedman-Diaconis', 'Freedman%E2%80%93Diaconis')
+                    );
+            });
+
+        this.controls.Quantity.selectAll('input')
+            .attr({
+                min: 1,
+                step: 1
+            })
+            .on('change', function(d) {
+                if (this.value < 1) this.value = 1;
+                if (this.value % 1) this.value = Math.round(this.value);
+                context.config.x.bin = this.value;
+                context.config.x.bin_algorithm = 'Custom';
+                context.controls.Algorithm.selectAll('option').property('selected', function(di) {
+                    return di === 'Custom';
+                });
+                context.draw();
+            });
+
+        this.controls.Width.selectAll('input').property('disabled', true);
     }
 
     function addParticipantCountContainer() {
@@ -1128,6 +1217,7 @@
         addXdomainResetButton.call(this);
         groupControls.call(this);
         addXdomainZoomButton.call(this);
+        customizeBinsEventListener.call(this);
         addParticipantCountContainer.call(this);
         addRemovedRecordsNote.call(this);
         addBorderAboveChart.call(this);
@@ -1138,6 +1228,7 @@
         this.measure.previous = this.measure.current;
         this.measure.current = this.controls.wrap.selectAll('#measure option:checked').text();
         this.config.x.label = this.measure.current;
+        if (this.measure.current !== this.measure.previous) this.config.x.custom_bin = false;
     }
 
     function defineMeasureData() {
@@ -1243,11 +1334,43 @@
                 median: d3.quantile(obj.results, 0.5),
                 q75: d3.quantile(obj.results, 0.75),
                 max: obj.domain[1],
-                range: obj.domain[1] - obj.domain[0]
+                range: obj.domain[1] - obj.domain[0],
+                std: d3.deviation(obj.results)
             };
             obj.stats.log10range = obj.stats.range > 0 ? Math.log10(obj.stats.range) : NaN;
             obj.stats.iqr = obj.stats.q75 - obj.stats.q25;
         });
+    }
+
+    function calculateSquareRootBinWidth(obj) {
+        //https://en.wikipedia.org/wiki/Histogram#Square-root_choice
+        var range = this.config.x.domain[1] - this.config.x.domain[0];
+        obj.stats.SquareRootBins = Math.ceil(Math.sqrt(obj.stats.n));
+        obj.stats.SquareRootBinWidth = range / obj.stats.SquareRootBins;
+    }
+
+    function calculateSturgesBinWidth(obj) {
+        //https://en.wikipedia.org/wiki/Histogram#Sturges'_formula
+        var range = this.config.x.domain[1] - this.config.x.domain[0];
+        obj.stats.SturgesBins = Math.ceil(Math.log2(obj.stats.n)) + 1;
+        obj.stats.SturgesBinWidth = range / obj.stats.SturgesBins;
+    }
+
+    function calculateRiceBinWidth(obj) {
+        //https://en.wikipedia.org/wiki/Histogram#Rice_Rule
+        var range = this.config.x.domain[1] - this.config.x.domain[0];
+        obj.stats.RiceBins = Math.ceil(2 * Math.pow(obj.stats.n, 1.0 / 3.0));
+        obj.stats.RiceBinWidth = range / obj.stats.RiceBins;
+    }
+
+    function calculateScottBinWidth(obj) {
+        //https://en.wikipedia.org/wiki/Histogram#Scott's_normal_reference_rule
+        var range = this.config.x.domain[1] - this.config.x.domain[0];
+        obj.stats.ScottBinWidth = (3.5 * obj.stats.std) / Math.pow(obj.stats.n, 1.0 / 3.0);
+        obj.stats.ScottBins =
+            obj.stats.ScottBinWidth > 0
+                ? Math.max(Math.ceil(range / obj.stats.ScottBinWidth), 5)
+                : NaN;
     }
 
     function calculateFDBinWidth(obj) {
@@ -1258,18 +1381,130 @@
             obj.stats.FDBinWidth > 0 ? Math.max(Math.ceil(range / obj.stats.FDBinWidth), 5) : NaN;
     }
 
+    var toConsumableArray = function(arr) {
+        if (Array.isArray(arr)) {
+            for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+            return arr2;
+        } else {
+            return Array.from(arr);
+        }
+    };
+
+    function calculateSSBinWidth(obj) {
+        //https://en.wikipedia.org/wiki/Histogram#Shimazaki_and_Shinomoto's_choice
+        var nBins = d3.range(2, 100); // number of bins
+        var cost = d3.range(nBins.length); // cost function results
+        var binWidths = [].concat(toConsumableArray(cost)); // bin widths
+        var binBoundaries = [].concat(toConsumableArray(cost)); // bin boundaries
+        var bins = [].concat(toConsumableArray(cost)); // bins
+        var binSizes = [].concat(toConsumableArray(cost)); // bin lengths
+        var meanBinSizes = [].concat(toConsumableArray(cost)); // mean of bin lengths
+        var residuals = [].concat(toConsumableArray(cost)); // residuals
+
+        var _loop = function _loop(i) {
+            binWidths[i] = obj.stats.range / nBins[i];
+            binBoundaries[i] = d3.range(obj.stats.min, obj.stats.max, obj.stats.range / nBins[i]);
+            bins[i] = d3.layout.histogram().bins(nBins[i] - 1)(
+                /*.bins(binBoundaries[i])*/ obj.results
+            );
+            binSizes[i] = bins[i].map(function(arr) {
+                return arr.length;
+            });
+            meanBinSizes[i] = d3.mean(binSizes[i]);
+            residuals[i] =
+                d3.sum(
+                    binSizes[i].map(function(binSize) {
+                        return Math.pow(binSize - meanBinSizes[i], 2);
+                    })
+                ) / nBins[i];
+            cost[i] = (2 * meanBinSizes[i] - residuals[i]) / Math.pow(binWidths[i], 2);
+        };
+
+        for (var i = 0; i < nBins.length; i++) {
+            _loop(i);
+        }
+
+        //consoleLogVars(
+        //    {
+        //        nBins,
+        //        binWidths,
+        //        binBoundaries,
+        //        //bins,
+        //        binSizes,
+        //        meanBinSizes,
+        //        residuals,
+        //        cost
+        //    },
+        //    5
+        //);
+
+        var minCost = d3.min(cost);
+        var idx = cost.findIndex(function(c) {
+            return c === minCost;
+        });
+
+        obj.stats.SSBinWidth = binWidths[idx];
+        obj.stats.SSBins = nBins[idx];
+        //const optBinBoundaries = range(obj.stats.min, obj.stats.max, obj.stats.range/optNBins);
+    }
+
     function calcualteBinWidth() {
         var _this = this;
 
         ['raw', 'custom'].forEach(function(property) {
             var obj = _this.measure[property];
 
-            //Calculate bin width.
-            {
-                //Calculate bin width with Freedman-Diaconis algorithm.
-                calculateFDBinWidth.call(_this, obj);
-                obj.stats.nBins =
-                    obj.stats.FDBins < obj.stats.nUnique ? obj.stats.FDBins : obj.stats.nUnique;
+            //Calculate bin width with the selected algorithm.
+            switch (_this.config.x.bin_algorithm) {
+                case 'Square-root choice':
+                    calculateSquareRootBinWidth.call(_this, obj);
+                    obj.stats.nBins =
+                        obj.stats.SquareRootBins < obj.stats.nUnique
+                            ? obj.stats.SquareRootBins
+                            : obj.stats.nUnique;
+                    break;
+                case "Sturges' formula":
+                    calculateSturgesBinWidth.call(_this, obj);
+                    obj.stats.nBins =
+                        obj.stats.SturgesBins < obj.stats.nUnique
+                            ? obj.stats.SturgesBins
+                            : obj.stats.nUnique;
+                    break;
+                case 'Rice Rule':
+                    calculateRiceBinWidth.call(_this, obj);
+                    obj.stats.nBins =
+                        obj.stats.RiceBins < obj.stats.nUnique
+                            ? obj.stats.RiceBins
+                            : obj.stats.nUnique;
+                    break;
+                //case 'Doane\'s formula':
+                //    console.log(4);
+                //    calculateDoaneBinWidth.call(this, obj);
+                //    obj.stats.nBins =
+                //        obj.stats.DoaneBins < obj.stats.nUnique ? obj.stats.DoaneBins : obj.stats.nUnique;
+                //    break;
+                case "Scott's normal reference rule":
+                    calculateScottBinWidth.call(_this, obj);
+                    obj.stats.nBins =
+                        obj.stats.ScottBins < obj.stats.nUnique
+                            ? obj.stats.ScottBins
+                            : obj.stats.nUnique;
+                    break;
+                case "Freedman-Diaconis' choice":
+                    calculateFDBinWidth.call(_this, obj);
+                    obj.stats.nBins =
+                        obj.stats.FDBins < obj.stats.nUnique ? obj.stats.FDBins : obj.stats.nUnique;
+                    break;
+                case "Shimazaki and Shinomoto's choice":
+                    calculateSSBinWidth.call(_this, obj);
+                    obj.stats.nBins =
+                        obj.stats.SSBins < obj.stats.nUnique ? obj.stats.SSBins : obj.stats.nUnique;
+                    break;
+                default:
+                    //Handle custom number of bins.
+                    obj.stats.nBins = _this.config.x.bin;
+                //obj.stats.binWidth = this.config.x.domain[1] - this.config.x.domain[0] / this.config.x.bin;
             }
 
             //Calculate bin width.
@@ -1279,6 +1514,7 @@
 
         //Update chart config and set chart data to measure data.
         this.config.x.bin = this.measure[this.measure.domain_state].stats.nBins;
+        this.config.x.bin_width = this.measure[this.measure.domain_state].stats.binWidth;
     }
 
     function calculateXPrecision() {
@@ -1320,7 +1556,21 @@
         this.measure.step = step || 1;
     }
 
-    function updateXaxisLimitControls() {
+    function updateXAxisResetButton() {
+        //Update tooltip of x-axis domain reset button.
+        if (this.measure.current !== this.measure.previous) {
+            this.controls.reset.container.attr(
+                'title',
+                'Initial Limits: [' +
+                    this.config.x.d3format1(this.config.x.domain[0]) +
+                    ' - ' +
+                    this.config.x.d3format1(this.config.x.domain[1]) +
+                    ']'
+            );
+        }
+    }
+
+    function updateXAxisLimits() {
         this.controls.wrap
             .selectAll('#lower input')
             .attr('step', this.measure.step) // set in ./calculateXPrecision
@@ -1334,18 +1584,34 @@
             .property('value', this.config.x.d3format1(this.config.x.domain[1]));
     }
 
-    function updateXaxisResetButton() {
-        //Update tooltip of x-axis domain reset button.
-        if (this.measure.current !== this.measure.previous) {
-            this.controls.reset.container.attr(
+    function updateBinAlogrithm() {
+        this.controls.Algorithm.selectAll('.algorithm-explanation')
+            .style('display', this.config.x.bin_algorithm !== 'Custom' ? null : 'none')
+            .attr(
                 'title',
-                'Initial Limits: [' +
-                    this.config.x.d3format1(this.config.x.domain[0]) +
-                    ' - ' +
-                    this.config.x.d3format1(this.config.x.domain[1]) +
-                    ']'
+                this.config.x.bin_algorithm !== 'Custom'
+                    ? 'View information on ' + this.config.x.bin_algorithm
+                    : null
             );
-        }
+    }
+
+    function updateBinWidth() {
+        this.controls.Width.selectAll('input').property(
+            'value',
+            this.config.x.d3format1(this.config.x.bin_width)
+        );
+    }
+
+    function updateBinQuantity() {
+        this.controls.Quantity.selectAll('input').property('value', this.config.x.bin);
+    }
+
+    function updateControls() {
+        updateXAxisResetButton.call(this);
+        updateXAxisLimits.call(this);
+        updateBinAlogrithm.call(this);
+        updateBinWidth.call(this);
+        updateBinQuantity.call(this);
     }
 
     function defineBinBoundaries() {
@@ -1375,19 +1641,16 @@
         // 3b Calculate statistics - needed in 4a and 4b.
         calculateStatistics.call(this);
 
-        // 4a Define precision of measure - needed in step 5a, 5b, and 5c.
+        // 4a Define precision of measure - needed in step 5a and 5b.
         calculateXPrecision.call(this);
 
         // 4b Calculate bin width - needed in step 5c.
         calcualteBinWidth.call(this);
 
-        // 5a Update x-axis reset button when measure changes.
-        updateXaxisResetButton.call(this);
+        // 5a Update x-axis and bin controls after.
+        updateControls.call(this);
 
-        // 5b Update x-axis limit controls to match x-axis domain.
-        updateXaxisLimitControls.call(this);
-
-        // 5c Define bin boundaries given bin width and precision.
+        // 5b Define bin boundaries given bin width and precision.
         defineBinBoundaries.call(this);
     }
 
@@ -1448,12 +1711,36 @@
 
         //Reset listing.
         this.listing.draw([]);
-        this.listing.wrap.selectAll('*').style('display', 'none');
+        this.listing.wrap.style('display', 'none');
+    }
+
+    function increasePrecision() {
+        var _this = this;
+
+        var ticks = this.x.ticks().map(function(d) {
+            return _this.config.x.d3format(d);
+        });
+        if (
+            d3
+                .nest()
+                .key(function(d) {
+                    return d;
+                })
+                .rollup(function(d) {
+                    return d.length;
+                })
+                .entries(ticks)
+                .some(function(d) {
+                    return d.values > 1;
+                })
+        )
+            this.config.x.format = this.config.x.format1;
     }
 
     function onDraw() {
         updateParticipantCount.call(this);
         resetRenderer.call(this);
+        increasePrecision.call(this);
     }
 
     function drawZeroRangeBar() {
@@ -1499,22 +1786,24 @@
                     stroke: 'black',
                     'stroke-opacity': 0
                 });
+            d.footnote =
+                "<span style = 'font-weight: bold'>" +
+                d.values.raw.length +
+                ' records</span> with ' +
+                (context.measure.current + " values &ge;<span style = 'font-weight: bold'>") +
+                (context.config.x.d3format1(d.rangeLow) +
+                    '</span> and ' +
+                    (d.rangeHigh < context.config.x.domain[1] ? '&lt;' : '&le;') +
+                    "<span style = 'font-weight: bold'>" +
+                    context.config.x.d3format1(d.rangeHigh) +
+                    '</span>');
         });
     }
 
     function mouseout(element, d) {
         //Update footnote.
-        this.footnotes.barDetails.text(
-            this.highlightedBin
-                ? 'Table displays ' +
-                  this.highlighteD.values.raw.length +
-                  ' records with ' +
-                  (this.measure.current + ' values from ') +
-                  (this.config.x.d3format1(this.highlighteD.rangeLow) +
-                      ' to ' +
-                      this.config.x.d3format1(this.highlighteD.rangeHigh) +
-                      '.')
-                : ''
+        this.footnotes.barDetails.html(
+            this.highlightedBin ? 'Table displays ' + this.highlighteD.footnote + '.' : ''
         );
 
         //Remove bar highlight.
@@ -1523,19 +1812,12 @@
     }
 
     function mouseover(element, d) {
-        //Update footnote.
-        this.footnotes.barDetails.text(
-            d.values.raw.length +
-                ' records with ' +
-                (this.measure.current + ' values from ') +
-                (this.config.x.d3format1(d.rangeLow) +
-                    ' to ' +
-                    this.config.x.d3format1(d.rangeHigh))
-        );
+        //Update bar details footnote.
+        this.footnotes.barDetails.html('Bar encompasses ' + d.footnote + '.');
 
         //Highlight bar.
         var selection = d3.select(element);
-        selection.moveToFront();
+        if (!/trident/i.test(navigator.userAgent)) selection.moveToFront();
         selection.selectAll('.bar').attr('stroke', 'black');
     }
 
@@ -1562,28 +1844,19 @@
                 resetRenderer.call(_this);
             });
 
-        //Update bar details footnotes.
-        this.footnotes.barDetails.text(
-            'Table displays ' +
-                d.values.raw.length +
-                ' records with ' +
-                (this.measure.current + ' values from ') +
-                (this.config.x.d3format1(d.rangeLow) +
-                    ' to ' +
-                    this.config.x.d3format1(d.rangeHigh) +
-                    '.')
-        );
+        //Update bar details footnote.
+        this.footnotes.barDetails.html('Table displays ' + d.footnote + '.');
 
         //Draw listing.
         this.listing.draw(d.values.raw);
-        this.listing.wrap.selectAll('*').style('display', null);
+        this.listing.wrap.style('display', 'inline-block');
     }
 
     function deselect(element, d) {
         delete this.highlightedBin;
         delete this.highlighteD;
         this.listing.draw([]);
-        this.listing.wrap.selectAll('*').style('display', 'none');
+        this.listing.wrap.style('display', 'none');
         this.svg.selectAll('.bar').attr('fill-opacity', 0.75);
 
         this.footnotes.barClick
@@ -1761,50 +2034,72 @@
     }
 
     function removeXAxisTicks() {
-        this.svg.selectAll('.x.axis .tick').remove();
+        if (this.config.annotate_bin_boundaries) this.svg.selectAll('.x.axis .tick').remove();
     }
 
     function annotateBinBoundaries() {
         var _this = this;
 
-        //Remove bin boundaries.
-        this.svg.select('g.bin-boundaries').remove();
+        if (this.config.annotate_bin_boundaries) {
+            //Remove bin boundaries.
+            this.svg.select('g.bin-boundaries').remove();
 
-        //Check for repeats of values formatted with lower precision.
-        var repeats = d3
-            .nest()
-            .key(function(d) {
-                return d.value1;
-            })
-            .rollup(function(d) {
-                return d.length;
-            })
-            .entries(this.measure.binBoundaries)
-            .some(function(d) {
-                return d.values > 1;
-            });
+            //Check for repeats of values formatted with lower precision.
+            var repeats = d3
+                .nest()
+                .key(function(d) {
+                    return d.value1;
+                })
+                .rollup(function(d) {
+                    return d.length;
+                })
+                .entries(this.measure.binBoundaries)
+                .some(function(d) {
+                    return d.values > 1;
+                });
 
-        //Annotate bin boundaries.
-        var axis = this.svg.append('g').classed('bin-boundaries axis', true);
-        var ticks = axis
-            .selectAll('g.bin-boundary')
-            .data(this.measure.binBoundaries)
-            .enter()
-            .append('g')
-            .classed('bin-boundary tick', true);
-        var texts = ticks
-            .append('text')
-            .attr({
-                x: function x(d) {
-                    return _this.x(d.value);
-                },
-                y: this.plot_height,
-                dy: '16px',
-                'text-anchor': 'middle'
-            })
-            .text(function(d) {
-                return repeats ? d.value2 : d.value1;
+            //Annotate bin boundaries.
+            var axis = this.svg.append('g').classed('bin-boundaries axis', true);
+            var ticks = axis
+                .selectAll('g.bin-boundary')
+                .data(this.measure.binBoundaries)
+                .enter()
+                .append('g')
+                .classed('bin-boundary tick', true);
+            var texts = ticks
+                .append('text')
+                .attr({
+                    x: function x(d) {
+                        return _this.x(d.value);
+                    },
+                    y: this.plot_height,
+                    dy: '16px',
+                    'text-anchor': 'middle'
+                })
+                .text(function(d) {
+                    return repeats ? d.value2 : d.value1;
+                });
+
+            //Thin ticks.
+            var textDimensions = [];
+            texts.each(function(d) {
+                var text = d3.select(this);
+                var bbox = this.getBBox();
+                if (
+                    textDimensions.some(function(textDimension) {
+                        return textDimension.x + textDimension.width > bbox.x - 5;
+                    })
+                )
+                    text.remove();
+                else
+                    textDimensions.push({
+                        x: bbox.x,
+                        width: bbox.width,
+                        y: bbox.y,
+                        height: bbox.height
+                    });
             });
+        }
     }
 
     function onResize() {
@@ -1892,7 +2187,13 @@
 
         //Initialize listing and hide initially.
         chart.listing.init([]);
-        chart.listing.wrap.selectAll('*').style('display', 'none');
+        chart.listing.wrap.style('display', 'none');
+        chart.listing.wrap.selectAll('.table-top,table,.table-bottom').style({
+            float: 'left',
+            clear: 'left',
+            width: '100%'
+        });
+        chart.listing.table.style('white-space', 'nowrap');
 
         return chart;
     }

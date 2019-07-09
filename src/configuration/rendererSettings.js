@@ -15,6 +15,8 @@ export default function rendererSettings() {
         //miscellaneous settings
         start_value: null,
         normal_range: true,
-        displayNormalRange: false
+        displayNormalRange: false,
+        bin_algorithm: "Scott's normal reference rule",
+        annotate_bin_boundaries: false
     };
 }

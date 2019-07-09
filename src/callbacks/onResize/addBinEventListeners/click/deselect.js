@@ -2,7 +2,7 @@ export default function deselect(element, d) {
     delete this.highlightedBin;
     delete this.highlighteD;
     this.listing.draw([]);
-    this.listing.wrap.selectAll('*').style('display', 'none');
+    this.listing.wrap.style('display', 'none');
     this.svg.selectAll('.bar').attr('fill-opacity', 0.75);
 
     this.footnotes.barClick

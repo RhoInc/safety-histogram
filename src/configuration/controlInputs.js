@@ -19,9 +19,42 @@ export default function controlInputs() {
             require: true
         },
         {
+            type: 'dropdown',
+            option: 'x.bin_algorithm',
+            label: 'Algorithm',
+            values: [
+                'Square-root choice',
+                "Sturges' formula",
+                'Rice Rule',
+                //'Doane\'s formula',
+                "Scott's normal reference rule",
+                "Freedman-Diaconis' choice",
+                "Shimazaki and Shinomoto's choice",
+                'Custom'
+            ],
+            require: true
+        },
+        {
+            type: 'number',
+            option: 'x.bin',
+            label: 'Quantity'
+        },
+        {
+            type: 'number',
+            option: 'x.bin_width',
+            label: 'Width'
+        },
+        {
             type: 'checkbox',
             option: 'displayNormalRange',
             label: 'Normal Range'
+        },
+        {
+            type: 'radio',
+            option: 'annotate_bin_boundaries',
+            label: 'X-axis Ticks',
+            values: [false, true],
+            relabels: ['linear', 'bin boundaries']
         }
     ];
 }

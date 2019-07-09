@@ -22,5 +22,11 @@ export default function addHoverBars() {
                 stroke: 'black',
                 'stroke-opacity': 0
             });
+        d.footnote =
+            `<span style = 'font-weight: bold'>${d.values.raw.length} records</span> with ` +
+            `${context.measure.current} values &ge;<span style = 'font-weight: bold'>` +
+            `${context.config.x.d3format1(d.rangeLow)}</span> and ${
+                d.rangeHigh < context.config.x.domain[1] ? '&lt;' : '&le;'
+            }<span style = 'font-weight: bold'>${context.config.x.d3format1(d.rangeHigh)}</span>`;
     });
 }

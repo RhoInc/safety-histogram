@@ -2,15 +2,11 @@ import { select } from 'd3';
 import mouseout from './mouseout';
 
 export default function mouseover(element, d) {
-    //Update footnote.
-    this.footnotes.barDetails.text(
-        `${d.values.raw.length} records with ` +
-            `${this.measure.current} values from ` +
-            `${this.config.x.d3format1(d.rangeLow)} to ${this.config.x.d3format1(d.rangeHigh)}`
-    );
+    //Update bar details footnote.
+    this.footnotes.barDetails.html(`Bar encompasses ${d.footnote}.`);
 
     //Highlight bar.
     const selection = select(element);
-    selection.moveToFront();
+    if (!/trident/i.test(navigator.userAgent)) selection.moveToFront();
     selection.selectAll('.bar').attr('stroke', 'black');
 }

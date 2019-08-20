@@ -8,11 +8,13 @@ export default function identifyControls() {
         .selectAll('.control-group');
 
     //Give each control a unique ID.
-    controlGroups.attr('id', d => d.label.toLowerCase().replace(/ /g, '-')).each(function(d) {
-        const controlGroup = select(this);
-        controlGroup.classed(d.type, true);
-        context.controls[d.label] = controlGroup;
-    });
+    controlGroups
+        .attr('id', d => d.label.toLowerCase().replace(/ /g, '-'))
+        .each(function(d) {
+            const controlGroup = select(this);
+            controlGroup.classed(d.type, true);
+            context.controls[d.label] = controlGroup;
+        });
 
     //Give x-axis controls a common class name.
     controlGroups

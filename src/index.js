@@ -36,19 +36,23 @@ export default function safetyHistogram(element = 'body', settings = {}) {
         syncedSettings
     );
     const listing = createTable(element, listingSettings);
-
+    listing.on('layout', function() {
+        //Style table
+        this.wrap.style('display', 'none');
+        this.wrap.selectAll('.table-top,table,.table-bottom').style({
+            float: 'left',
+            clear: 'left',
+            width: '100%'
+        });
+        this.table.style('white-space', 'nowrap');
+    });
     //Attach listing to chart.
     chart.listing = listing;
     listing.chart = chart;
 
     //Initialize listing and hide initially.
+
     chart.listing.init([]);
-    chart.listing.wrap.style('display', 'none');
-    chart.listing.wrap.selectAll('.table-top,table,.table-bottom').style({
-        float: 'left',
-        clear: 'left',
-        width: '100%'
-    });
 
     return chart;
 }

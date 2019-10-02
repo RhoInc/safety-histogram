@@ -49,7 +49,6 @@ export default function safetyHistogram(element = 'body', settings = {}) {
         clear: 'left',
         width: '100%'
     });
-    chart.listing.table.style('white-space', 'nowrap');
 
     return chart;
 }

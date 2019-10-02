@@ -7,6 +7,7 @@ import addParticipantCountContainer from './onLayout/addParticipantCountContaine
 import addRemovedRecordsContainer from './onLayout/addRemovedRecordsContainer';
 import addBorderAboveChart from './onLayout/addBorderAboveChart';
 import addFootnoteContainer from './onLayout/addFootnoteContainer';
+import preventWhiteSpaceWrap from './onLayout/preventWhiteSpaceWrap';
 
 export default function onLayout() {
     identifyControls.call(this);
@@ -18,4 +19,5 @@ export default function onLayout() {
     addRemovedRecordsContainer.call(this);
     addBorderAboveChart.call(this);
     addFootnoteContainer.call(this);
+    preventWhiteSpaceWrap.call(this);
 }

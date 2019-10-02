@@ -8,9 +8,7 @@ export default function checkOptional() {
             if (this.variables.actual.indexOf(definition.setting) < 0) {
                 definition.missing = true;
                 console.warn(
-                    `The variable specified for [ ${definition.property} ], ${
-                        definition.setting
-                    }, does not exist in the data.`
+                    `The variable specified for [ ${definition.property} ], ${definition.setting}, does not exist in the data.`
                 );
             }
         } // standard data mappings
@@ -24,9 +22,7 @@ export default function checkOptional() {
                 if (this.variables.actual.indexOf(variable) < 0) {
                     definition.missing = true;
                     console.warn(
-                        `The variable specified for [ ${
-                            definition.property
-                        }[${i}] ], ${variable}, does not exist in the data.`
+                        `The variable specified for [ ${definition.property}[${i}] ], ${variable}, does not exist in the data.`
                     );
                 }
             });

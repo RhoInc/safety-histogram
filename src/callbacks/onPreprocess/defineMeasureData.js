@@ -11,13 +11,12 @@ export default function defineMeasureData() {
         data: this.measure.raw.data
     };
     this.filters.forEach(filter => {
-        this.measure.filtered.data = this.measure.filtered.data.filter(
-            d =>
-                filter.val === 'All'
-                    ? true
-                    : Array.isArray(filter.val)
-                        ? filter.val.includes(d[filter.col])
-                        : filter.val === d[filter.col]
+        this.measure.filtered.data = this.measure.filtered.data.filter(d =>
+            filter.val === 'All'
+                ? true
+                : Array.isArray(filter.val)
+                ? filter.val.includes(d[filter.col])
+                : filter.val === d[filter.col]
         );
     });
 

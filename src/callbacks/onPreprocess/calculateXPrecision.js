@@ -26,8 +26,8 @@ export default function calculateXPrecision() {
         this.measure[this.measure.domain_state].stats.range > 0
             ? Math.abs(this.measure[this.measure.domain_state].stats.range / 15) // non-zero range
             : this.measure[this.measure.domain_state].results[0] !== 0
-                ? Math.abs(this.measure[this.measure.domain_state].results[0] / 15) // zero range, non-zero result(s)
-                : 1; // zero range, zero result(s)
+            ? Math.abs(this.measure[this.measure.domain_state].results[0] / 15) // zero range, non-zero result(s)
+            : 1; // zero range, zero result(s)
     if (step < 1) {
         let x10 = 0;
         do {

@@ -1,5 +1,5 @@
 export default function syncControlInputs(controlInputs, settings) {
-    //Add filters to default controls.
+    // Add filters to default controls.
     if (Array.isArray(settings.filters) && settings.filters.length > 0) {
         let position = controlInputs.findIndex(input => input.label === 'Algorithm');
         settings.filters.forEach(filter => {
@@ -12,6 +12,13 @@ export default function syncControlInputs(controlInputs, settings) {
             ++position;
         });
     }
+
+    // Sync group control.
+    const groupControl = controlInputs.find(controlInput => controlInput.label === 'Group by');
+    console.log(groupControl);
+    console.log(settings.groups);
+    groupControl.start = settings.groups.find(group => group.value_col === settings.color_by).label;
+    groupControl.values = settings.groups.map(group => group.label);
 
     //Remove normal range control.
     if (!settings.normal_range)

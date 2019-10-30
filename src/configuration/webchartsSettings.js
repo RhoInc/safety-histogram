@@ -25,6 +25,8 @@ export default function webchartsSettings() {
                 attributes: { 'fill-opacity': 0.75 }
             }
         ],
+        color_by: null,
+        legend: {},
         aspect: 3
     };
 }

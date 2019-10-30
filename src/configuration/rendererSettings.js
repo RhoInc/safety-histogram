@@ -10,6 +10,7 @@ export default function rendererSettings() {
         normal_col_low: 'STNRLO',
         normal_col_high: 'STNRHI',
         filters: null,
+        groups: null,
         details: null,
 
         //miscellaneous settings

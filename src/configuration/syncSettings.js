@@ -14,6 +14,47 @@ export default function syncSettings(settings) {
     if (!(settings.filters instanceof Array))
         settings.filters = typeof settings.filters === 'string' ? [settings.filters] : [];
 
+    //handle a string argument to groups
+    if (!(settings.groups instanceof Array))
+        settings.groups = typeof settings.groups === 'string' ? [settings.groups] : [];
+
+    //stratification
+    const defaultGroup = { value_col: 'sh_none', label: 'None' };
+    if (!(settings.groups instanceof Array && settings.groups.length))
+        settings.groups = [defaultGroup];
+    else
+        settings.groups = [defaultGroup].concat(
+            settings.groups.map(group => {
+                return {
+                    value_col: group.value_col || group,
+                    label: group.label || group.value_col || group
+                };
+            })
+        );
+
+    //Remove duplicate values.
+    settings.groups = d3
+        .set(settings.groups.map(group => group.value_col))
+        .values()
+        .map(value => {
+            return {
+                value_col: value,
+                label: settings.groups.find(group => group.value_col === value).label
+            };
+        });
+
+    //Set initial group-by variable.
+    settings.color_by = settings.color_by
+        ? settings.color_by
+        : settings.groups.length > 1
+        ? settings.groups[1].value_col
+        : defaultGroup.value_col;
+
+    //Set initial group-by label.
+    settings.legend.label = settings.groups.find(
+        group => group.value_col === settings.color_by
+    ).label;
+
     //handle a string argument to details
     if (!(settings.details instanceof Array))
         settings.details = typeof settings.details === 'string' ? [settings.details] : [];

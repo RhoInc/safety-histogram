@@ -2,26 +2,34 @@ export default function controlInputs() {
     return [
         {
             type: 'subsetter',
-            value_col: 'sh_measure',
             label: 'Measure',
+            value_col: 'sh_measure',
             start: null // set in ../callbacks/onInit/checkControls/updateMeasureFilter
         },
         {
+            type: 'dropdown',
+            label: 'Group by',
+            options: ['marks.0.per.0', 'color_by'],
+            start: null, // set in ./syncControlInputs
+            values: null, // set in ./syncControlInputs
+            require: false
+        },
+        {
             type: 'number',
-            option: 'x.domain[0]',
             label: 'Lower',
+            option: 'x.domain[0]',
             require: true
         },
         {
             type: 'number',
-            option: 'x.domain[1]',
             label: 'Upper',
+            option: 'x.domain[1]',
             require: true
         },
         {
             type: 'dropdown',
-            option: 'x.bin_algorithm',
             label: 'Algorithm',
+            option: 'x.bin_algorithm',
             values: [
                 'Square-root choice',
                 "Sturges' formula",
@@ -36,23 +44,23 @@ export default function controlInputs() {
         },
         {
             type: 'number',
-            option: 'x.bin',
-            label: 'Quantity'
+            label: 'Quantity',
+            option: 'x.bin'
         },
         {
             type: 'number',
-            option: 'x.bin_width',
-            label: 'Width'
+            label: 'Width',
+            option: 'x.bin_width'
         },
         {
             type: 'checkbox',
-            option: 'displayNormalRange',
-            label: 'Normal Range'
+            label: 'Normal Range',
+            option: 'displayNormalRange'
         },
         {
             type: 'radio',
-            option: 'annotate_bin_boundaries',
             label: 'X-axis Ticks',
+            option: 'annotate_bin_boundaries',
             values: [false, true],
             relabels: ['linear', 'bin boundaries']
         }

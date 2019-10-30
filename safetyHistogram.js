@@ -1231,7 +1231,8 @@
             .text('Click a bar for details.');
         this.footnotes.barDetails = this.footnotes.container
             .append('p')
-            .classed('footnote footnote--bar-details', true);
+            .classed('footnote footnote--bar-details', true)
+            .html('<br>');
     }
 
     function onLayout() {
@@ -1729,7 +1730,7 @@
                 cursor: 'normal'
             })
             .text('Click a bar for details.');
-        this.footnotes.barDetails.text('');
+        this.footnotes.barDetails.html('<br>');
 
         //Reset listing.
         this.listing.draw([]);
@@ -1825,7 +1826,7 @@
     function mouseout(element, d) {
         //Update footnote.
         this.footnotes.barDetails.html(
-            this.highlightedBin ? 'Table displays ' + this.highlighteD.footnote + '.' : ''
+            this.highlightedBin ? 'Table displays ' + this.highlighteD.footnote + '.' : '<br>'
         );
 
         //Remove bar highlight.

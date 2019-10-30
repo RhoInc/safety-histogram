@@ -14,5 +14,6 @@ export default function addFootnoteContainer() {
         .text('Click a bar for details.');
     this.footnotes.barDetails = this.footnotes.container
         .append('p')
-        .classed('footnote footnote--bar-details', true);
+        .classed('footnote footnote--bar-details', true)
+        .html('<br>');
 }

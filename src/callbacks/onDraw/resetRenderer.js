@@ -19,7 +19,7 @@ export default function resetRenderer() {
             cursor: 'normal'
         })
         .text('Click a bar for details.');
-    this.footnotes.barDetails.text('');
+    this.footnotes.barDetails.html('<br>');
 
     //Reset listing.
     this.listing.draw([]);

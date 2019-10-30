@@ -123,6 +123,26 @@
             "description": "a boolean that dictates whether the normal range will be displayed initially",
             "type": "boolean",
             "default": false
+        },
+        "bin_algorithm": {
+            "title": "Initial Binning Algorithm",
+            "description": "a boolean that dictates whether the normal range will be displayed initially",
+            "type": "string",
+            "default": "Scott's normal reference rule",
+            "enum": [
+                "Square-root choice",
+                "Sturges' formula",
+                "Rice Rule",
+                "Scott's normal reference rule",
+                "Freedman-Diaconis' choice",
+                "Shimazaki and Shinomoto's choice"
+            ]
+        },
+        "annotate_bin_boundaries": {
+            "title": "Annotate Bin Boundaries?",
+            "description": "a boolean that dictates whether x-axis tick labels appear between bars or at regular intervals along the x-axis",
+            "type": "boolean",
+            "default": false
         }
     }
 }

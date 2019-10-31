@@ -9,7 +9,7 @@ export default function customizeBinsEventListener() {
         .on('click', () => {
             if (this.config.x.bin_algorithm !== 'Custom')
                 window.open(
-                    `https://en.wikipedia.org/wiki/Histogram#${this.config.x.bin_algorithm
+                    `https:// en.wikipedia.org/wiki/Histogram#${this.config.x.bin_algorithm
                         .replace(/ /g, '_')
                         .replace('Freedman-Diaconis', 'Freedman%E2%80%93Diaconis')}`
                 );

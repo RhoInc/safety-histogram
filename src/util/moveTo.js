@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 
-// https://github.com/wbkd/d3-extended
+// https:// github.com/wbkd/d3-extended
 d3.selection.prototype.moveToFront = function() {
     return this.each(function() {
         this.parentNode.appendChild(this);

@@ -1,24 +1,26 @@
+import { set } from 'd3';
+
 export default function syncSettings(settings) {
     settings.x.column = settings.value_col;
     settings.x.bin_algorithm = settings.bin_algorithm;
     settings.marks[0].per[0] = settings.value_col;
 
-    //update normal range settings if normal_range is set to false
+    // update normal range settings if normal_range is set to false
     if (!settings.normal_range) {
         settings.normal_col_low = null;
         settings.normal_col_high = null;
         settings.displayNormalRange = false;
     }
 
-    //handle a string argument to filters
+    // handle a string argument to filters
     if (!(settings.filters instanceof Array))
         settings.filters = typeof settings.filters === 'string' ? [settings.filters] : [];
 
-    //handle a string argument to groups
+    // handle a string argument to groups
     if (!(settings.groups instanceof Array))
         settings.groups = typeof settings.groups === 'string' ? [settings.groups] : [];
 
-    //stratification
+    // stratification
     const defaultGroup = { value_col: 'sh_none', label: 'None' };
     if (!(settings.groups instanceof Array && settings.groups.length))
         settings.groups = [defaultGroup];
@@ -32,9 +34,8 @@ export default function syncSettings(settings) {
             })
         );
 
-    //Remove duplicate values.
-    settings.groups = d3
-        .set(settings.groups.map(group => group.value_col))
+    // Remove duplicate values.
+    settings.groups = set(settings.groups.map(group => group.value_col))
         .values()
         .map(value => {
             return {
@@ -44,29 +45,18 @@ export default function syncSettings(settings) {
         });
 
     // Set initial group-by variable.
-    //settings.marks[0].split = settings.color_by
-    //    ? settings.color_by
-    //    : settings.groups.length > 1
-    //    ? settings.groups[1].value_col
-    //    : defaultGroup.value_col;
-
-    // Set initial group-by variable.
-    settings.color_by = settings.color_by
-        ? settings.color_by
+    settings.group_by = settings.group_by
+        ? settings.group_by
         : settings.groups.length > 1
         ? settings.groups[1].value_col
         : defaultGroup.value_col;
+    console.log(settings.group_by);
 
-    //Set initial group-by label.
-    settings.legend.label = settings.groups.find(
-        group => group.value_col === settings.color_by
-    ).label;
-
-    //handle a string argument to details
+    // handle a string argument to details
     if (!(settings.details instanceof Array))
         settings.details = typeof settings.details === 'string' ? [settings.details] : [];
 
-    //Define default details.
+    // Define default details.
     let defaultDetails = [{ value_col: settings.id_col, label: 'Participant ID' }];
     if (Array.isArray(settings.filters))
         settings.filters
@@ -90,12 +80,12 @@ export default function syncSettings(settings) {
             label: 'Upper Limit of Normal'
         });
 
-    //If [settings.details] is not specified:
+    // If [settings.details] is not specified:
     if (!settings.details) settings.details = defaultDetails;
     else {
-        //If [settings.details] is specified:
-        //Allow user to specify an array of columns or an array of objects with a column property
-        //and optionally a column label.
+        // If [settings.details] is specified:
+        // Allow user to specify an array of columns or an array of objects with a column property
+        // and optionally a column label.
         settings.details.forEach(detail => {
             if (
                 defaultDetails

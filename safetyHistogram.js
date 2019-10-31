@@ -2,7 +2,7 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('d3'), require('webcharts')) :
     typeof define === 'function' && define.amd ? define(['d3', 'webcharts'], factory) :
     (global.safetyHistogram = factory(global.d3,global.webCharts));
-}(this, (function (d3$1,webcharts) { 'use strict';
+}(this, (function (d3,webcharts) { 'use strict';
 
     if (typeof Object.assign != 'function') {
         Object.defineProperty(Object, 'assign', {
@@ -128,14 +128,14 @@
         return Math.log(x) * Math.LOG10E;
     };
 
-    // https://github.com/wbkd/d3-extended
-    d3$1.selection.prototype.moveToFront = function () {
+    // https:// github.com/wbkd/d3-extended
+    d3.selection.prototype.moveToFront = function () {
         return this.each(function () {
             this.parentNode.appendChild(this);
         });
     };
 
-    d3$1.selection.prototype.moveToBack = function () {
+    d3.selection.prototype.moveToBack = function () {
         return this.each(function () {
             var firstChild = this.parentNode.firstChild;
             if (firstChild) {
@@ -144,13 +144,89 @@
         });
     };
 
+    var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+      return typeof obj;
+    } : function (obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    };
+
+    var toConsumableArray = function (arr) {
+      if (Array.isArray(arr)) {
+        for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+        return arr2;
+      } else {
+        return Array.from(arr);
+      }
+    };
+
+    function clone(obj) {
+        var copy = void 0;
+
+        //boolean, number, string, null, undefined
+        if ('object' != (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) || null == obj) return obj;
+
+        //date
+        if (obj instanceof Date) {
+            copy = new Date();
+            copy.setTime(obj.getTime());
+            return copy;
+        }
+
+        //array
+        if (obj instanceof Array) {
+            copy = [];
+            for (var i = 0, len = obj.length; i < len; i++) {
+                copy[i] = clone(obj[i]);
+            }
+            return copy;
+        }
+
+        //object
+        if (obj instanceof Object) {
+            copy = {};
+            for (var attr in obj) {
+                if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr]);
+            }
+            return copy;
+        }
+
+        throw new Error('Unable to copy [obj]! Its type is not supported.');
+    }
+
+    function layout(element) {
+        var containers = {
+            main: d3.select(element).append('div').classed('safety-histogram', true)
+        };
+
+        containers.controls = containers.main.append('div').classed('sh-controls', true);
+
+        containers.chart = containers.main.append('div').classed('sh-chart', true);
+
+        containers.multiples = containers.main.append('div').classed('sh-multiples', true);
+
+        containers.listing = containers.main.append('div').classed('sh-listing', true);
+
+        return containers;
+    }
+
+    function styles() {
+        var styles = ['.safety-histogram {' + '    display: inline-block;' + '    width: 100%;' + '}', '.safety-histogram > * {' + '    display: inline-block;' + '    width: 100%;' + '}', '.sh-controls {' + '}', '.sh-chart,' + '.sh-listing {' + '    width: 75%;' + '    float: left;' + '}', '.sh-chart {' + '}', '.sh-multiples {' + '    width: 24%;' + '    float: right;' + '}', '.sh-multiples .wc-small-multiples .wc-chart {' + '    display: inline-block;' + '    width: 100%;' + '    position: relative;' + '}', '.sh-multiples .wc-small-multiples .wc-chart.wc-chart-title {' + '    position: absolute;' + '    top: 0;' + '    right: 0;' + '}', '#group-by {' + '    width: 100%;' + '    padding-bottom: 4px;' + '    border-bottom: 1px solid #aaa;' + '    margin-bottom: 4px;' + '    display: flex;' + '    justify-content: center;' + '}', '#group-by .wc-control-label {' + '    margin-right: 5px;' + '}', '#group-by .span-description {' + '    display: none;' + '}', '#group-by .changer {' + '}', '.sh-listing {' + '}'];
+
+        // Attach styles to DOM.
+        var style = document.createElement('style');
+        style.type = 'text/css';
+        style.innerHTML = styles.join('\n');
+        document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
     function rendererSettings() {
         return {
-            //required variables
+            // required variables
             measure_col: 'TEST',
             value_col: 'STRESN',
 
-            //optional variables
+            // optional variables
             id_col: 'USUBJID',
             unit_col: 'STRESU',
             normal_col_low: 'STNRLO',
@@ -159,7 +235,7 @@
             groups: null,
             details: null,
 
-            //miscellaneous settings
+            // miscellaneous settings
             start_value: null,
             normal_range: true,
             displayNormalRange: false,
@@ -191,11 +267,8 @@
                 type: 'bar',
                 summarizeX: 'mean',
                 summarizeY: 'count',
-                split: null, // set in ./syncSettings
-                arrange: 'grouped',
                 attributes: { 'fill-opacity': 0.75 }
             }],
-            color_by: null,
             legend: {},
             aspect: 3
         };
@@ -206,20 +279,20 @@
         settings.x.bin_algorithm = settings.bin_algorithm;
         settings.marks[0].per[0] = settings.value_col;
 
-        //update normal range settings if normal_range is set to false
+        // update normal range settings if normal_range is set to false
         if (!settings.normal_range) {
             settings.normal_col_low = null;
             settings.normal_col_high = null;
             settings.displayNormalRange = false;
         }
 
-        //handle a string argument to filters
+        // handle a string argument to filters
         if (!(settings.filters instanceof Array)) settings.filters = typeof settings.filters === 'string' ? [settings.filters] : [];
 
-        //handle a string argument to groups
+        // handle a string argument to groups
         if (!(settings.groups instanceof Array)) settings.groups = typeof settings.groups === 'string' ? [settings.groups] : [];
 
-        //stratification
+        // stratification
         var defaultGroup = { value_col: 'sh_none', label: 'None' };
         if (!(settings.groups instanceof Array && settings.groups.length)) settings.groups = [defaultGroup];else settings.groups = [defaultGroup].concat(settings.groups.map(function (group) {
             return {
@@ -228,7 +301,7 @@
             };
         }));
 
-        //Remove duplicate values.
+        // Remove duplicate values.
         settings.groups = d3.set(settings.groups.map(function (group) {
             return group.value_col;
         })).values().map(function (value) {
@@ -241,24 +314,13 @@
         });
 
         // Set initial group-by variable.
-        //settings.marks[0].split = settings.color_by
-        //    ? settings.color_by
-        //    : settings.groups.length > 1
-        //    ? settings.groups[1].value_col
-        //    : defaultGroup.value_col;
+        settings.group_by = settings.group_by ? settings.group_by : settings.groups.length > 1 ? settings.groups[1].value_col : defaultGroup.value_col;
+        console.log(settings.group_by);
 
-        // Set initial group-by variable.
-        settings.color_by = settings.color_by ? settings.color_by : settings.groups.length > 1 ? settings.groups[1].value_col : defaultGroup.value_col;
-
-        //Set initial group-by label.
-        settings.legend.label = settings.groups.find(function (group) {
-            return group.value_col === settings.color_by;
-        }).label;
-
-        //handle a string argument to details
+        // handle a string argument to details
         if (!(settings.details instanceof Array)) settings.details = typeof settings.details === 'string' ? [settings.details] : [];
 
-        //Define default details.
+        // Define default details.
         var defaultDetails = [{ value_col: settings.id_col, label: 'Participant ID' }];
         if (Array.isArray(settings.filters)) settings.filters.filter(function (filter) {
             return filter.value_col !== settings.id_col;
@@ -275,11 +337,11 @@
             label: 'Upper Limit of Normal'
         });
 
-        //If [settings.details] is not specified:
+        // If [settings.details] is not specified:
         if (!settings.details) settings.details = defaultDetails;else {
-            //If [settings.details] is specified:
-            //Allow user to specify an array of columns or an array of objects with a column property
-            //and optionally a column label.
+            // If [settings.details] is specified:
+            // Allow user to specify an array of columns or an array of objects with a column property
+            // and optionally a column label.
             settings.details.forEach(function (detail) {
                 if (defaultDetails.map(function (d) {
                     return d.value_col;
@@ -303,7 +365,7 @@
         }, {
             type: 'dropdown',
             label: 'Group by',
-            options: ['marks.0.per.0', 'color_by'],
+            option: 'group_by',
             start: null, // set in ./syncControlInputs
             values: null, // set in ./syncControlInputs
             require: false
@@ -322,7 +384,7 @@
             label: 'Algorithm',
             option: 'x.bin_algorithm',
             values: ['Square-root choice', "Sturges' formula", 'Rice Rule',
-            //'Doane\'s formula',
+            // 'Doane\'s formula',
             "Scott's normal reference rule", "Freedman-Diaconis' choice", "Shimazaki and Shinomoto's choice", 'Custom'],
             require: true
         }, {
@@ -368,13 +430,13 @@
             return controlInput.label === 'Group by';
         });
         groupControl.start = settings.groups.find(function (group) {
-            return group.value_col === settings.color_by;
+            return group.value_col === settings.group_by;
         }).label;
         groupControl.values = settings.groups.map(function (group) {
             return group.label;
         });
 
-        //Remove normal range control.
+        // Remove normal range control.
         if (!settings.normal_range) controlInputs.splice(controlInputs.findIndex(function (input) {
             return input.label === 'Normal Range';
         }), 1);
@@ -534,20 +596,20 @@
             if (_this.variables.actual.indexOf(definition.setting) < 0) {
                 definition.missing = true;
 
-                //Define error text.
+                // Define error text.
                 var codeStyle = ['padding: 1px 5px', 'white-space: prewrap', 'font-family: Consolas,Lucida Console,Courier New,monospace,sans-serif', 'background-color: #eff0f1'];
                 var errorText = 'The variable specified for <code style=\'' + codeStyle.join(';') + '\'>' + definition.property + '</code>, <em>' + definition.setting + '</em>, does not exist in the data.';
 
-                //Print error to console.
+                // Print error to console.
                 console.error(errorText.replace(/<.+?>/g, ''));
 
-                //Print error to containing element.
-                var div = d3$1.select(_this.div);
+                // Print error to containing element.
+                var div = d3.select(_this.div);
                 div.append('p').html(errorText).style('color', 'red');
             }
         });
 
-        //Destroy chart.
+        // Destroy chart.
         if (this.variables.required.some(function (definition) {
             return definition.missing;
         })) this.destroy();
@@ -577,7 +639,7 @@
                     });
                 } // optional variable arrays (filters, listing columns)
 
-            //Remove participant ID column from listing if variable is missing.
+            // Remove participant ID column from listing if variable is missing.
             if (definition.property === 'id_col' && definition.missing) {
                 var index = _this.listing.config.cols.findIndex(function (col) {
                     return col === definition.setting;
@@ -610,7 +672,7 @@
         var _this = this;
 
         this.participantCount = {
-            N: d3$1.set(this.raw_data.map(function (d) {
+            N: d3.set(this.raw_data.map(function (d) {
                 return d[_this.config.id_col];
             })).values().filter(function (value) {
                 return !/^\s*$/.test(value);
@@ -624,26 +686,26 @@
     function removeMissingResults() {
         var _this = this;
 
-        //Split data into records with missing and nonmissing results.
+        // Split data into records with missing and nonmissing results.
         var missingResults = [];
         var nonMissingResults = [];
         this.raw_data.forEach(function (d) {
             if (/^\s*$/.test(d[_this.config.value_col])) missingResults.push(d);else nonMissingResults.push(d);
         });
 
-        //Nest missing and nonmissing results by participant.
-        var participantsWithMissingResults = d3$1.nest().key(function (d) {
+        // Nest missing and nonmissing results by participant.
+        var participantsWithMissingResults = d3.nest().key(function (d) {
             return d[_this.config.id_col];
         }).rollup(function (d) {
             return d.length;
         }).entries(missingResults);
-        var participantsWithNonMissingResults = d3$1.nest().key(function (d) {
+        var participantsWithNonMissingResults = d3.nest().key(function (d) {
             return d[_this.config.id_col];
         }).rollup(function (d) {
             return d.length;
         }).entries(nonMissingResults);
 
-        //Identify placeholder records, i.e. participants with a single missing result.
+        // Identify placeholder records, i.e. participants with a single missing result.
         this.removedRecords.placeholderRecords = participantsWithMissingResults.filter(function (d) {
             return participantsWithNonMissingResults.map(function (d) {
                 return d.key;
@@ -653,22 +715,22 @@
         });
         if (this.removedRecords.placeholderRecords.length) console.log(this.removedRecords.placeholderRecords.length + ' participants without results have been detected.');
 
-        //Count the number of records with missing results.
-        this.removedRecords.missing = d3$1.sum(participantsWithMissingResults.filter(function (d) {
+        // Count the number of records with missing results.
+        this.removedRecords.missing = d3.sum(participantsWithMissingResults.filter(function (d) {
             return _this.removedRecords.placeholderRecords.indexOf(d.key) < 0;
         }), function (d) {
             return d.values;
         });
         if (this.removedRecords.missing > 0) console.warn(this.removedRecords.missing + ' record' + (this.removedRecords.missing > 1 ? 's with a missing result have' : ' with a missing result has') + ' been removed.');
 
-        //Update data.
+        // Update data.
         this.raw_data = nonMissingResults;
     }
 
     function removeNonNumericResults() {
         var _this = this;
 
-        //Filter out non-numeric results.
+        // Filter out non-numeric results.
         var numericResults = this.raw_data.filter(function (d) {
             return (/^-?[0-9.]+$/.test(d[_this.config.value_col])
             );
@@ -676,7 +738,7 @@
         this.removedRecords.nonNumeric = this.raw_data.length - numericResults.length;
         if (this.removedRecords.nonNumeric > 0) console.warn(this.removedRecords.nonNumeric + ' record' + (this.removedRecords.nonNumeric > 1 ? 's with a non-numeric result have' : ' with a non-numeric result has') + ' been removed.');
 
-        //Update data.
+        // Update data.
         this.raw_data = numericResults;
     }
 
@@ -711,7 +773,7 @@
     function participant() {
         var _this = this;
 
-        this.participants = d3$1.set(this.initial_data.map(function (d) {
+        this.participants = d3.set(this.initial_data.map(function (d) {
             return d[_this.config.id_col];
         })).values().sort();
     }
@@ -719,10 +781,10 @@
     function measure() {
         var _this = this;
 
-        this.measures = d3$1.set(this.initial_data.map(function (d) {
+        this.measures = d3.set(this.initial_data.map(function (d) {
             return d[_this.config.measure_col];
         })).values().sort();
-        this.sh_measures = d3$1.set(this.initial_data.map(function (d) {
+        this.sh_measures = d3.set(this.initial_data.map(function (d) {
             return d.sh_measure;
         })).values().sort();
     }
@@ -755,7 +817,7 @@
             } else if (!_this.raw_data[0].hasOwnProperty(input.value_col)) {
                 console.warn('The [ ' + input.label + ' ] filter has been removed because the variable does not exist.');
             } else {
-                var levels = d3$1.set(_this.raw_data.map(function (d) {
+                var levels = d3.set(_this.raw_data.map(function (d) {
                     return d[input.value_col];
                 })).values();
 
@@ -796,48 +858,51 @@
 
         var controlGroups = this.controls.wrap.style('padding-bottom', '8px').selectAll('.control-group');
 
-        //Give each control a unique ID.
+        // Give each control a unique ID.
         controlGroups.attr('id', function (d) {
             return d.label.toLowerCase().replace(/ /g, '-');
         }).each(function (d) {
-            var controlGroup = d3$1.select(this);
+            var controlGroup = d3.select(this);
             controlGroup.classed(d.type, true);
             context.controls[d.label] = controlGroup;
         });
 
-        //Give x-axis controls a common class name.
+        // Give x-axis controls a common class name.
         controlGroups.filter(function (d) {
             return ['x.domain[0]', 'x.domain[1]'].indexOf(d.option) > -1;
         }).classed('x-axis', true);
 
-        //Give binning controls a common class name.
+        // Give binning controls a common class name.
         controlGroups.filter(function (d) {
             return ['x.bin_algorithm', 'x.bin', 'x.bin_width'].indexOf(d.option) > -1;
         }).classed('bin', true);
     }
 
     function customizeGroupByControl() {
-        var _this = this;
+        var _this2 = this;
 
         var context = this;
 
         var groupControl = this.controls.wrap.selectAll('.control-group#group-by');
+        this.containers.multiples.node().appendChild(groupControl.node());
 
         // Hide group-by control when no groups are specified.
         if (groupControl.datum().values.length === 1) groupControl.style('display', 'none');else {
             var _select = groupControl.selectAll('select').on('change', function (d) {
-                var label = _select(this).selectAll('option:checked').text();
-                var value_col = context.config.groups.find(function (group) {
-                    return group.label === label;
+                var _this = this;
+
+                console.log(this.value);
+                context.config.group_by = context.config.groups.find(function (group) {
+                    return group.label === _this.value;
                 }).value_col;
-                context.config.marks[0].per[0] = value_col;
-                context.config.color_by = value_col;
-                context.config.legend.label = label;
+                console.log(context.config.group_by);
                 context.draw();
             });
 
             var options = _select.selectAll('option').property('selected', function (d) {
-                return d === _this.config.legend.label;
+                return _this2.config.groups.find(function (group) {
+                    return group.label === d;
+                }).value_col === _this2.config.group_by;
             }).style('display', function (d, i) {
                 return i > 0 && this.value === 'None' ? 'none' : null;
             });
@@ -847,7 +912,7 @@
     function addXdomainResetButton() {
         var _this = this;
 
-        //Add x-domain reset button container.
+        // Add x-domain reset button container.
         this.controls.reset = {
             container: this.controls.wrap.insert('div', '#lower').classed('control-group x-axis', true).datum({
                 type: 'button',
@@ -856,10 +921,10 @@
             }).style('vertical-align', 'bottom')
         };
 
-        //Add label.
+        // Add label.
         this.controls.reset.label = this.controls.reset.container.append('span').attr('class', 'wc-control-label').text('');
 
-        //Add button.
+        // Add button.
         this.controls.reset.button = this.controls.reset.container.append('button').text(' Reset ').style('padding', '0px 5px').on('click', function () {
             _this.config.x.domain = _this.measure.raw.domain;
 
@@ -893,13 +958,13 @@
     }
 
     function groupControls() {
-        //Group x-axis controls.
+        // Group x-axis controls.
         insertGrouping.call(this, '.x-axis', 'X-axis Limits');
 
-        //Group filters.
+        // Group filters.
         if (this.filters.length > 1) insertGrouping.call(this, '.subsetter:not(#measure)', 'Filters');
 
-        //Group bin controls.
+        // Group bin controls.
         insertGrouping.call(this, '.bin', 'Bins');
     }
 
@@ -909,7 +974,7 @@
         if (this.filters.find(function (filter) {
             return filter.col !== 'sh_measure';
         })) {
-            //Add x-domain zoom button container.
+            // Add x-domain zoom button container.
             var resetContainer = this.controls.wrap.select('.x-axis-limits-grouping-fieldset').append('div').classed('control-group x-axis', true).datum({
                 type: 'button',
                 option: 'x.domain',
@@ -922,10 +987,10 @@
                 'margin-left': '2px'
             });
 
-            //Add label.
+            // Add label.
             resetContainer.append('span').attr('class', 'wc-control-label').text('');
 
-            //Add button.
+            // Add button.
             resetContainer.append('button').text(' Zoom ').style('padding', '0px 5px').on('click', function () {
                 _this.config.x.domain = _this.measure.filtered.domain;
 
@@ -948,7 +1013,7 @@
         var context = this;
 
         this.controls.Algorithm.selectAll('.wc-control-label').append('span').classed('algorithm-explanation', true).html(' &#9432').style('cursor', 'pointer').on('click', function () {
-            if (_this.config.x.bin_algorithm !== 'Custom') window.open('https://en.wikipedia.org/wiki/Histogram#' + _this.config.x.bin_algorithm.replace(/ /g, '_').replace('Freedman-Diaconis', 'Freedman%E2%80%93Diaconis'));
+            if (_this.config.x.bin_algorithm !== 'Custom') window.open('https:// en.wikipedia.org/wiki/Histogram#' + _this.config.x.bin_algorithm.replace(/ /g, '_').replace('Freedman-Diaconis', 'Freedman%E2%80%93Diaconis'));
         });
 
         this.controls.Quantity.selectAll('input').attr({
@@ -972,7 +1037,7 @@
         this.participantCount.container = this.controls.wrap.style('position', 'relative').append('div').attr('id', 'participant-count').style({
             position: 'absolute',
             'font-style': 'italic',
-            bottom: '-10px',
+            bottom: '0px',
             left: 0,
             display: this.variables.optional.find(function (definition) {
                 return definition.property === 'id_col';
@@ -988,7 +1053,7 @@
             this.removedRecords.container = this.controls.wrap.append('div').style({
                 position: 'absolute',
                 'font-style': 'italic',
-                bottom: '-10px',
+                bottom: '0px',
                 right: 0
             }).text(message);
             this.removedRecords.container.append('span').style({
@@ -1006,8 +1071,8 @@
     }
 
     function addBorderAboveChart() {
-        this.wrap.style({
-            'border-top': '1px solid #ccc'
+        this.controls.wrap.style({
+            'border-bottom': '1px solid #ccc'
         });
     }
 
@@ -1045,14 +1110,14 @@
     function defineMeasureData() {
         var _this = this;
 
-        //Filter data on selected measure.
+        // Filter data on selected measure.
         this.measure.raw = {
             data: this.initial_data.filter(function (d) {
                 return d.sh_measure === _this.measure.current;
             })
         };
 
-        //Apply other filters to measure data.
+        // Apply other filters to measure data.
         this.measure.filtered = {
             data: this.measure.raw.data
         };
@@ -1062,8 +1127,8 @@
             });
         });
 
-        //Filter results on current x-domain.
-        if (this.measure.current !== this.measure.previous) this.config.x.domain = d3$1.extent(this.measure.raw.data.map(function (d) {
+        // Filter results on current x-domain.
+        if (this.measure.current !== this.measure.previous) this.config.x.domain = d3.extent(this.measure.raw.data.map(function (d) {
             return +d[_this.config.value_col];
         }));
         this.measure.custom = {
@@ -1072,42 +1137,42 @@
             })
         };
 
-        //Define arrays of results, unique results, and extent of results.
+        // Define arrays of results, unique results, and extent of results.
         ['raw', 'custom', 'filtered'].forEach(function (property) {
             var obj = _this.measure[property];
 
-            //Define array of all and unique results.
+            // Define array of all and unique results.
             obj.results = obj.data.map(function (d) {
                 return +d[_this.config.value_col];
             }).sort(function (a, b) {
                 return a - b;
             });
-            obj.uniqueResults = d3$1.set(obj.results).values();
+            obj.uniqueResults = d3.set(obj.results).values();
 
-            //Calculate extent of data.
-            obj.domain = property !== 'custom' ? d3$1.extent(obj.results) : _this.config.x.domain;
+            // Calculate extent of data.
+            obj.domain = property !== 'custom' ? d3.extent(obj.results) : _this.config.x.domain;
         });
     }
 
     function setXdomain() {
         if (this.measure.current !== this.measure.previous) this.config.x.domain = this.measure.raw.domain;else if (this.config.x.domain[0] > this.config.x.domain[1]) this.config.x.domain.reverse();
 
-        //The x-domain can be in three states:
-        //- the extent of all results
-        //- user-defined, e.g. narrower to exclude outliers
-        //
-        //Bin width is calculated with two variables:
-        //- the interquartile range
-        //- the number of results
-        //
-        //1 When the x-domain is set to the extent of all results, the bin width should be calculated
+        // The x-domain can be in three states:
+        // - the extent of all results
+        // - user-defined, e.g. narrower to exclude outliers
+        // 
+        // Bin width is calculated with two variables:
+        // - the interquartile range
+        // - the number of results
+        // 
+        // 1 When the x-domain is set to the extent of all results, the bin width should be calculated
         //  with the unfiltered set of results, regardless of the state of the current filters.
-        //
-        //2 Given a user-defined x-domain, the bin width should be calculated with the results that
+        // 
+        // 2 Given a user-defined x-domain, the bin width should be calculated with the results that
         //  fall inside the current domain.
         this.measure.domain_state = this.config.x.domain[0] === this.measure.raw.domain[0] && this.config.x.domain[1] === this.measure.raw.domain[1] || this.measure.previous === undefined ? 'raw' : 'custom';
 
-        //Set chart data to measure data.
+        // Set chart data to measure data.
         this.raw_data = this.measure[this.measure.domain_state].data.slice();
     }
 
@@ -1117,17 +1182,17 @@
         ['raw', 'custom'].forEach(function (property) {
             var obj = _this.measure[property];
 
-            //Calculate statistics.
+            // Calculate statistics.
             obj.stats = {
                 n: obj.results.length,
                 nUnique: obj.uniqueResults.length,
                 min: obj.domain[0],
-                q25: d3$1.quantile(obj.results, 0.25),
-                median: d3$1.quantile(obj.results, 0.5),
-                q75: d3$1.quantile(obj.results, 0.75),
+                q25: d3.quantile(obj.results, 0.25),
+                median: d3.quantile(obj.results, 0.5),
+                q75: d3.quantile(obj.results, 0.75),
                 max: obj.domain[1],
                 range: obj.domain[1] - obj.domain[0],
-                std: d3$1.deviation(obj.results)
+                std: d3.deviation(obj.results)
             };
             obj.stats.log10range = obj.stats.range > 0 ? Math.log10(obj.stats.range) : NaN;
             obj.stats.iqr = obj.stats.q75 - obj.stats.q25;
@@ -1135,54 +1200,44 @@
     }
 
     function calculateSquareRootBinWidth(obj) {
-        //https://en.wikipedia.org/wiki/Histogram#Square-root_choice
+        // https:// en.wikipedia.org/wiki/Histogram#Square-root_choice
         var range = this.config.x.domain[1] - this.config.x.domain[0];
         obj.stats.SquareRootBins = Math.ceil(Math.sqrt(obj.stats.n));
         obj.stats.SquareRootBinWidth = range / obj.stats.SquareRootBins;
     }
 
     function calculateSturgesBinWidth(obj) {
-        //https://en.wikipedia.org/wiki/Histogram#Sturges'_formula
+        // https:// en.wikipedia.org/wiki/Histogram#Sturges'_formula
         var range = this.config.x.domain[1] - this.config.x.domain[0];
         obj.stats.SturgesBins = Math.ceil(Math.log2(obj.stats.n)) + 1;
         obj.stats.SturgesBinWidth = range / obj.stats.SturgesBins;
     }
 
     function calculateRiceBinWidth(obj) {
-        //https://en.wikipedia.org/wiki/Histogram#Rice_Rule
+        // https:// en.wikipedia.org/wiki/Histogram#Rice_Rule
         var range = this.config.x.domain[1] - this.config.x.domain[0];
         obj.stats.RiceBins = Math.ceil(2 * Math.pow(obj.stats.n, 1.0 / 3.0));
         obj.stats.RiceBinWidth = range / obj.stats.RiceBins;
     }
 
     function calculateScottBinWidth(obj) {
-        //https://en.wikipedia.org/wiki/Histogram#Scott's_normal_reference_rule
+        // https:// en.wikipedia.org/wiki/Histogram#Scott's_normal_reference_rule
         var range = this.config.x.domain[1] - this.config.x.domain[0];
         obj.stats.ScottBinWidth = 3.5 * obj.stats.std / Math.pow(obj.stats.n, 1.0 / 3.0);
         obj.stats.ScottBins = obj.stats.ScottBinWidth > 0 ? Math.max(Math.ceil(range / obj.stats.ScottBinWidth), 5) : NaN;
     }
 
     function calculateFDBinWidth(obj) {
-        //https://en.wikipedia.org/wiki/Histogram#Freedman%E2%80%93Diaconis'_choice
+        // https:// en.wikipedia.org/wiki/Histogram#Freedman%E2%80%93Diaconis'_choice
         var range = this.config.x.domain[1] - this.config.x.domain[0];
         obj.stats.FDBinWidth = 2 * obj.stats.iqr / Math.pow(obj.stats.n, 1.0 / 3.0);
         obj.stats.FDBins = obj.stats.FDBinWidth > 0 ? Math.max(Math.ceil(range / obj.stats.FDBinWidth), 5) : NaN;
     }
 
-    var toConsumableArray = function (arr) {
-      if (Array.isArray(arr)) {
-        for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
-
-        return arr2;
-      } else {
-        return Array.from(arr);
-      }
-    };
-
     function calculateSSBinWidth(obj) {
-        //https://en.wikipedia.org/wiki/Histogram#Shimazaki_and_Shinomoto's_choice
-        var nBins = d3$1.range(2, 100); // number of bins
-        var cost = d3$1.range(nBins.length); // cost function results
+        // https:// en.wikipedia.org/wiki/Histogram#Shimazaki_and_Shinomoto's_choice
+        var nBins = d3.range(2, 100); // number of bins
+        var cost = d3.range(nBins.length); // cost function results
         var binWidths = [].concat(toConsumableArray(cost)); // bin widths
         var binBoundaries = [].concat(toConsumableArray(cost)); // bin boundaries
         var bins = [].concat(toConsumableArray(cost)); // bins
@@ -1192,13 +1247,13 @@
 
         var _loop = function _loop(i) {
             binWidths[i] = obj.stats.range / nBins[i];
-            binBoundaries[i] = d3$1.range(obj.stats.min, obj.stats.max, obj.stats.range / nBins[i]);
-            bins[i] = d3$1.layout.histogram().bins(nBins[i] - 1)( /*.bins(binBoundaries[i])*/obj.results);
+            binBoundaries[i] = d3.range(obj.stats.min, obj.stats.max, obj.stats.range / nBins[i]);
+            bins[i] = d3.layout.histogram().bins(nBins[i] - 1)( /*.bins(binBoundaries[i])*/obj.results);
             binSizes[i] = bins[i].map(function (arr) {
                 return arr.length;
             });
-            meanBinSizes[i] = d3$1.mean(binSizes[i]);
-            residuals[i] = d3$1.sum(binSizes[i].map(function (binSize) {
+            meanBinSizes[i] = d3.mean(binSizes[i]);
+            residuals[i] = d3.sum(binSizes[i].map(function (binSize) {
                 return Math.pow(binSize - meanBinSizes[i], 2);
             })) / nBins[i];
             cost[i] = (2 * meanBinSizes[i] - residuals[i]) / Math.pow(binWidths[i], 2);
@@ -1208,28 +1263,28 @@
             _loop(i);
         }
 
-        //consoleLogVars(
+        // consoleLogVars(
         //    {
         //        nBins,
         //        binWidths,
         //        binBoundaries,
-        //        //bins,
+        //        // bins,
         //        binSizes,
         //        meanBinSizes,
         //        residuals,
         //        cost
         //    },
         //    5
-        //);
+        // );
 
-        var minCost = d3$1.min(cost);
+        var minCost = d3.min(cost);
         var idx = cost.findIndex(function (c) {
             return c === minCost;
         });
 
         obj.stats.SSBinWidth = binWidths[idx];
         obj.stats.SSBins = nBins[idx];
-        //const optBinBoundaries = range(obj.stats.min, obj.stats.max, obj.stats.range/optNBins);
+        // const optBinBoundaries = range(obj.stats.min, obj.stats.max, obj.stats.range/optNBins);
     }
 
     function calcualteBinWidth() {
@@ -1238,7 +1293,7 @@
         ['raw', 'custom'].forEach(function (property) {
             var obj = _this.measure[property];
 
-            //Calculate bin width with the selected algorithm.
+            // Calculate bin width with the selected algorithm.
             switch (_this.config.x.bin_algorithm) {
                 case 'Square-root choice':
                     calculateSquareRootBinWidth.call(_this, obj);
@@ -1252,7 +1307,7 @@
                     calculateRiceBinWidth.call(_this, obj);
                     obj.stats.nBins = obj.stats.RiceBins < obj.stats.nUnique ? obj.stats.RiceBins : obj.stats.nUnique;
                     break;
-                //case 'Doane\'s formula':
+                // case 'Doane\'s formula':
                 //    console.log(4);
                 //    calculateDoaneBinWidth.call(this, obj);
                 //    obj.stats.nBins =
@@ -1271,35 +1326,35 @@
                     obj.stats.nBins = obj.stats.SSBins < obj.stats.nUnique ? obj.stats.SSBins : obj.stats.nUnique;
                     break;
                 default:
-                    //Handle custom number of bins.
+                    // Handle custom number of bins.
                     obj.stats.nBins = _this.config.x.bin;
-                //obj.stats.binWidth = this.config.x.domain[1] - this.config.x.domain[0] / this.config.x.bin;
+                // obj.stats.binWidth = this.config.x.domain[1] - this.config.x.domain[0] / this.config.x.bin;
             }
 
-            //Calculate bin width.
+            // Calculate bin width.
             obj.stats.binWidth = obj.stats.range / obj.stats.nBins;
-            obj.stats.binBoundaries = d3$1.range(obj.stats.nBins).concat(obj.domain[1]);
+            obj.stats.binBoundaries = d3.range(obj.stats.nBins).concat(obj.domain[1]);
         });
 
-        //Update chart config and set chart data to measure data.
+        // Update chart config and set chart data to measure data.
         this.config.x.bin = this.measure[this.measure.domain_state].stats.nBins;
         this.config.x.bin_width = this.measure[this.measure.domain_state].stats.binWidth;
     }
 
     function calculateXPrecision() {
-        //define the precision of the x-axis
+        // define the precision of the x-axis
         this.config.x.precisionFactor = Math.round(this.measure[this.measure.domain_state].stats.log10range);
         this.config.x.precision = Math.pow(10, this.config.x.precisionFactor);
 
-        //x-axis format
+        // x-axis format
         this.config.x.format = this.config.x.precisionFactor > 0 ? '.0f' : '.' + (Math.abs(this.config.x.precisionFactor) + 1) + 'f';
-        this.config.x.d3format = d3$1.format(this.config.x.format);
+        this.config.x.d3format = d3.format(this.config.x.format);
 
-        //one more precision please: bin format
+        // one more precision please: bin format
         this.config.x.format1 = this.config.x.precisionFactor > 0 ? '.1f' : '.' + (Math.abs(this.config.x.precisionFactor) + 2) + 'f';
-        this.config.x.d3format1 = d3$1.format(this.config.x.format1);
+        this.config.x.d3format1 = d3.format(this.config.x.format1);
 
-        //define the size of the x-axis limit increments
+        // define the size of the x-axis limit increments
         var step = this.measure[this.measure.domain_state].stats.range > 0 ? Math.abs(this.measure[this.measure.domain_state].stats.range / 15) // non-zero range
         : this.measure[this.measure.domain_state].results[0] !== 0 ? Math.abs(this.measure[this.measure.domain_state].results[0] / 15) // zero range, non-zero result(s)
         : 1; // zero range, zero result(s)
@@ -1315,7 +1370,7 @@
     }
 
     function updateXAxisResetButton() {
-        //Update tooltip of x-axis domain reset button.
+        // Update tooltip of x-axis domain reset button.
         if (this.measure.current !== this.measure.previous) {
             this.controls.reset.container.attr('title', 'Initial Limits: [' + this.config.x.d3format1(this.config.x.domain[0]) + ' - ' + this.config.x.d3format1(this.config.x.domain[1]) + ']');
         }
@@ -1387,8 +1442,6 @@
 
         // 5b Define bin boundaries given bin width and precision.
         defineBinBoundaries.call(this);
-
-        console.log(this.raw_data);
     }
 
     function onDatatransform() {}
@@ -1396,16 +1449,16 @@
     function updateParticipantCount() {
         var _this = this;
 
-        //count the number of unique ids in the current chart and calculate the percentage
-        this.participantCount.n = d3$1.set(this.filtered_data.map(function (d) {
+        // count the number of unique ids in the current chart and calculate the percentage
+        this.participantCount.n = d3.set(this.filtered_data.map(function (d) {
             return d[_this.config.id_col];
         })).values().length;
-        this.participantCount.percentage = d3$1.format('0.1%')(this.participantCount.n / this.participantCount.N);
+        this.participantCount.percentage = d3.format('0.1%')(this.participantCount.n / this.participantCount.N);
 
-        //clear the annotation
+        // clear the annotation
         this.participantCount.container.selectAll('*').remove();
 
-        //update the annotation
+        // update the annotation
         this.participantCount.container.text('\n' + this.participantCount.n + ' of ' + this.participantCount.N + ' participant(s) shown (' + this.participantCount.percentage + ')');
     }
 
@@ -1413,20 +1466,20 @@
         delete this.highlightedBin;
         delete this.highlighteD;
 
-        //Remove bin boundaries.
+        // Remove bin boundaries.
         this.svg.select('g.bin-boundaries').remove();
 
-        //Reset bar highlighting.
+        // Reset bar highlighting.
         this.svg.selectAll('.bar-group').classed('selected', false).selectAll('.bar').attr('fill-opacity', 0.75);
 
-        //Reset footnotes.
+        // Reset footnotes.
         this.footnotes.barClick.style({
             'text-decoration': 'none',
             cursor: 'normal'
         }).text('Click a bar for details.');
         this.footnotes.barDetails.html('<br>');
 
-        //Reset listing.
+        // Reset listing.
         this.listing.draw([]);
         this.listing.wrap.style('display', 'none');
     }
@@ -1437,7 +1490,7 @@
         var ticks = this.x.ticks().map(function (d) {
             return _this.config.x.d3format(d);
         });
-        if (d3$1.nest().key(function (d) {
+        if (d3.nest().key(function (d) {
             return d;
         }).rollup(function (d) {
             return d.length;
@@ -1467,16 +1520,48 @@
         }
     }
 
-    function groupBars() {}
+    function groupBars() {
+        var settings = clone(this.settings);
+        settings.x = Object.assign({}, this.config.x);
+        settings.x.label = '';
+        settings.y = Object.assign({}, this.config.y);
+        settings.y.label = '';
+        settings.width = 425;
+        settings.height = settings.width / 4;
+        settings.resizable = false;
+        settings.margin = {
+            top: 1,
+            right: 1,
+            bottom: 1,
+            left: 1
+        };
+        if (this.multiples) this.multiples.destroy();
+        this.multiples = webcharts.createChart(this.containers.multiples.node(), settings);
+        webcharts.multiply(this.multiples, this.filtered_data.slice(), this.config.group_by);
+        this.multiples.multiples.forEach(function (multiple) {
+            multiple.on('init', function () {
+                this.config.margin = {
+                    top: 1,
+                    right: 1,
+                    bottom: 1,
+                    left: 1
+                };
+            });
+        });
+        //console.log(this.current_data);
+        console.log(this.config.x);
+        console.log(this.multiples.multiples[0].config.x);
+        //console.log(this.multiples.multiples[0].current_data);
+    }
 
     function addHoverBars() {
         var context = this;
 
         var bins = this.svg.selectAll('.bar-group').each(function (d) {
-            var g = d3$1.select(this);
+            var g = d3.select(this);
             g.selectAll('.hover-bar').remove();
 
-            //Drawing a path instead of a rect because Webcharts messes up the original rect on resize.
+            // Drawing a path instead of a rect because Webcharts messes up the original rect on resize.
             var x = context.x(d.rangeLow);
             var y = 0;
             var width = context.x(d.rangeHigh) - context.x(d.rangeLow);
@@ -1493,20 +1578,20 @@
     }
 
     function mouseout(element, d) {
-        //Update footnote.
+        // Update footnote.
         this.footnotes.barDetails.html(this.highlightedBin ? 'Table displays ' + this.highlighteD.footnote + '.' : '<br>');
 
-        //Remove bar highlight.
-        var selection = d3$1.select(element);
+        // Remove bar highlight.
+        var selection = d3.select(element);
         selection.selectAll('.bar').attr('stroke', this.colorScale());
     }
 
     function mouseover(element, d) {
-        //Update bar details footnote.
+        // Update bar details footnote.
         this.footnotes.barDetails.html('Bar encompasses ' + d.footnote + '.');
 
-        //Highlight bar.
-        var selection = d3$1.select(element);
+        // Highlight bar.
+        var selection = d3.select(element);
         if (!/trident/i.test(navigator.userAgent)) selection.moveToFront();
         selection.selectAll('.bar').attr('stroke', 'black');
     }
@@ -1514,11 +1599,11 @@
     function select(element, d) {
         var _this = this;
 
-        //Reduce bin opacity and highlight selected bin.
+        // Reduce bin opacity and highlight selected bin.
         this.svg.selectAll('.bar-group').selectAll('.bar').attr('fill-opacity', 0.5);
-        d3$1.select(element).select('.bar').attr('fill-opacity', 1);
+        d3.select(element).select('.bar').attr('fill-opacity', 1);
 
-        //Update bar click footnote
+        // Update bar click footnote
         this.footnotes.barClick.style({
             cursor: 'pointer',
             'text-decoration': 'underline'
@@ -1526,10 +1611,10 @@
             resetRenderer.call(_this);
         });
 
-        //Update bar details footnote.
+        // Update bar details footnote.
         this.footnotes.barDetails.html('Table displays ' + d.footnote + '.');
 
-        //Draw listing.
+        // Draw listing.
         this.listing.draw(d.values.raw);
         this.listing.wrap.style('display', 'inline-block');
     }
@@ -1551,7 +1636,7 @@
     function click(element, d) {
         this.highlightedBin = d.key;
         this.highlighteD = d;
-        var selection = d3$1.select(element);
+        var selection = d3.select(element);
         var selected = selection.classed('selected');
         this.svg.selectAll('.bar-group').classed('selected', false);
         selection.classed('selected', !selected);
@@ -1580,8 +1665,8 @@
         this.svg.select('.normal-ranges').remove();
 
         if (this.config.displayNormalRange && this.filtered_data.length > 0) {
-            //Capture distinct normal ranges in filtered data.
-            var normalRanges = d3$1.nest().key(function (d) {
+            // Capture distinct normal ranges in filtered data.
+            var normalRanges = d3.nest().key(function (d) {
                 return d[_this.config.normal_col_low] + ',' + d[_this.config.normal_col_high];
             }) // set key to comma-delimited normal range
             .rollup(function (d) {
@@ -1589,22 +1674,22 @@
             }).entries(this.filtered_data).map(function (d) {
                 d.keySplit = d.key.split(',');
 
-                //lower
+                // lower
                 d.lower = +d.keySplit[0];
                 d.x1 = d.lower >= _this.x_dom[0] ? _this.x(d.lower) : 0;
 
-                //upper
+                // upper
                 d.upper = +d.keySplit[1];
                 d.x2 = d.upper <= _this.x_dom[1] ? _this.x(d.upper) : _this.plot_width;
 
-                //width
+                // width
                 d.width = d.x2 - d.x1;
 
-                //tooltip
+                // tooltip
                 d.rate = d.values / _this.filtered_data.length;
-                d.tooltip = d.values < _this.filtered_data.length ? d.lower + ' - ' + d.upper + ' (' + d3$1.format('%')(d.rate) + ' of records)' : d.lower + ' - ' + d.upper;
+                d.tooltip = d.values < _this.filtered_data.length ? d.lower + ' - ' + d.upper + ' (' + d3.format('%')(d.rate) + ' of records)' : d.lower + ' - ' + d.upper;
 
-                //plot if:
+                // plot if:
                 //  - at least one of the limits of normal fall within the current x-domain
                 //  - the lower limit is less than the current x-domain and the upper limit is greater than current the x-domain
                 d.plot = _this.x_dom[0] <= d.lower && d.lower <= _this.x_dom[1] || _this.x_dom[0] <= d.upper && d.upper <= _this.x_dom[1] || _this.x_dom[0] >= d.lower && d.upper >= _this.x_dom[1];
@@ -1616,18 +1701,18 @@
                 return diff_lower ? diff_lower : diff_upper ? diff_upper : 0;
             }); // sort normal ranges so larger normal ranges plot beneath smaller normal ranges
 
-            //Add tooltip to Normal Range control that lists normal ranges.
+            // Add tooltip to Normal Range control that lists normal ranges.
             this.controls.wrap.selectAll('#normal-range .wc-control-label').append('span').classed('normal-range-list', true).html(' &#9432').attr('title', normalRanges.length > 1 ? this.measure.current + ' normal ranges:\n' + normalRanges.map(function (normalRange) {
                 return normalRange.tooltip;
             }).join('\n') : this.measure.current + ' normal range: ' + normalRanges[0].tooltip).style('cursor', 'default');
 
-            //Add groups in which to draw normal range rectangles and annotations.
+            // Add groups in which to draw normal range rectangles and annotations.
             var group = this.svg.insert('g', '.bar-supergroup').classed('normal-ranges', true);
             var groups = group.selectAll('g.normal-range').data(normalRanges.filter(function (d) {
                 return d.plot;
             })).enter().append('g').classed('normal-range', true);
 
-            //Draw normal range rectangles.
+            // Draw normal range rectangles.
             var rectangles = groups.append('rect').classed('normal-range__rect', true).attr({
                 x: function x(d) {
                     return d.x1;
@@ -1665,11 +1750,11 @@
         var _this = this;
 
         if (this.config.annotate_bin_boundaries) {
-            //Remove bin boundaries.
+            // Remove bin boundaries.
             this.svg.select('g.bin-boundaries').remove();
 
-            //Check for repeats of values formatted with lower precision.
-            var repeats = d3$1.nest().key(function (d) {
+            // Check for repeats of values formatted with lower precision.
+            var repeats = d3.nest().key(function (d) {
                 return d.value1;
             }).rollup(function (d) {
                 return d.length;
@@ -1677,7 +1762,7 @@
                 return d.values > 1;
             });
 
-            //Annotate bin boundaries.
+            // Annotate bin boundaries.
             var axis = this.svg.append('g').classed('bin-boundaries axis', true);
             var ticks = axis.selectAll('g.bin-boundary').data(this.measure.binBoundaries).enter().append('g').classed('bin-boundary tick', true);
             var texts = ticks.append('text').attr({
@@ -1691,10 +1776,10 @@
                 return repeats ? d.value2 : d.value1;
             });
 
-            //Thin ticks.
+            // Thin ticks.
             var textDimensions = [];
             texts.each(function (d) {
-                var text = d3$1.select(this);
+                var text = d3.select(this);
                 var bbox = this.getBBox();
                 if (textDimensions.some(function (textDimension) {
                     return textDimension.x + textDimension.width > bbox.x - 5;
@@ -1709,34 +1794,34 @@
     }
 
     function onResize() {
-        //Draw custom bin for single observation subsets.
+        // Draw custom bin for single observation subsets.
         drawZeroRangeBar.call(this);
 
-        //Group bars by group-by variable.
+        // Group bars by group-by variable.
         groupBars.call(this);
 
-        //Add invisible bars for improved hovering.
+        // Add invisible bars for improved hovering.
         addHoverBars.call(this);
 
-        //Display data listing on bin click.
+        // Display data listing on bin click.
         addBinEventListeners.call(this);
 
-        //Visualize normal ranges.
+        // Visualize normal ranges.
         drawNormalRanges.call(this);
 
-        //Keep highlighted bin highlighted on resize.
+        // Keep highlighted bin highlighted on resize.
         maintainBinHighlighting.call(this);
 
-        //Remove x-axis ticks.
+        // Remove x-axis ticks.
         removeXAxisTicks.call(this);
 
-        //Annotate bin boundaries.
+        // Annotate bin boundaries.
         annotateBinBoundaries.call(this);
     }
 
     function onDestroy() {
         this.listing.destroy();
-        d3$1.select(this.div).selectAll('.loader').remove();
+        d3.select(this.div).selectAll('.loader').remove();
     }
 
     var callbacks = {
@@ -1749,24 +1834,24 @@
         onDestroy: onDestroy
     };
 
+    // utilities
+
     function safetyHistogram() {
         var element = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'body';
         var settings = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-        //Define chart.
-        var mergedSettings = Object.assign({}, JSON.parse(JSON.stringify(configuration.settings)), settings);
-        var syncedSettings = configuration.syncSettings(mergedSettings);
-        var syncedControlInputs = configuration.syncControlInputs(configuration.controlInputs(), syncedSettings);
-        var controls = webcharts.createControls(element, {
-            location: 'top',
-            inputs: syncedControlInputs
-        });
-        var chart = webcharts.createChart(element, syncedSettings, controls);
+        var containers = layout(element);
+        styles();
 
-        //Define chart callbacks.
-        for (var callback in callbacks) {
-            chart.on(callback.substring(2).toLowerCase(), callbacks[callback]);
-        } //Define listing
+        // Merge and sync settings.
+        var mergedSettings = Object.assign({}, JSON.parse(JSON.stringify(configuration.settings)), // clone settings
+        settings);
+        var syncedSettings = configuration.syncSettings(mergedSettings);
+        var controlsSettings = {
+            inputs: configuration.syncControlInputs(configuration.controlInputs(), syncedSettings)
+        };
+        var chartSettings = clone(syncedSettings);
+        var multiplesSettings = clone(syncedSettings);
         var listingSettings = Object.assign({}, {
             cols: syncedSettings.details.map(function (detail) {
                 return detail.value_col;
@@ -1775,21 +1860,38 @@
                 return detail.label;
             })
         }, syncedSettings);
-        var listing = webcharts.createTable(element, listingSettings);
 
-        //Attach listing to chart.
+        // Define controls.
+        var controls = webcharts.createControls(containers.controls.node(), controlsSettings);
+
+        // Define chart.
+        var chart = webcharts.createChart(containers.chart.node(), chartSettings, controls);
+        chart.settings = clone(chartSettings);
+        for (var callback in callbacks) {
+            chart.on(callback.substring(2).toLowerCase(), callbacks[callback]);
+        } // Define multiples.
+        var multiples = webcharts.createChart(containers.multiples.node(), multiplesSettings);
+        multiples.settings = clone(multiplesSettings);
+
+        // Define listing.
+        var listing = webcharts.createTable(containers.listing.node(), listingSettings);
+        listing.settings = clone(listingSettings);
+
+        // Attach listing to chart.
+        chart.containers = containers;
+        chart.multiples = multiples;
         chart.listing = listing;
         listing.chart = chart;
 
-        //Initialize listing and hide initially.
-        chart.listing.init([]);
-        chart.listing.wrap.style('display', 'none');
-        chart.listing.wrap.selectAll('.table-top,table,.table-bottom').style({
+        // Initialize listing and hide initially.
+        listing.init([]);
+        listing.wrap.style('display', 'none');
+        listing.wrap.selectAll('.table-top,table,.table-bottom').style({
             float: 'left',
             clear: 'left',
             width: '100%'
         });
-        chart.listing.table.style('white-space', 'nowrap');
+        listing.table.style('white-space', 'nowrap');
 
         return chart;
     }

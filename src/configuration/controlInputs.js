@@ -9,7 +9,7 @@ export default function controlInputs() {
         {
             type: 'dropdown',
             label: 'Group by',
-            options: ['marks.0.per.0', 'color_by'],
+            option: 'group_by',
             start: null, // set in ./syncControlInputs
             values: null, // set in ./syncControlInputs
             require: false
@@ -34,7 +34,7 @@ export default function controlInputs() {
                 'Square-root choice',
                 "Sturges' formula",
                 'Rice Rule',
-                //'Doane\'s formula',
+                // 'Doane\'s formula',
                 "Scott's normal reference rule",
                 "Freedman-Diaconis' choice",
                 "Shimazaki and Shinomoto's choice",

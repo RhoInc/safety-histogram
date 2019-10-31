@@ -15,10 +15,10 @@ export default function syncControlInputs(controlInputs, settings) {
 
     // Sync group control.
     const groupControl = controlInputs.find(controlInput => controlInput.label === 'Group by');
-    groupControl.start = settings.groups.find(group => group.value_col === settings.color_by).label;
+    groupControl.start = settings.groups.find(group => group.value_col === settings.group_by).label;
     groupControl.values = settings.groups.map(group => group.label);
 
-    //Remove normal range control.
+    // Remove normal range control.
     if (!settings.normal_range)
         controlInputs.splice(controlInputs.findIndex(input => input.label === 'Normal Range'), 1);
 

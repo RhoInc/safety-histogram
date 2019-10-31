@@ -6,7 +6,7 @@ export default function addParticipantCountContainer() {
         .style({
             position: 'absolute',
             'font-style': 'italic',
-            bottom: '-10px',
+            bottom: '0px',
             left: 0,
             display: this.variables.optional.find(definition => definition.property === 'id_col')
                 .missing

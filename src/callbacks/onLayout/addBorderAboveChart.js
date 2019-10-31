@@ -1,5 +1,5 @@
 export default function addBorderAboveChart() {
-    this.wrap.style({
-        'border-top': '1px solid #ccc'
+    this.controls.wrap.style({
+        'border-bottom': '1px solid #ccc'
     });
 }

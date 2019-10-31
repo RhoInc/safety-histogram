@@ -8,7 +8,7 @@ export default function checkRequired() {
         if (this.variables.actual.indexOf(definition.setting) < 0) {
             definition.missing = true;
 
-            //Define error text.
+            // Define error text.
             const codeStyle = [
                 'padding: 1px 5px',
                 'white-space: prewrap',
@@ -19,10 +19,10 @@ export default function checkRequired() {
                 definition.property
             }</code>, <em>${definition.setting}</em>, does not exist in the data.`;
 
-            //Print error to console.
+            // Print error to console.
             console.error(errorText.replace(/<.+?>/g, ''));
 
-            //Print error to containing element.
+            // Print error to containing element.
             const div = select(this.div);
             div.append('p')
                 .html(errorText)
@@ -30,6 +30,6 @@ export default function checkRequired() {
         }
     });
 
-    //Destroy chart.
+    // Destroy chart.
     if (this.variables.required.some(definition => definition.missing)) this.destroy();
 }

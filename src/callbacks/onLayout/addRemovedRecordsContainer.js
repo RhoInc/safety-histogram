@@ -25,7 +25,7 @@ export default function addRemovedRecordsNote() {
             .style({
                 position: 'absolute',
                 'font-style': 'italic',
-                bottom: '-10px',
+                bottom: '0px',
                 right: 0
             })
             .text(message);

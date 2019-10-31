@@ -2,7 +2,7 @@ import { select as d3select } from 'd3';
 import resetRenderer from '../../../onDraw/resetRenderer';
 
 export default function select(element, d) {
-    //Reduce bin opacity and highlight selected bin.
+    // Reduce bin opacity and highlight selected bin.
     this.svg
         .selectAll('.bar-group')
         .selectAll('.bar')
@@ -11,7 +11,7 @@ export default function select(element, d) {
         .select('.bar')
         .attr('fill-opacity', 1);
 
-    //Update bar click footnote
+    // Update bar click footnote
     this.footnotes.barClick
         .style({
             cursor: 'pointer',
@@ -22,10 +22,10 @@ export default function select(element, d) {
             resetRenderer.call(this);
         });
 
-    //Update bar details footnote.
+    // Update bar details footnote.
     this.footnotes.barDetails.html(`Table displays ${d.footnote}.`);
 
-    //Draw listing.
+    // Draw listing.
     this.listing.draw(d.values.raw);
     this.listing.wrap.style('display', 'inline-block');
 }

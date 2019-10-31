@@ -1,10 +1,10 @@
 export default function rendererSettings() {
     return {
-        //required variables
+        // required variables
         measure_col: 'TEST',
         value_col: 'STRESN',
 
-        //optional variables
+        // optional variables
         id_col: 'USUBJID',
         unit_col: 'STRESU',
         normal_col_low: 'STNRLO',
@@ -13,7 +13,7 @@ export default function rendererSettings() {
         groups: null,
         details: null,
 
-        //miscellaneous settings
+        // miscellaneous settings
         start_value: null,
         normal_range: true,
         displayNormalRange: false,

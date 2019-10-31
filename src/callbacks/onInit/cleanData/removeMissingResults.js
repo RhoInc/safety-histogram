@@ -1,7 +1,7 @@
 import { nest, sum } from 'd3';
 
 export default function removeMissingResults() {
-    //Split data into records with missing and nonmissing results.
+    // Split data into records with missing and nonmissing results.
     const missingResults = [];
     const nonMissingResults = [];
     this.raw_data.forEach(d => {
@@ -9,7 +9,7 @@ export default function removeMissingResults() {
         else nonMissingResults.push(d);
     });
 
-    //Nest missing and nonmissing results by participant.
+    // Nest missing and nonmissing results by participant.
     const participantsWithMissingResults = nest()
         .key(d => d[this.config.id_col])
         .rollup(d => d.length)
@@ -19,7 +19,7 @@ export default function removeMissingResults() {
         .rollup(d => d.length)
         .entries(nonMissingResults);
 
-    //Identify placeholder records, i.e. participants with a single missing result.
+    // Identify placeholder records, i.e. participants with a single missing result.
     this.removedRecords.placeholderRecords = participantsWithMissingResults
         .filter(
             d =>
@@ -32,7 +32,7 @@ export default function removeMissingResults() {
             `${this.removedRecords.placeholderRecords.length} participants without results have been detected.`
         );
 
-    //Count the number of records with missing results.
+    // Count the number of records with missing results.
     this.removedRecords.missing = sum(
         participantsWithMissingResults.filter(
             d => this.removedRecords.placeholderRecords.indexOf(d.key) < 0
@@ -48,6 +48,6 @@ export default function removeMissingResults() {
             } been removed.`
         );
 
-    //Update data.
+    // Update data.
     this.raw_data = nonMissingResults;
 }

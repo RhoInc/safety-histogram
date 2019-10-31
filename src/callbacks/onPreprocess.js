@@ -31,6 +31,4 @@ export default function onPreprocess() {
 
     // 5b Define bin boundaries given bin width and precision.
     defineBinBoundaries.call(this);
-
-    console.log(this.raw_data);
 }

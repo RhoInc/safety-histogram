@@ -7,7 +7,7 @@ export default function addHoverBars() {
         const g = select(this);
         g.selectAll('.hover-bar').remove();
 
-        //Drawing a path instead of a rect because Webcharts messes up the original rect on resize.
+        // Drawing a path instead of a rect because Webcharts messes up the original rect on resize.
         const x = context.x(d.rangeLow);
         const y = 0;
         const width = context.x(d.rangeHigh) - context.x(d.rangeLow);

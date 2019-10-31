@@ -1,4 +1,5 @@
 import identifyControls from './onLayout/identifyControls';
+import customizeGroupByControl from './onLayout/customizeGroupByControl';
 import addXdomainResetButton from './onLayout/addXdomainResetButton';
 import groupControls from './onLayout/groupControls';
 import addXdomainZoomButton from './onLayout/addXdomainZoomButton';
@@ -10,6 +11,7 @@ import addFootnoteContainer from './onLayout/addFootnoteContainer';
 
 export default function onLayout() {
     identifyControls.call(this);
+    customizeGroupByControl.call(this);
     addXdomainResetButton.call(this);
     groupControls.call(this);
     addXdomainZoomButton.call(this);

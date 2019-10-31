@@ -22,7 +22,9 @@ export default function webchartsSettings() {
                 type: 'bar',
                 summarizeX: 'mean',
                 summarizeY: 'count',
-                attributes: { 'fill-opacity': 0.75 }
+                split: null, // set in ./syncSettings
+                arrange: 'grouped',
+                attributes: { 'fill-opacity': 0.75 },
             }
         ],
         color_by: null,

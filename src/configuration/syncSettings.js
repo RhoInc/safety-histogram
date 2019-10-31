@@ -43,7 +43,14 @@ export default function syncSettings(settings) {
             };
         });
 
-    //Set initial group-by variable.
+    // Set initial group-by variable.
+    //settings.marks[0].split = settings.color_by
+    //    ? settings.color_by
+    //    : settings.groups.length > 1
+    //    ? settings.groups[1].value_col
+    //    : defaultGroup.value_col;
+
+    // Set initial group-by variable.
     settings.color_by = settings.color_by
         ? settings.color_by
         : settings.groups.length > 1

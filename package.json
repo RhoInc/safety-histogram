@@ -20,6 +20,7 @@
   ],
   "dependencies": {
     "d3": "^3",
+    "jerzy": "^0.2.1",
     "webcharts": "^1.11.6"
   },
   "scripts": {
@@ -36,13 +37,15 @@
     "watch": "rollup -c -w"
   },
   "devDependencies": {
-    "babel-plugin-external-helpers": "^6.22.0",
-    "babel-preset-env": "^1.7.0",
-    "babel-register": "^6.26.0",
-    "prettier": "^1.18.2",
-    "rollup": "^0.66.6",
-    "rollup-plugin-babel": "^3.0.7",
-    "rollup-plugin-json": "^4.0.0"
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-external-helpers": "^7.2.0",
+    "@babel/preset-env": "^7.4.5",
+    "prettier": "^1.19.1",
+    "rollup": "^1.27.1",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-node-resolve": "^5.2.0"
   },
   "repository": {
     "type": "git",

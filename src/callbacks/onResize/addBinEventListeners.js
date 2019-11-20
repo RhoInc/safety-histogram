@@ -1,7 +1,6 @@
 import mouseover from './addBinEventListeners/mouseover';
 import mouseout from './addBinEventListeners/mouseout';
 import click from './addBinEventListeners/click';
-import { mouse } from 'd3';
 
 export default function addBinEventListeners() {
     const context = this;

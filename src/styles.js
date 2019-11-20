@@ -30,6 +30,12 @@ export default function styles() {
         '    position: absolute;' +
         '    top: 0;' +
         '    right: 0;' +
+        '    width: 100%;' +
+        '}',
+        '.sh-ks-test {' +
+        '    position: absolute;' +
+        '    top: 0;' +
+        '    right: 0;' +
         '}',
         '#group-by {' +
         '    width: 100%;' +

@@ -5,7 +5,7 @@ import calculateRiceBinWidth from './calculateBinWidth/calculateRiceBinWidth';
 import calculateScottBinWidth from './calculateBinWidth/calculateScottBinWidth';
 import calculateFDBinWidth from './calculateBinWidth/calculateFDBinWidth';
 import calculateSSBinWidth from './calculateBinWidth/calculateSSBinWidth';
-import { scale, range } from 'd3';
+import { range } from 'd3';
 
 export default function calcualteBinWidth() {
     ['raw', 'custom'].forEach(property => {

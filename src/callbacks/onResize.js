@@ -1,5 +1,5 @@
 import drawZeroRangeBar from './onResize/drawZeroRangeBar';
-import groupBars from './onResize/groupBars';
+import drawSmallMultiples from './onResize/drawSmallMultiples';
 import addHoverBars from './onResize/addHoverBars';
 import addBinEventListeners from './onResize/addBinEventListeners';
 import drawNormalRanges from './onResize/drawNormalRanges';
@@ -12,7 +12,7 @@ export default function onResize() {
     drawZeroRangeBar.call(this);
 
     // Group bars by group-by variable.
-    groupBars.call(this);
+    drawSmallMultiples.call(this);
 
     // Add invisible bars for improved hovering.
     addHoverBars.call(this);

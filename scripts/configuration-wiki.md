@@ -188,7 +188,6 @@ The object below contains Webcharts settings that define the safety-histogram ch
             }
         }
     ],
-    "color_by": null,
     "legend": {},
     "aspect": 3
 }

@@ -13,7 +13,7 @@ export default function defineSettings() {
 
     // dimensions
     settings.width = 425;
-    settings.height = settings.width/4;
+    settings.height = settings.width / 4;
     settings.resizable = false;
     settings.margin = {
         top: 1,

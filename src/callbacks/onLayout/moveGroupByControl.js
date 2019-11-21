@@ -1,3 +1,1 @@
-export default function moveGroupByControl() {
-
-}
+export default function moveGroupByControl() {}

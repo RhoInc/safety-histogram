@@ -20,15 +20,11 @@ export default function safetyHistogram(element = 'body', settings = {}) {
     const mergedSettings = Object.assign(
         {},
         JSON.parse(JSON.stringify(configuration.settings)), // clone settings
-        settings,
+        settings
     );
     const syncedSettings = configuration.syncSettings(mergedSettings);
     const controlsSettings = {
-        inputs: configuration
-            .syncControlInputs(
-                configuration.controlInputs(),
-                syncedSettings,
-            ),
+        inputs: configuration.syncControlInputs(configuration.controlInputs(), syncedSettings)
     };
     const chartSettings = clone(syncedSettings);
     const multiplesSettings = clone(syncedSettings);
@@ -36,44 +32,31 @@ export default function safetyHistogram(element = 'body', settings = {}) {
         {},
         {
             cols: syncedSettings.details.map(detail => detail.value_col),
-            headers: syncedSettings.details.map(detail => detail.label),
+            headers: syncedSettings.details.map(detail => detail.label)
         },
-        syncedSettings,
+        syncedSettings
     );
 
     // Define controls.
-    const controls = createControls(
-        containers.controls.node(),
-        controlsSettings,
-    );
+    const controls = createControls(containers.controls.node(), controlsSettings);
 
     // Define chart.
-    const chart = createChart(
-        containers.chart.node(),
-        chartSettings,
-        controls,
-    );
+    const chart = createChart(containers.chart.node(), chartSettings, controls);
     chart.settings = clone(chartSettings);
     for (const callback in callbacks)
         chart.on(callback.substring(2).toLowerCase(), callbacks[callback]);
 
     // Define multiples.
-    const multiples = createChart(
-        containers.multiples.node(),
-        multiplesSettings,
-    );
+    const multiples = createChart(containers.multiples.node(), multiplesSettings);
     multiples.settings = clone(multiplesSettings);
 
     // Define listing.
-    const listing = createTable(
-        containers.listing.node(),
-        listingSettings
-    );
+    const listing = createTable(containers.listing.node(), listingSettings);
     listing.settings = clone(listingSettings);
 
     // Attach listing to chart.
     chart.containers = containers;
-    chart.multiples = multiples
+    chart.multiples = multiples;
     chart.listing = listing;
     listing.chart = chart;
 

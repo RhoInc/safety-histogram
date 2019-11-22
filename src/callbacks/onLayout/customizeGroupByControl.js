@@ -10,11 +10,10 @@ export default function customizeGroupByControl() {
     if (groupControl.datum().values.length === 1) groupControl.style('display', 'none');
     else {
         const select = groupControl.selectAll('select').on('change', function(d) {
-            console.log(this.value);
+            context.config.group_label = this.value;
             context.config.group_by = context.config.groups.find(
                 group => group.label === this.value
             ).value_col;
-            console.log(context.config.group_by);
             context.draw();
         });
 

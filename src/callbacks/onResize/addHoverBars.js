@@ -2,6 +2,7 @@ import { select } from 'd3';
 
 export default function addHoverBars() {
     const context = this;
+    const safetyHistogram = this.sh || this;
 
     const bins = this.svg.selectAll('.bar-group').each(function(d) {
         const g = select(this);
@@ -24,9 +25,11 @@ export default function addHoverBars() {
             });
         d.footnote =
             `<span style = 'font-weight: bold'>${d.values.raw.length} records</span> with ` +
-            `${context.measure.current} values &ge;<span style = 'font-weight: bold'>` +
-            `${context.config.x.d3format1(d.rangeLow)}</span> and ${
+            `${safetyHistogram.measure.current} values &ge;<span style = 'font-weight: bold'>` +
+            `${safetyHistogram.config.x.d3format1(d.rangeLow)}</span> and ${
                 d.rangeHigh < context.config.x.domain[1] ? '&lt;' : '&le;'
-            }<span style = 'font-weight: bold'>${context.config.x.d3format1(d.rangeHigh)}</span>`;
+            }<span style = 'font-weight: bold'>${safetyHistogram.config.x.d3format1(
+                d.rangeHigh
+            )}</span>`;
     });
 }

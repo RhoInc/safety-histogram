@@ -4,7 +4,7 @@ export default function drawNormalRanges() {
     this.controls.wrap.select('.normal-range-list').remove();
     this.svg.select('.normal-ranges').remove();
 
-    if (this.config.displayNormalRange && this.filtered_data.length > 0) {
+    if (this.config.display_normal_range && this.filtered_data.length > 0) {
         // Capture distinct normal ranges in filtered data.
         const normalRanges = nest()
             .key(d => `${d[this.config.normal_col_low]},${d[this.config.normal_col_high]}`) // set key to comma-delimited normal range

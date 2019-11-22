@@ -55,7 +55,7 @@ export default function controlInputs() {
         {
             type: 'checkbox',
             label: 'Normal Range',
-            option: 'displayNormalRange'
+            option: 'display_normal_range'
         },
         {
             type: 'radio',

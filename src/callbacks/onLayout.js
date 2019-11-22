@@ -6,7 +6,6 @@ import addXdomainZoomButton from './onLayout/addXdomainZoomButton';
 import customizeBinsEventListener from './onLayout/customizeBinsEventListener';
 import addParticipantCountContainer from './onLayout/addParticipantCountContainer';
 import addRemovedRecordsContainer from './onLayout/addRemovedRecordsContainer';
-import addBorderAboveChart from './onLayout/addBorderAboveChart';
 import addFootnoteContainer from './onLayout/addFootnoteContainer';
 
 export default function onLayout() {
@@ -18,6 +17,5 @@ export default function onLayout() {
     customizeBinsEventListener.call(this);
     addParticipantCountContainer.call(this);
     addRemovedRecordsContainer.call(this);
-    addBorderAboveChart.call(this);
     addFootnoteContainer.call(this);
 }

@@ -3,13 +3,12 @@ export default function customizeBinsEventListener() {
 
     this.controls.Algorithm.selectAll('.wc-control-label')
         .append('span')
-        .classed('algorithm-explanation', true)
+        .classed('sh-algorithm-explanation', true)
         .html(' &#9432')
-        .style('cursor', 'pointer')
         .on('click', () => {
             if (this.config.x.bin_algorithm !== 'Custom')
                 window.open(
-                    `https:// en.wikipedia.org/wiki/Histogram#${this.config.x.bin_algorithm
+                    `https://en.wikipedia.org/wiki/Histogram#${this.config.x.bin_algorithm
                         .replace(/ /g, '_')
                         .replace('Freedman-Diaconis', 'Freedman%E2%80%93Diaconis')}`
                 );

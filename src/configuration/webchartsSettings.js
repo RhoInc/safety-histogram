@@ -26,6 +26,7 @@ export default function webchartsSettings() {
             }
         ],
         legend: {},
-        aspect: 3
+        aspect: 3,
+        gridlines: 'y'
     };
 }

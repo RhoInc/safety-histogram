@@ -5,7 +5,7 @@ import click from './addBinEventListeners/click';
 export default function addBinEventListeners() {
     const context = this;
 
-    const barGroups = this.svg.selectAll('.bar-group').style('cursor', 'pointer');
+    const barGroups = this.svg.selectAll('.bar-group');
 
     barGroups
         .on('mouseover', function(d) {

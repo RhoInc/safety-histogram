@@ -5,26 +5,21 @@ export default function syncSettings(settings) {
     settings.x.bin_algorithm = settings.bin_algorithm;
     settings.marks[0].per[0] = settings.value_col;
 
-    // update normal range settings if normal_range is set to false
-    if (!settings.normal_range) {
-        settings.normal_col_low = null;
-        settings.normal_col_high = null;
-        settings.displayNormalRange = false;
-    }
-
-    // handle a string argument to filters
+    // Handle a string argument to filters.
     if (!(settings.filters instanceof Array))
         settings.filters = typeof settings.filters === 'string' ? [settings.filters] : [];
 
-    // handle a string argument to groups
+    // Handle a string argument to groups.
     if (!(settings.groups instanceof Array))
         settings.groups = typeof settings.groups === 'string' ? [settings.groups] : [];
 
     // stratification
     const defaultGroup = { value_col: 'sh_none', label: 'None' };
-    if (!(settings.groups instanceof Array && settings.groups.length))
+    if (!(settings.groups instanceof Array && settings.groups.length)) {
         settings.groups = [defaultGroup];
-    else
+        if (settings.group_by)
+            settings.groups.push({ value_col: settings.group_by, label: settings.group_by });
+    } else
         settings.groups = [defaultGroup].concat(
             settings.groups.map(group => {
                 return {
@@ -43,6 +38,7 @@ export default function syncSettings(settings) {
                 label: settings.groups.find(group => group.value_col === value).label
             };
         });
+    settings.draw_multiples = settings.groups.length > 1;
 
     // Set initial group-by variable.
     settings.group_by = settings.group_by
@@ -50,7 +46,11 @@ export default function syncSettings(settings) {
         : settings.groups.length > 1
         ? settings.groups[1].value_col
         : defaultGroup.value_col;
-    console.log(settings.group_by);
+    settings.group_label = settings.group_by
+        ? settings.groups.find(group => group.value_col === settings.group_by).label
+        : settings.groups.length > 1
+        ? settings.groups[1].label
+        : defaultGroup.label;
 
     // handle a string argument to details
     if (!(settings.details instanceof Array))
@@ -102,6 +102,17 @@ export default function syncSettings(settings) {
                 });
         });
         settings.details = defaultDetails;
+    }
+
+    // Maintain backward compatibility for displayNormalRange.
+    if (settings.hasOwnProperty('displayNormalRange'))
+        settings.display_normal_range = settings.displayNormalRange;
+
+    // Update normal range settings if normal_range is set to false.
+    if (!settings.normal_range) {
+        settings.normal_col_low = null;
+        settings.normal_col_high = null;
+        settings.display_normal_range = false;
     }
 
     return settings;

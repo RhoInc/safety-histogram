@@ -20,7 +20,11 @@ d3.csv(
                     {value_col: 'RACE', label: 'Race'},
                     {value_col: 'ARM', label: 'Treatment Group'},
                 ],
-                displayNormalRange: true,
+                display_normal_range: true,
+                annotate_bin_boundaries: true,
+                test_normality: true,
+                group_by: 'ARM',
+                compare_distributions: true,
             } // settings
         );
         instance.init(data);

@@ -11,6 +11,15 @@ export default function resetRenderer() {
         .classed('selected', false)
         .selectAll('.bar')
         .attr('fill-opacity', 0.75);
+    if (this.config.draw_multiples && this.multiples && this.multiples.multiples) {
+        this.multiples.multiples.forEach(multiple => {
+            multiple.svg
+                .selectAll('.bar-group')
+                .classed('selected', false)
+                .selectAll('.bar')
+                .attr('fill-opacity', 0.75);
+        });
+    }
 
     // Reset footnotes.
     this.footnotes.barClick

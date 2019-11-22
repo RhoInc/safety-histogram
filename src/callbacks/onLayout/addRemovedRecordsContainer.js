@@ -22,24 +22,11 @@ export default function addRemovedRecordsNote() {
                 : '';
         this.removedRecords.container = this.controls.wrap
             .append('div')
-            .style({
-                position: 'absolute',
-                'font-style': 'italic',
-                bottom: '0px',
-                right: 0
-            })
+            .classed('sh-head-note sh-head-note--removed-records', true)
             .text(message);
         this.removedRecords.container
             .append('span')
-            .style({
-                color: 'blue',
-                'text-decoration': 'underline',
-                'font-style': 'normal',
-                'font-weight': 'bold',
-                cursor: 'pointer',
-                'font-size': '16px',
-                'margin-left': '5px'
-            })
+            .classed('sh-clear-note', true)
             .html('<sup>x</sup>')
             .on('click', () => this.removedRecords.container.style('display', 'none'));
     }

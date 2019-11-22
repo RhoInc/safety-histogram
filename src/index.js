@@ -3,19 +3,18 @@ import './util/polyfills';
 import './util/moveTo';
 import clone from './util/clone';
 
-// DOM
+// configuration
+import configuration from './configuration/index';
+
+// DOM manipulation
 import layout from './layout';
 import styles from './styles';
 
 // displays
-import configuration from './configuration/index';
 import { createChart, createControls, createTable } from 'webcharts';
 import callbacks from './callbacks/index';
 
 export default function safetyHistogram(element = 'body', settings = {}) {
-    const containers = layout(element);
-    styles();
-
     // Merge and sync settings.
     const mergedSettings = Object.assign(
         {},
@@ -36,6 +35,10 @@ export default function safetyHistogram(element = 'body', settings = {}) {
         },
         syncedSettings
     );
+
+    // Manipulate DOM and define a style sheet.
+    const containers = layout(element);
+    const styleSheet = styles(syncedSettings);
 
     // Define controls.
     const controls = createControls(containers.controls.node(), controlsSettings);

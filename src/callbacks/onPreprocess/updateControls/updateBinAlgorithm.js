@@ -1,10 +1,10 @@
 export default function updateBinAlogrithm() {
-    this.controls.Algorithm.selectAll('.algorithm-explanation')
-        .style('display', this.config.x.bin_algorithm !== 'Custom' ? null : 'none')
+    this.controls.Algorithm.selectAll('.sh-algorithm-explanation')
+        .classed('sh-hidden', this.config.x.bin_algorithm === 'Custom')
         .attr(
             'title',
             this.config.x.bin_algorithm !== 'Custom'
-                ? `View information on ${this.config.x.bin_algorithm}`
+                ? `Click to view information on ${this.config.x.bin_algorithm}.`
                 : null
         );
 }

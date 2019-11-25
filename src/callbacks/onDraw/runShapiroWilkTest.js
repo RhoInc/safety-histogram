@@ -1,10 +1,11 @@
-import jerzy from 'jerzy';
+import vector from '../../util/stats/vector';
+import normality from '../../util/stats/normality';
 
 // TODO: Code review the shapiroWilk method because it differs slightly from the R calculation.
 export default function runShapiroWilkTest() {
     if (this.config.test_normality) {
-        const x = new jerzy.Vector(this.raw_data.map(d => +d[this.config.x.column]));
-        this.sw = jerzy.Normality.shapiroWilk(x);
+        const x = new vector.Vector(this.raw_data.map(d => +d[this.config.x.column]));
+        this.sw = normality.shapiroWilk(x);
 
         // Annotate p-value.
         this.wrap.select('span.sh-sw-test').remove();
@@ -35,4 +36,5 @@ export default function runShapiroWilkTest() {
                 window.open('https://en.wikipedia.org/wiki/Shapiro%E2%80%93Wilk_test');
             });
     }
+
 }

@@ -62,4 +62,4 @@ Numeric.secant = function(f, a, b, eps) {
 	return (q[0] + q[1]) / 2;
 }
 
-module.exports.Numeric = Numeric;
+export default Numeric;

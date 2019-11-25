@@ -11,16 +11,5 @@ export default function defineSettings() {
     settings.y = Object.assign({}, this.config.y);
     settings.y.label = '';
 
-    // dimensions
-    settings.width = 425;
-    settings.height = settings.width / 4;
-    settings.resizable = false;
-    //settings.margin = {
-    //    top: 1,
-    //    right: 1,
-    //    bottom: 1,
-    //    left: 1
-    //};
-
     return settings;
 }

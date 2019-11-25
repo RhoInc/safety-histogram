@@ -1,4 +1,4 @@
-var distributions = require('./distributions');
+import distributions from './distributions';
 
 const Power = function() {};
 
@@ -11,4 +11,4 @@ Power.sampleSize = function(a, power, sd, effect) {
 	return (2 * Math.pow(n.inverse(1 - a / 2) + n.inverse(power), 2) * Math.pow(sd, 2)) / Math.pow(effect, 2);
 };
 
-module.exports.Power = Power;
+export default Power;

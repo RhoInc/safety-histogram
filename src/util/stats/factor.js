@@ -28,4 +28,4 @@ Factor.prototype.groups = function() {
 	return this.levels.length;
 };
 
-module.exports.Factor = Factor;
+export default Factor;

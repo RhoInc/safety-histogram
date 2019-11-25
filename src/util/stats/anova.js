@@ -1,5 +1,5 @@
-var vector = require('./vector');
-var distributions = require('./distributions');
+import vector from './vector';
+import distributions from './distributions';
 
 const Anova = function() {};
 
@@ -45,4 +45,4 @@ Anova.oneway = function(x, y) {
 	return result;
 }
 
-module.exports.Anova = Anova;
+export default Anova;

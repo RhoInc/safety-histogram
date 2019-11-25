@@ -237,5 +237,7 @@ function Sequence(min, max, step) {
 	}
 };
 
-module.exports.Vector = Vector;
-module.exports.Sequence = Sequence;
+export default {
+    Vector,
+    Sequence,
+}

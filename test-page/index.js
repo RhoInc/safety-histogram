@@ -15,7 +15,7 @@ d3.csv(
                     {value_col: 'USUBJID', label: 'Participant ID'},
                 ],
                 groups: [
-                    {value_col: 'SITEID', label: 'Site ID'},
+                    {value_col: 'SITE', label: 'Site'},
                     {value_col: 'SEX', label: 'Sex'},
                     {value_col: 'RACE', label: 'Race'},
                     {value_col: 'ARM', label: 'Treatment Group'},
@@ -23,7 +23,7 @@ d3.csv(
                 display_normal_range: true,
                 annotate_bin_boundaries: true,
                 test_normality: true,
-                group_by: 'ARM',
+                group_by: 'SITE',
                 compare_distributions: true,
             } // settings
         );

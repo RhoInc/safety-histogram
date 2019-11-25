@@ -1,4 +1,4 @@
-var numeric = require('./numeric');
+import numeric from './numeric';
 
 const Misc = function() {};
 
@@ -86,4 +86,4 @@ Misc.fac = function(n) {
 	return result;
 }
 
-module.exports.Misc = Misc;
+export default Misc;

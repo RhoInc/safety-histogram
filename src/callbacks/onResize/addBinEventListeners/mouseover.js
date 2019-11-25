@@ -7,11 +7,7 @@ export default function mouseover(element, d) {
 
     // Update bar details footnote.
     safetyHistogram.footnotes.barDetails.html(
-        `Bar encompasses ${d.footnote}${
-            this.sh
-                ? ` where <span style = 'font-weight: bold'>${safetyHistogram.config.group_label} = ${this.filters[0].val}</span>`
-                : ''
-        }.`
+        `Bar encompasses ${d.footnote}.`
     );
 
     // Highlight bar.

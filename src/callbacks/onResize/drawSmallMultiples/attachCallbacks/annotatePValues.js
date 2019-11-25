@@ -1,11 +1,6 @@
-import jerzy from 'jerzy';
-
-// TODO: Clean up the jerzy library by declaring any undeclared variables, like the methods themselves.
-export default function runKolmogorovSmirnovTest() {
+export default function annotatePValues() {
     if (this.sh.config.compare_distributions) {
-        const x = new jerzy.Vector(this.raw_data.map(d => +d[this.config.x.column]));
-        const y = new jerzy.Vector(this.filtered_data.map(d => +d[this.config.x.column]));
-        this.ks = jerzy.Nonparametric.kolmogorovSmirnov(x, y);
+        this.ks = this.sh.groups.find(group => group.value === this.filters[0].val).ks;
 
         // Annotate p-value.
         const pValue = this.wrap

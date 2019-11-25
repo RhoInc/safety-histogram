@@ -1,6 +1,6 @@
-var vector = require('./vector');
-var misc = require('./misc');
-var numeric = require('./numeric');
+import vector from './vector';
+import misc from './misc';
+import numeric from './numeric';
 
 /*
  * Normal distribution
@@ -17,7 +17,7 @@ Normal.prototype._de = function(x) {
 };
 
 Normal.prototype._di = function(x) {
-	return 0.5 * (1 + misc.Misc.erf((x - this.mean) / (Math.sqrt(this.variance) * Math.sqrt(2))));
+	return 0.5 * (1 + misc.erf((x - this.mean) / (Math.sqrt(this.variance) * Math.sqrt(2))));
 };
 
 Normal.prototype.dens = function(arg) {
@@ -109,15 +109,15 @@ const T = function(df) {
 };
 
 T.prototype._de = function(x) {
-	return (misc.Misc.gamma((this.df + 1) / 2) / (Math.sqrt(this.df * Math.PI) * misc.Misc.gamma(this.df / 2))) 
+	return (misc.gamma((this.df + 1) / 2) / (Math.sqrt(this.df * Math.PI) * misc.gamma(this.df / 2))) 
 		* Math.pow((1 + Math.pow(x, 2) / this.df), -(this.df + 1) / 2);
 };
 
 T.prototype._di = function(x) {
 	if (x < 0) {
-		return 0.5 * misc.Misc.rbeta(this.df / (Math.pow(x, 2) + this.df), this.df / 2, 0.5);
+		return 0.5 * misc.rbeta(this.df / (Math.pow(x, 2) + this.df), this.df / 2, 0.5);
 	} else {
-		return 1 - 0.5 * misc.Misc.rbeta(this.df / (Math.pow(x, 2) + this.df), this.df / 2, 0.5);
+		return 1 - 0.5 * misc.rbeta(this.df / (Math.pow(x, 2) + this.df), this.df / 2, 0.5);
 	}
 };
 
@@ -203,7 +203,7 @@ const F = function(df1, df2) {
 };
 
 F.prototype._di = function(x) {
-	return misc.Misc.rbeta((this.df1 * x) / (this.df1 * x + this.df2), this.df1 / 2, this.df2 / 2);
+	return misc.rbeta((this.df1 * x) / (this.df1 * x + this.df2), this.df1 / 2, this.df2 / 2);
 };
 
 F.prototype.distr = function(arg) {
@@ -218,8 +218,10 @@ F.prototype.distr = function(arg) {
 	}
 };
 
-module.exports.Normal = Normal;
-module.exports.StandardNormal = StandardNormal;
-module.exports.T = T;
-module.exports.F = F;
-module.exports.Kolmogorov = Kolmogorov;
+export default {
+    Normal,
+    StandardNormal,
+    T,
+    F,
+    Kolmogorov,
+}

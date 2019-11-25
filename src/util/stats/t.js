@@ -1,5 +1,5 @@
-var vector = require('./vector');
-var distributions = require('./distributions');
+import vector from './vector';
+import distributions from './distributions';
 
 const StudentT = function(){};
 
@@ -41,4 +41,4 @@ StudentT._onesample = function(sample, mu) {
 	return result;
 };
 
-module.exports.StudentT = StudentT;
+export default StudentT;

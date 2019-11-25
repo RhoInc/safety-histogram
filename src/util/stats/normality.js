@@ -1,6 +1,6 @@
-var matrix = require('./matrix');
-var vector = require('./vector');
-var distributions = require('./distributions');
+import matrix from './matrix';
+import vector from './vector';
+import distributions from './distributions';
 
 const Normality = function() {};
 
@@ -81,4 +81,4 @@ Normality.shapiroWilk = function(x) {
 	return result;
 };
 
-module.exports.Normality = Normality;
+export default Normality;

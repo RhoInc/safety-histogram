@@ -1,4 +1,4 @@
-var distributions = require('./distributions');
+import distributions from './distributions';
 
 const Regression = function() {};
 
@@ -56,4 +56,4 @@ Regression.linear = function(x, y) {
 	return result;
 };
 
-module.exports.Regression = Regression;
+export default Regression;

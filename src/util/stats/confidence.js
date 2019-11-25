@@ -1,4 +1,4 @@
-var distributions = require('./distributions');
+import distributions from './distributions';
 
 const Confidence = function() {};
 
@@ -22,4 +22,4 @@ Confidence.normalLower = function(x, c) {
 	return(x.mean() - t.inverse(1 - alpha) * x.sem());
 };
 
-module.exports.Confidence = Confidence;
+export default Confidence;

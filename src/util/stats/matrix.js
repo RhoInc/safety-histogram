@@ -25,4 +25,4 @@ Matrix.prototype.dot = function(m) {
 	return new Matrix(result); 
 };
 
-module.exports.Matrix = Matrix;
+export default Matrix;

@@ -1,3 +1,6 @@
+[jerzy](https://github.com/pieterprovoost/jerzy) is a CommonJS library of statistics in JavaScript.
+The codebase does not bundle without editing, so the library has been copied here and updated to function as a modern, modular JavaScript library.
+
 # jerzy
 
 Jerzy is a JavaScript statistics library

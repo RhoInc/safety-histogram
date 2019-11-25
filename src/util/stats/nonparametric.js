@@ -1,5 +1,5 @@
-var vector = require('./vector');
-var distributions = require('./distributions');
+import vector from './vector';
+import distributions from './distributions';
 
 const Nonparametric = function() {};
 
@@ -23,4 +23,4 @@ Nonparametric.kolmogorovSmirnov = function(x, y) {
 	};
 }
 
-module.exports.Nonparametric = Nonparametric;
+export default Nonparametric;

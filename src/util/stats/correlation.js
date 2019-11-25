@@ -1,4 +1,4 @@
-var distributions = require('./distributions');
+import distributions from './distributions';
 
 const Correlation = function() {};
 
@@ -20,4 +20,4 @@ Correlation.pearson = function(x, y) {
 	return result;
 };
 
-module.exports.Correlation = Correlation;
+export default Correlation;

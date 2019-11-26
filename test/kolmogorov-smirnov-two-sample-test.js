@@ -5,7 +5,7 @@ const parse = require('csv-parse/lib/sync');
 const d3 = require('d3');
 const vector = require('../src/util/stats/vector').default;
 const nonparametric = require('../src/util/stats/nonparametric').default;
-const writer = require('csv-writer'); // TODO: save data to .csv 
+const writer = require('csv-writer');
 
 fetch('https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinical-trials/renderer-specific/adbds.csv')
     .then(response => response.text())

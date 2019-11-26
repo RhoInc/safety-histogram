@@ -176,7 +176,7 @@ a boolean that dictates whether x-axis tick labels appear between bars or at reg
 ## settings.test_normality
 `boolean`
 
-a boolean that dictates whether x-axis tick labels appear between bars or at regular intervals along the x-axis
+a boolean that dictates whether a Shapiro-Wilk normality test will be run and annotated in the top right of the chart
 
 **default:** `false`
 
@@ -194,7 +194,7 @@ the name of the variable by which to group the data initially
 ## settings.compare_distributions
 `boolean`
 
-a boolean that dictates whether the a two-sample test will be run for each subgroup
+a boolean that dictates whether the a Kolmogorov-Smirnov two-sample test will be run for each subgroup and annotated in the top right of each small multiple
 
 **default:** `false`
 

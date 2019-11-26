@@ -2,6 +2,7 @@ import { set } from 'd3';
 import vector from '../../util/stats/vector';
 import nonparametric from '../../util/stats/nonparametric';
 
+// TODO: Code review the kolmogorovSmirnov method because it's slow as hell
 export default function runKolmogorovSmirnovTest() {
     if (this.config.compare_distributions && this.config.group_by !== 'sh_none') {
         const allResults = new vector.Vector(this.raw_data.map(d => +d[this.config.x.column]));

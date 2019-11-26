@@ -10,10 +10,10 @@ export default function attachCallbacks() {
 
     this.multiples.on('draw', function() {
         annotatePercentage.call(this);
+        annotatePValues.call(this);
     });
 
     this.multiples.on('resize', function() {
-        annotatePValues.call(this);
         addHoverBars.call(this);
         addBinEventListeners.call(this);
     });

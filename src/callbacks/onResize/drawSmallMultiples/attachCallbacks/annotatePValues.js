@@ -1,3 +1,5 @@
+import { format } from 'd3';
+
 export default function annotatePValues() {
     if (this.sh.config.compare_distributions) {
         this.ks = this.sh.groups.find(group => group.value === this.filters[0].val).ks;
@@ -16,7 +18,7 @@ export default function annotatePValues() {
                 'The two-sample Kolmogorov-Smirnov test tests whether two underlying one-dimensional probability distributions differ.\n' +
                     `In this case the test compares the distribution of results where ${this.sh.config.group_label} = ${this.filters[0].val} with that of the full set of results.`
             )
-            .text(`p = ${d3.format('.2f')(this.ks.p)}`);
+            .text(`p = ${format('.2f')(this.ks.p)}`);
 
         pValue
             .append('span')

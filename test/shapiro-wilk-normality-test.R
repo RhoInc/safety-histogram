@@ -1,3 +1,5 @@
+# TODO: compare R output with JavaScript output
+
 library(magrittr)
 library(data.table)
 library(dplyr)

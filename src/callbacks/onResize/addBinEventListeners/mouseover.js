@@ -23,7 +23,7 @@ export default function mouseover(element, d) {
         otherCharts.forEach(chart => {
             chart.marks[0].groups.each(function(di) {
                 if (di.key === d.key) {
-                    const selection = d3.select(this);
+                    const selection = select(this);
                     if (!/trident/i.test(navigator.userAgent)) selection.moveToFront();
                     selection.selectAll('.bar').attr('stroke', 'black');
                 }

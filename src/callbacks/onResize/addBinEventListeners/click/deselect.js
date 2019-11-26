@@ -25,11 +25,5 @@ export default function deselect(element, d) {
         })
         .text('Click a bar for details.');
 
-    safetyHistogram.footnotes.barDetails.text(
-        `${d.values.raw.length} records with ` +
-            `${safetyHistogram.measure.current} values from ` +
-            `${safetyHistogram.config.x.d3format1(
-                d.rangeLow
-            )} to ${safetyHistogram.config.x.d3format1(d.rangeHigh)}`
-    );
+    safetyHistogram.footnotes.barDetails.html(`Bar encompases ${d.footnote}.`);
 }

@@ -137,7 +137,7 @@
         },
         "bin_algorithm": {
             "title": "Initial Binning Algorithm",
-            "description": "a boolean that dictates whether the normal range will be displayed initially",
+            "description": "the name of the binning algorithm with which to bin the data initially",
             "type": "string",
             "default": "Scott's normal reference rule",
             "enum": [

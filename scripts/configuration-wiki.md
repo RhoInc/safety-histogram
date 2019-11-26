@@ -140,7 +140,7 @@ the name of the initially displayed medical sign; defaults to the first measure 
 ## settings.bin_algorithm
 `string`
 
-a boolean that dictates whether the normal range will be displayed initially
+the name of the binning algorithm with which to bin the data initially
 
 **default:** `"Scott's normal reference rule"`
 

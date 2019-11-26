@@ -4,8 +4,7 @@ import attachCallbacks from './drawSmallMultiples/attachCallbacks';
 
 export default function drawSmallMultiples() {
     // Destroy previously drawn small multiples.
-    if (this.multiples)
-        this.multiples.destroy();
+    if (this.multiples) this.multiples.destroy();
 
     if (this.config.draw_multiples && this.config.group_by !== 'sh_none') {
         // Update settings.

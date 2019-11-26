@@ -4,16 +4,13 @@ import nonparametric from '../../util/stats/nonparametric';
 
 export default function runKolmogorovSmirnovTest() {
     if (this.config.compare_distributions && this.config.group_by !== 'sh_none') {
-        const allResults = new vector.Vector(
-            this.raw_data
-                .map(d => +d[this.config.x.column])
-        );
+        const allResults = new vector.Vector(this.raw_data.map(d => +d[this.config.x.column]));
 
         this.groups = set(this.initial_data.map(d => d[this.config.group_by]))
             .values()
             .map(value => {
                 const group = {
-                    value,
+                    value
                 };
                 group.results = new vector.Vector(
                     this.raw_data

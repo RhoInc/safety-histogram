@@ -84,6 +84,29 @@
             "data-type": "either",
             "required": false
         },
+        "groups": {
+            "title": "Group Variables",
+            "description": "an array of variables and metadata that will appear as options in the Group by dropdown",
+            "type": "array",
+            "items": {
+                "properties": {
+                    "label": {
+                        "description": "a description of the variable",
+                        "title": "Variable Label",
+                        "type": "string"
+                    },
+                    "value_col": {
+                        "description": "the name of the variable",
+                        "title": "Variable Name",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "data-mapping": true,
+            "data-type": "either",
+            "required": false
+        },
         "details": {
             "title": "Listing Variables",
             "description": "an array of variables and metadata that will appear in the data listing",
@@ -112,18 +135,6 @@
             "description": "the name of the initially displayed medical sign; defaults to the first measure in the data",
             "type": "string"
         },
-        "normal_range": {
-            "title": "Generate Normal Range Control?",
-            "description": "a boolean that dictates whether the normal range control will be generated",
-            "type": "boolean",
-            "default": true
-        },
-        "displayNormalRange": {
-            "title": "Display Normal Range?",
-            "description": "a boolean that dictates whether the normal range will be displayed initially",
-            "type": "boolean",
-            "default": false
-        },
         "bin_algorithm": {
             "title": "Initial Binning Algorithm",
             "description": "a boolean that dictates whether the normal range will be displayed initially",
@@ -138,9 +149,38 @@
                 "Shimazaki and Shinomoto's choice"
             ]
         },
+        "normal_range": {
+            "title": "Generate Normal Range Control?",
+            "description": "a boolean that dictates whether the normal range control will be generated",
+            "type": "boolean",
+            "default": true
+        },
+        "display_normal_range": {
+            "title": "Display Normal Range?",
+            "description": "a boolean that dictates whether the normal range will be displayed initially",
+            "type": "boolean",
+            "default": false
+        },
         "annotate_bin_boundaries": {
             "title": "Annotate Bin Boundaries?",
             "description": "a boolean that dictates whether x-axis tick labels appear between bars or at regular intervals along the x-axis",
+            "type": "boolean",
+            "default": false
+        },
+        "test_normality": {
+            "title": "Annotate Bin Boundaries?",
+            "description": "a boolean that dictates whether x-axis tick labels appear between bars or at regular intervals along the x-axis",
+            "type": "boolean",
+            "default": false
+        },
+        "group_by": {
+            "title": "Initial Grouping",
+            "description": "the name of the variable by which to group the data initially",
+            "type": "string"
+        },
+        "compare_distributions": {
+            "title": "Compare Distributions of Subgroups with Population?",
+            "description": "a boolean that dictates whether the a two-sample test will be run for each subgroup",
             "type": "boolean",
             "default": false
         }

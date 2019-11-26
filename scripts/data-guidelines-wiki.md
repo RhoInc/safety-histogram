@@ -15,4 +15,5 @@ required and optional variables:
 |`normal_col_low`|_STNRLO_|**numeric**|a variable that contains the lower limit of normal of the medical sign||
 |`normal_col_high`|_STNRHI_|**numeric**|a variable that contains the upper limit of normal of the medical sign||
 |`filters[]`||**either**|an array of variables and metadata that will appear in the controls as data filters||
+|`groups[]`||**either**|an array of variables and metadata that will appear as options in the Group by dropdown||
 |`details[]`||**either**|an array of variables and metadata that will appear in the data listing||

@@ -36,5 +36,4 @@ export default function runShapiroWilkTest() {
                 window.open('https://en.wikipedia.org/wiki/Shapiro%E2%80%93Wilk_test');
             });
     }
-
 }

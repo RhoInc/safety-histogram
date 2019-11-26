@@ -23,23 +23,20 @@ export default function addHoverBars() {
                 stroke: 'black',
                 'stroke-opacity': 0
             });
-        d.footnote =
-            `<span style = 'font-weight: bold'>${
-                d.values.raw.length
-            } records</span> where ${
-                context.sh
-                    ? `<span style = 'font-weight: bold'>${safetyHistogram.config.group_label} = ${context.filters[0].val}</span> and`
-                    : ''
-            } ${
-                safetyHistogram.measure.current
-            } is &ge;<span style = 'font-weight: bold'>${
-                safetyHistogram.config.x.d3format1(d.rangeLow)
-            }</span> and ${
-                d.rangeHigh < context.config.x.domain[1]
-                    ? '&lt;'
-                    : '&le;'
-            }<span style = 'font-weight: bold'>${
-                safetyHistogram.config.x.d3format1(d.rangeHigh)
-            }</span>`;
+        d.footnote = `<span style = 'font-weight: bold'>${
+            d.values.raw.length
+        } records</span> where ${
+            context.sh
+                ? `<span style = 'font-weight: bold'>${safetyHistogram.config.group_label} = ${context.filters[0].val}</span> and`
+                : ''
+        } ${
+            safetyHistogram.measure.current
+        } is &ge;<span style = 'font-weight: bold'>${safetyHistogram.config.x.d3format1(
+            d.rangeLow
+        )}</span> and ${
+            d.rangeHigh < context.config.x.domain[1] ? '&lt;' : '&le;'
+        }<span style = 'font-weight: bold'>${safetyHistogram.config.x.d3format1(
+            d.rangeHigh
+        )}</span>`;
     });
 }

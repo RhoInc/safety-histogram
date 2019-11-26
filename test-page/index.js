@@ -23,7 +23,7 @@ d3.csv(
                 display_normal_range: true,
                 annotate_bin_boundaries: true,
                 test_normality: true,
-                group_by: 'SITE',
+                group_by: 'ARM',
                 compare_distributions: true,
             } // settings
         );

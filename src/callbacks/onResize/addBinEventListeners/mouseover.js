@@ -6,9 +6,7 @@ export default function mouseover(element, d) {
     const safetyHistogram = this.sh ? this.sh : this;
 
     // Update bar details footnote.
-    safetyHistogram.footnotes.barDetails.html(
-        `Bar encompasses ${d.footnote}.`
-    );
+    safetyHistogram.footnotes.barDetails.html(`Bar encompasses ${d.footnote}.`);
 
     // Highlight bar.
     const selection = select(element);

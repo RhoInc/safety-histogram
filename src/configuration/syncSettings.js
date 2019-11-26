@@ -41,11 +41,12 @@ export default function syncSettings(settings) {
     settings.draw_multiples = settings.groups.length > 1;
 
     // Set initial group-by variable.
-    settings.group_by = settings.group_by
-        ? settings.group_by
-        : settings.groups.length > 1
-        ? settings.groups[1].value_col
-        : defaultGroup.value_col;
+    settings.group_by =
+        settings.group_by && settings.groups.some(group => group.value_col === settings.group_by)
+            ? settings.group_by
+            : settings.groups.length > 1
+            ? settings.groups[1].value_col
+            : defaultGroup.value_col;
     settings.group_label = settings.group_by
         ? settings.groups.find(group => group.value_col === settings.group_by).label
         : settings.groups.length > 1

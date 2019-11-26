@@ -82,6 +82,29 @@ the name of the variable
 
 
 
+## settings.groups
+`array`
+
+an array of variables and metadata that will appear as options in the Group by dropdown
+
+**default:** none
+
+### settings.groups[].label
+`string`
+
+a description of the variable
+
+**default:** none
+
+### settings.groups[].value_col
+`string`
+
+the name of the variable
+
+**default:** none
+
+
+
 ## settings.details
 `array`
 
@@ -114,24 +137,6 @@ the name of the initially displayed medical sign; defaults to the first measure 
 
 
 
-## settings.normal_range
-`boolean`
-
-a boolean that dictates whether the normal range control will be generated
-
-**default:** `true`
-
-
-
-## settings.displayNormalRange
-`boolean`
-
-a boolean that dictates whether the normal range will be displayed initially
-
-**default:** `false`
-
-
-
 ## settings.bin_algorithm
 `string`
 
@@ -141,10 +146,55 @@ a boolean that dictates whether the normal range will be displayed initially
 
 
 
+## settings.normal_range
+`boolean`
+
+a boolean that dictates whether the normal range control will be generated
+
+**default:** `true`
+
+
+
+## settings.display_normal_range
+`boolean`
+
+a boolean that dictates whether the normal range will be displayed initially
+
+**default:** `false`
+
+
+
 ## settings.annotate_bin_boundaries
 `boolean`
 
 a boolean that dictates whether x-axis tick labels appear between bars or at regular intervals along the x-axis
+
+**default:** `false`
+
+
+
+## settings.test_normality
+`boolean`
+
+a boolean that dictates whether x-axis tick labels appear between bars or at regular intervals along the x-axis
+
+**default:** `false`
+
+
+
+## settings.group_by
+`string`
+
+the name of the variable by which to group the data initially
+
+**default:** none
+
+
+
+## settings.compare_distributions
+`boolean`
+
+a boolean that dictates whether the a two-sample test will be run for each subgroup
 
 **default:** `false`
 

@@ -31,7 +31,7 @@ export default function runShapiroWilkTest() {
         pValue
             .append('span')
             .classed('sh-statistical-test__info', true)
-            .attr('title', 'Click to view information on the Shapiro-Wilkd test.')
+            .attr('title', 'Click to view information on the Shapiro-Wilk test.')
             .html(' &#9432')
             .on('click', () => {
                 window.open('https://en.wikipedia.org/wiki/Shapiro%E2%80%93Wilk_test');

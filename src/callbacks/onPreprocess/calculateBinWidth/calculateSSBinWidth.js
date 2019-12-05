@@ -1,7 +1,7 @@
 import { range, layout, mean, sum, min } from 'd3';
 
 export default function calculateSSBinWidth(obj) {
-    // https:// en.wikipedia.org/wiki/Histogram#Shimazaki_and_Shinomoto's_choice
+    // https://en.wikipedia.org/wiki/Histogram#Shimazaki_and_Shinomoto's_choice
     const nBins = range(2, 100); // number of bins
     const cost = range(nBins.length); // cost function results
     const binWidths = [...cost]; // bin widths

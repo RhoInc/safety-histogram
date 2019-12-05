@@ -6,13 +6,7 @@ export default function mouseover(element, d) {
     const safetyHistogram = this.sh ? this.sh : this;
 
     // Update bar details footnote.
-    safetyHistogram.footnotes.barDetails.html(
-        `Bar encompasses ${d.footnote}${
-            this.sh
-                ? ` where <span style = 'font-weight: bold'>${safetyHistogram.config.group_label} = ${this.filters[0].val}</span>`
-                : ''
-        }.`
-    );
+    safetyHistogram.footnotes.barDetails.html(`Bar encompasses ${d.footnote}.`);
 
     // Highlight bar.
     const selection = select(element);
@@ -29,7 +23,7 @@ export default function mouseover(element, d) {
         otherCharts.forEach(chart => {
             chart.marks[0].groups.each(function(di) {
                 if (di.key === d.key) {
-                    const selection = d3.select(this);
+                    const selection = select(this);
                     if (!/trident/i.test(navigator.userAgent)) selection.moveToFront();
                     selection.selectAll('.bar').attr('stroke', 'black');
                 }

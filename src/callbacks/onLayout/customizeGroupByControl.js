@@ -14,6 +14,7 @@ export default function customizeGroupByControl() {
             context.config.group_by = context.config.groups.find(
                 group => group.label === this.value
             ).value_col;
+
             context.draw();
         });
 

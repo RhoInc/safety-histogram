@@ -5,7 +5,7 @@
         ? define(['d3', 'webcharts'], factory)
         : ((global = global || self),
           (global.safetyHistogram = factory(global.d3, global.webCharts)));
-})(this, function(d3$1, webcharts) {
+})(this, function(d3, webcharts) {
     'use strict';
 
     if (typeof Object.assign != 'function') {
@@ -123,13 +123,13 @@
             return Math.log(x) * Math.LOG10E;
         };
 
-    d3$1.selection.prototype.moveToFront = function() {
+    d3.selection.prototype.moveToFront = function() {
         return this.each(function() {
             this.parentNode.appendChild(this);
         });
     };
 
-    d3$1.selection.prototype.moveToBack = function() {
+    d3.selection.prototype.moveToBack = function() {
         return this.each(function() {
             var firstChild = this.parentNode.firstChild;
 
@@ -327,7 +327,7 @@
                 })
             ); // Remove duplicate values.
 
-        settings.groups = d3$1
+        settings.groups = d3
             .set(
                 settings.groups.map(function(group) {
                     return group.value_col;
@@ -344,11 +344,15 @@
             });
         settings.draw_multiples = settings.groups.length > 1; // Set initial group-by variable.
 
-        settings.group_by = settings.group_by
-            ? settings.group_by
-            : settings.groups.length > 1
-            ? settings.groups[1].value_col
-            : defaultGroup.value_col;
+        settings.group_by =
+            settings.group_by &&
+            settings.groups.some(function(group) {
+                return group.value_col === settings.group_by;
+            })
+                ? settings.group_by
+                : settings.groups.length > 1
+                ? settings.groups[1].value_col
+                : defaultGroup.value_col;
         settings.group_label = settings.group_by
             ? settings.groups.find(function(group) {
                   return group.value_col === settings.group_by;
@@ -551,7 +555,7 @@
 
     function layout(element) {
         var containers = {
-            main: d3$1
+            main: d3
                 .select(element)
                 .append('div')
                 .classed('safety-histogram', true)
@@ -748,6 +752,30 @@
             'data-type': 'either',
             required: false
         },
+        groups: {
+            title: 'Group Variables',
+            description:
+                'an array of variables and metadata that will appear as options in the Group by dropdown',
+            type: 'array',
+            items: {
+                properties: {
+                    label: {
+                        description: 'a description of the variable',
+                        title: 'Variable Label',
+                        type: 'string'
+                    },
+                    value_col: {
+                        description: 'the name of the variable',
+                        title: 'Variable Name',
+                        type: 'string'
+                    }
+                },
+                type: 'object'
+            },
+            'data-mapping': true,
+            'data-type': 'either',
+            required: false
+        },
         details: {
             title: 'Listing Variables',
             description: 'an array of variables and metadata that will appear in the data listing',
@@ -777,24 +805,9 @@
                 'the name of the initially displayed medical sign; defaults to the first measure in the data',
             type: 'string'
         },
-        normal_range: {
-            title: 'Generate Normal Range Control?',
-            description:
-                'a boolean that dictates whether the normal range control will be generated',
-            type: 'boolean',
-            default: true
-        },
-        displayNormalRange: {
-            title: 'Display Normal Range?',
-            description:
-                'a boolean that dictates whether the normal range will be displayed initially',
-            type: 'boolean',
-            default: false
-        },
         bin_algorithm: {
             title: 'Initial Binning Algorithm',
-            description:
-                'a boolean that dictates whether the normal range will be displayed initially',
+            description: 'the name of the binning algorithm with which to bin the data initially',
             type: 'string',
             default: "Scott's normal reference rule",
             enum: [
@@ -806,10 +819,43 @@
                 "Shimazaki and Shinomoto's choice"
             ]
         },
+        normal_range: {
+            title: 'Generate Normal Range Control?',
+            description:
+                'a boolean that dictates whether the normal range control will be generated',
+            type: 'boolean',
+            default: true
+        },
+        display_normal_range: {
+            title: 'Display Normal Range?',
+            description:
+                'a boolean that dictates whether the normal range will be displayed initially',
+            type: 'boolean',
+            default: false
+        },
         annotate_bin_boundaries: {
             title: 'Annotate Bin Boundaries?',
             description:
                 'a boolean that dictates whether x-axis tick labels appear between bars or at regular intervals along the x-axis',
+            type: 'boolean',
+            default: false
+        },
+        test_normality: {
+            title: 'Test Normality?',
+            description:
+                'a boolean that dictates whether a Shapiro-Wilk normality test will be run and annotated in the top right of the chart',
+            type: 'boolean',
+            default: false
+        },
+        group_by: {
+            title: 'Initial Grouping',
+            description: 'the name of the variable by which to group the data initially',
+            type: 'string'
+        },
+        compare_distributions: {
+            title: 'Compare Distributions of Subgroups with Population?',
+            description:
+                'a boolean that dictates whether the a Kolmogorov-Smirnov two-sample test will be run for each subgroup and annotated in the top right of each small multiple',
             type: 'boolean',
             default: false
         }
@@ -838,7 +884,7 @@
 
                 console.error(errorText.replace(/<.+?>/g, '')); // Print error to containing element.
 
-                var div = d3$1.select(_this.div);
+                var div = d3.select(_this.div);
                 div.append('p')
                     .html(errorText)
                     .style('color', 'red');
@@ -927,7 +973,7 @@
         var _this = this;
 
         this.participantCount = {
-            N: d3$1
+            N: d3
                 .set(
                     this.raw_data.map(function(d) {
                         return d[_this.config.id_col];
@@ -956,7 +1002,7 @@
             else nonMissingResults.push(d);
         }); // Nest missing and nonmissing results by participant.
 
-        var participantsWithMissingResults = d3$1
+        var participantsWithMissingResults = d3
             .nest()
             .key(function(d) {
                 return d[_this.config.id_col];
@@ -965,7 +1011,7 @@
                 return d.length;
             })
             .entries(missingResults);
-        var participantsWithNonMissingResults = d3$1
+        var participantsWithNonMissingResults = d3
             .nest()
             .key(function(d) {
                 return d[_this.config.id_col];
@@ -996,7 +1042,7 @@
                 )
             ); // Count the number of records with missing results.
 
-        this.removedRecords.missing = d3$1.sum(
+        this.removedRecords.missing = d3.sum(
             participantsWithMissingResults.filter(function(d) {
                 return _this.removedRecords.placeholderRecords.indexOf(d.key) < 0;
             }),
@@ -1076,7 +1122,7 @@
     function participant() {
         var _this = this;
 
-        this.participants = d3$1
+        this.participants = d3
             .set(
                 this.initial_data.map(function(d) {
                     return d[_this.config.id_col];
@@ -1089,7 +1135,7 @@
     function measure() {
         var _this = this;
 
-        this.measures = d3$1
+        this.measures = d3
             .set(
                 this.initial_data.map(function(d) {
                     return d[_this.config.measure_col];
@@ -1097,7 +1143,7 @@
             )
             .values()
             .sort();
-        this.sh_measures = d3$1
+        this.sh_measures = d3
             .set(
                 this.initial_data.map(function(d) {
                     return d.sh_measure;
@@ -1156,7 +1202,7 @@
                     )
                 );
             } else {
-                var levels = d3$1
+                var levels = d3
                     .set(
                         _this.raw_data.map(function(d) {
                             return d[input.value_col];
@@ -1204,7 +1250,7 @@
                 return d.label.toLowerCase().replace(/ /g, '-');
             })
             .each(function(d) {
-                var controlGroup = d3$1.select(this);
+                var controlGroup = d3.select(this);
                 controlGroup.classed(d.type, true);
                 context.controls[d.label] = controlGroup;
             }); // Give x-axis controls a common class name.
@@ -1554,7 +1600,7 @@
         }); // Filter results on current x-domain.
 
         if (this.measure.current !== this.measure.previous)
-            this.config.x.domain = d3$1.extent(
+            this.config.x.domain = d3.extent(
                 this.measure.raw.data.map(function(d) {
                     return +d[_this.config.value_col];
                 })
@@ -1578,9 +1624,9 @@
                 .sort(function(a, b) {
                     return a - b;
                 });
-            obj.uniqueResults = d3$1.set(obj.results).values(); // Calculate extent of data.
+            obj.uniqueResults = d3.set(obj.results).values(); // Calculate extent of data.
 
-            obj.domain = property !== 'custom' ? d3$1.extent(obj.results) : _this.config.x.domain;
+            obj.domain = property !== 'custom' ? d3.extent(obj.results) : _this.config.x.domain;
         });
     }
 
@@ -1621,12 +1667,12 @@
                 n: obj.results.length,
                 nUnique: obj.uniqueResults.length,
                 min: obj.domain[0],
-                q25: d3$1.quantile(obj.results, 0.25),
-                median: d3$1.quantile(obj.results, 0.5),
-                q75: d3$1.quantile(obj.results, 0.75),
+                q25: d3.quantile(obj.results, 0.25),
+                median: d3.quantile(obj.results, 0.5),
+                q75: d3.quantile(obj.results, 0.75),
                 max: obj.domain[1],
                 range: obj.domain[1] - obj.domain[0],
-                std: d3$1.deviation(obj.results)
+                std: d3.deviation(obj.results)
             };
             obj.stats.log10range = obj.stats.range > 0 ? Math.log10(obj.stats.range) : NaN;
             obj.stats.iqr = obj.stats.q75 - obj.stats.q25;
@@ -1634,28 +1680,28 @@
     }
 
     function calculateSquareRootBinWidth(obj) {
-        // https:// en.wikipedia.org/wiki/Histogram#Square-root_choice
+        // https://en.wikipedia.org/wiki/Histogram#Square-root_choice
         var range = this.config.x.domain[1] - this.config.x.domain[0];
         obj.stats.SquareRootBins = Math.ceil(Math.sqrt(obj.stats.n));
         obj.stats.SquareRootBinWidth = range / obj.stats.SquareRootBins;
     }
 
     function calculateSturgesBinWidth(obj) {
-        // https:// en.wikipedia.org/wiki/Histogram#Sturges'_formula
+        // https://en.wikipedia.org/wiki/Histogram#Sturges'_formula
         var range = this.config.x.domain[1] - this.config.x.domain[0];
         obj.stats.SturgesBins = Math.ceil(Math.log2(obj.stats.n)) + 1;
         obj.stats.SturgesBinWidth = range / obj.stats.SturgesBins;
     }
 
     function calculateRiceBinWidth(obj) {
-        // https:// en.wikipedia.org/wiki/Histogram#Rice_Rule
+        // https://en.wikipedia.org/wiki/Histogram#Rice_Rule
         var range = this.config.x.domain[1] - this.config.x.domain[0];
         obj.stats.RiceBins = Math.ceil(2 * Math.pow(obj.stats.n, 1.0 / 3.0));
         obj.stats.RiceBinWidth = range / obj.stats.RiceBins;
     }
 
     function calculateScottBinWidth(obj) {
-        // https:// en.wikipedia.org/wiki/Histogram#Scott's_normal_reference_rule
+        // https://en.wikipedia.org/wiki/Histogram#Scott's_normal_reference_rule
         var range = this.config.x.domain[1] - this.config.x.domain[0];
         obj.stats.ScottBinWidth = (3.5 * obj.stats.std) / Math.pow(obj.stats.n, 1.0 / 3.0);
         obj.stats.ScottBins =
@@ -1665,7 +1711,7 @@
     }
 
     function calculateFDBinWidth(obj) {
-        // https:// en.wikipedia.org/wiki/Histogram#Freedman%E2%80%93Diaconis'_choice
+        // https://en.wikipedia.org/wiki/Histogram#Freedman%E2%80%93Diaconis'_choice
         var range = this.config.x.domain[1] - this.config.x.domain[0];
         obj.stats.FDBinWidth = (2 * obj.stats.iqr) / Math.pow(obj.stats.n, 1.0 / 3.0);
         obj.stats.FDBins =
@@ -1673,10 +1719,10 @@
     }
 
     function calculateSSBinWidth(obj) {
-        // https:// en.wikipedia.org/wiki/Histogram#Shimazaki_and_Shinomoto's_choice
-        var nBins = d3$1.range(2, 100); // number of bins
+        // https://en.wikipedia.org/wiki/Histogram#Shimazaki_and_Shinomoto's_choice
+        var nBins = d3.range(2, 100); // number of bins
 
-        var cost = d3$1.range(nBins.length); // cost function results
+        var cost = d3.range(nBins.length); // cost function results
 
         var binWidths = _toConsumableArray(cost); // bin widths
 
@@ -1692,17 +1738,17 @@
 
         var _loop = function _loop(i) {
             binWidths[i] = obj.stats.range / nBins[i];
-            binBoundaries[i] = d3$1.range(obj.stats.min, obj.stats.max, obj.stats.range / nBins[i]);
-            bins[i] = d3$1.layout.histogram().bins(nBins[i] - 1)(
+            binBoundaries[i] = d3.range(obj.stats.min, obj.stats.max, obj.stats.range / nBins[i]);
+            bins[i] = d3.layout.histogram().bins(nBins[i] - 1)(
                 /*.bins(binBoundaries[i])*/
                 obj.results
             );
             binSizes[i] = bins[i].map(function(arr) {
                 return arr.length;
             });
-            meanBinSizes[i] = d3$1.mean(binSizes[i]);
+            meanBinSizes[i] = d3.mean(binSizes[i]);
             residuals[i] =
-                d3$1.sum(
+                d3.sum(
                     binSizes[i].map(function(binSize) {
                         return Math.pow(binSize - meanBinSizes[i], 2);
                     })
@@ -1726,7 +1772,7 @@
         //    5
         // );
 
-        var minCost = d3$1.min(cost);
+        var minCost = d3.min(cost);
         var idx = cost.findIndex(function(c) {
             return c === minCost;
         });
@@ -1798,7 +1844,7 @@
             } // Calculate bin width.
 
             obj.stats.binWidth = obj.stats.range / obj.stats.nBins;
-            obj.stats.binBoundaries = d3$1.range(obj.stats.nBins).concat(obj.domain[1]);
+            obj.stats.binBoundaries = d3.range(obj.stats.nBins).concat(obj.domain[1]);
         }); // Update chart config and set chart data to measure data.
 
         this.config.x.bin = this.measure[this.measure.domain_state].stats.nBins;
@@ -1816,13 +1862,13 @@
             this.config.x.precisionFactor > 0
                 ? '.0f'
                 : '.'.concat(Math.abs(this.config.x.precisionFactor) + 1, 'f');
-        this.config.x.d3format = d3$1.format(this.config.x.format); // one more precision please: bin format
+        this.config.x.d3format = d3.format(this.config.x.format); // one more precision please: bin format
 
         this.config.x.format1 =
             this.config.x.precisionFactor > 0
                 ? '.1f'
                 : '.'.concat(Math.abs(this.config.x.precisionFactor) + 2, 'f');
-        this.config.x.d3format1 = d3$1.format(this.config.x.format1); // define the size of the x-axis limit increments
+        this.config.x.d3format1 = d3.format(this.config.x.format1); // define the size of the x-axis limit increments
 
         var step =
             this.measure[this.measure.domain_state].stats.range > 0
@@ -1941,14 +1987,14 @@
         var _this = this;
 
         // count the number of unique ids in the current chart and calculate the percentage
-        this.participantCount.n = d3$1
+        this.participantCount.n = d3
             .set(
                 this.filtered_data.map(function(d) {
                     return d[_this.config.id_col];
                 })
             )
             .values().length;
-        this.participantCount.percentage = d3$1.format('0.1%')(
+        this.participantCount.percentage = d3.format('0.1%')(
             this.participantCount.n / this.participantCount.N
         ); // clear the annotation
 
@@ -2003,7 +2049,7 @@
             return _this.config.x.d3format(d);
         });
         if (
-            d3$1
+            d3
                 .nest()
                 .key(function(d) {
                     return d;
@@ -2019,7 +2065,7 @@
             this.config.x.format = this.config.x.format1;
     }
 
-    const Vector = function(elements) {
+    var Vector = function Vector(elements) {
         this.elements = elements;
     };
 
@@ -2041,38 +2087,47 @@
 
     Vector.prototype.abs = function() {
         var values = [];
+
         for (var i = 0; i < this.elements.length; i++) {
             values.push(Math.abs(this.elements[i]));
         }
+
         return new Vector(values);
     };
 
     Vector.prototype.dot = function(v) {
         var result = 0;
+
         for (var i = 0; i < this.length(); i++) {
             result = result + this.elements[i] * v.elements[i];
         }
+
         return result;
     };
 
     Vector.prototype.sum = function() {
         var sum = 0;
+
         for (var i = 0, n = this.elements.length; i < n; ++i) {
             sum += this.elements[i];
         }
+
         return sum;
     };
 
     Vector.prototype.log = function() {
         var result = new Vector(this.elements.slice(0));
+
         for (var i = 0, n = this.elements.length; i < n; ++i) {
             result.elements[i] = Math.log(result.elements[i]);
         }
+
         return result;
     };
 
     Vector.prototype.add = function(term) {
         var result = new Vector(this.elements.slice(0));
+
         if (term instanceof Vector) {
             for (var i = 0, n = result.elements.length; i < n; ++i) {
                 result.elements[i] += term.elements[i];
@@ -2082,6 +2137,7 @@
                 result.elements[i] += term;
             }
         }
+
         return result;
     };
 
@@ -2091,6 +2147,7 @@
 
     Vector.prototype.multiply = function(factor) {
         var result = new Vector(this.elements.slice(0));
+
         if (factor instanceof Vector) {
             for (var i = 0, n = result.elements.length; i < n; ++i) {
                 result.elements[i] = result.elements[i] * factor.elements[i];
@@ -2100,11 +2157,13 @@
                 result.elements[i] = result.elements[i] * factor;
             }
         }
+
         return result;
     };
 
     Vector.prototype.pow = function(p) {
         var result = new Vector(this.elements.slice(0));
+
         if (p instanceof Vector) {
             for (var i = 0, n = result.elements.length; i < n; ++i) {
                 result.elements[i] = Math.pow(result.elements[i], p.elements[i]);
@@ -2114,14 +2173,17 @@
                 result.elements[i] = Math.pow(result.elements[i], p);
             }
         }
+
         return result;
     };
 
     Vector.prototype.mean = function() {
         var sum = 0;
+
         for (var i = 0, n = this.elements.length; i < n; ++i) {
             sum += this.elements[i];
         }
+
         return sum / this.elements.length;
     };
 
@@ -2131,31 +2193,39 @@
 
     Vector.prototype.sortElements = function() {
         var sorted = this.elements.slice(0);
+
         for (var i = 0, j, tmp; i < sorted.length; ++i) {
             tmp = sorted[i];
+
             for (j = i - 1; j >= 0 && sorted[j] > tmp; --j) {
                 sorted[j + 1] = sorted[j];
             }
+
             sorted[j + 1] = tmp;
         }
+
         return sorted;
     };
 
     Vector.prototype._ecdf = function(x) {
         var sorted = this.sortElements();
         var count = 0;
+
         for (var i = 0; i < sorted.length && sorted[i] <= x; i++) {
             count++;
         }
+
         return count / sorted.length;
     };
 
     Vector.prototype.ecdf = function(arg) {
         if (arg instanceof Vector) {
             var result = new Vector([]);
+
             for (var i = 0; i < arg.length(); i++) {
                 result.push(this._ecdf(arg.elements[i]));
             }
+
             return result;
         } else {
             return this._ecdf(arg);
@@ -2177,7 +2247,6 @@
     Vector.prototype.toString = function() {
         return '[' + this.elements.join(', ') + ']';
     };
-
     /*
      * unbiased sample variance
      */
@@ -2185,7 +2254,6 @@
     Vector.prototype.variance = function() {
         return this.ss() / (this.elements.length - 1);
     };
-
     /*
      * biased sample variance
      */
@@ -2193,7 +2261,6 @@
     Vector.prototype.biasedVariance = function() {
         return this.ss() / this.elements.length;
     };
-
     /*
      * corrected sample standard deviation
      */
@@ -2201,7 +2268,6 @@
     Vector.prototype.sd = function() {
         return Math.sqrt(this.variance());
     };
-
     /*
      * uncorrected sample standard deviation
      */
@@ -2209,7 +2275,6 @@
     Vector.prototype.uncorrectedSd = function() {
         return Math.sqrt(this.biasedVariance());
     };
-
     /*
      * standard error of the mean
      */
@@ -2217,7 +2282,6 @@
     Vector.prototype.sem = function() {
         return this.sd() / Math.sqrt(this.elements.length);
     };
-
     /*
      * total sum of squares
      */
@@ -2225,12 +2289,13 @@
     Vector.prototype.ss = function() {
         var m = this.mean();
         var sum = 0;
+
         for (var i = 0, n = this.elements.length; i < n; ++i) {
             sum += Math.pow(this.elements[i] - m, 2);
         }
+
         return sum;
     };
-
     /*
      * residuals
      */
@@ -2268,61 +2333,22 @@
     };
 
     Sequence.prototype = new Vector();
-
     Sequence.prototype.constructor = Sequence;
 
     function Sequence(min, max, step) {
         this.elements = [];
+
         for (var i = min; i <= max; i = i + step) {
             this.elements.push(i);
         }
     }
-    var Vector_1 = Vector;
-    var Sequence_1 = Sequence;
 
     var vector = {
-        Vector: Vector_1,
-        Sequence: Sequence_1
+        Vector: Vector,
+        Sequence: Sequence
     };
 
-    const Factor = function(elements) {
-        this.levels = [];
-        this.factors = [];
-        for (var i = 0; i < elements.length; i++) {
-            if ((index = this.levels.indexOf(elements[i])) != -1) {
-                this.factors.push(index);
-            } else {
-                this.factors.push(this.levels.length);
-                this.levels.push(elements[i]);
-            }
-        }
-    };
-
-    Factor.prototype.group = function(g) {
-        var indices = [];
-        var i = -1;
-        while ((i = this.factors.indexOf(g, i + 1)) != -1) {
-            indices.push(i);
-        }
-        return indices;
-    };
-
-    Factor.prototype.length = function() {
-        return this.factors.length;
-    };
-
-    Factor.prototype.groups = function() {
-        return this.levels.length;
-    };
-
-    var Factor_1 = Factor;
-
-    var factor = {
-        Factor: Factor_1
-    };
-
-    const Numeric = function() {};
-
+    var Numeric = function Numeric() {};
     /*
      * adaptive Simpson
      */
@@ -2337,6 +2363,7 @@
         var left = (h / 12) * (fa + 4 * fd + fc);
         var right = (h / 12) * (fc + 4 * fe + fb);
         var s2 = left + right;
+
         if (depth <= 0 || Math.abs(s2 - s) <= 15 * eps) {
             return s2 + (s2 - s) / 15;
         } else {
@@ -2356,13 +2383,13 @@
         var s = (h / 6) * (fa + 4 * fc + fb);
         return this._adaptive(f, a, b, eps, s, fa, fb, fc, depth);
     };
-
     /*
      * root finding: bisection
      */
 
     Numeric.bisection = function(f, a, b, eps) {
         eps = typeof eps !== 'undefined' ? eps : 1e-9;
+
         while (Math.abs(a - b) > eps) {
             if (f(a) * f((a + b) / 2) < 0) {
                 b = (a + b) / 2;
@@ -2370,9 +2397,9 @@
                 a = (a + b) / 2;
             }
         }
+
         return (a + b) / 2;
     };
-
     /*
      * root finding: secant
      */
@@ -2380,21 +2407,16 @@
     Numeric.secant = function(f, a, b, eps) {
         eps = typeof eps !== 'undefined' ? eps : 1e-9;
         var q = [a, b];
+
         while (Math.abs(q[0] - q[1]) > eps) {
             q.push((q[0] * f(q[1]) - q[1] * f(q[0])) / (f(q[1]) - f(q[0])));
             q.shift();
         }
+
         return (q[0] + q[1]) / 2;
     };
 
-    var Numeric_1 = Numeric;
-
-    var numeric = {
-        Numeric: Numeric_1
-    };
-
-    const Misc = function() {};
-
+    var Misc = function Misc() {};
     /*
      * error function
      */
@@ -2403,14 +2425,15 @@
         var term;
         var sum = 0;
         var n = 0;
+
         do {
             term = (Math.pow(-1, n) * Math.pow(z, 2 * n + 1)) / this.fac(n) / (2 * n + 1);
             sum = sum + term;
             n++;
         } while (Math.abs(term) > 0.000000000001);
+
         return (sum * 2) / Math.sqrt(Math.PI);
     };
-
     /*
      * gamma function
      */
@@ -2428,18 +2451,21 @@
             1.5056327351493116e-7
         ];
         var g = 7;
+
         if (n < 0.5) {
             return Math.PI / (Math.sin(Math.PI * n) * this.gamma(1 - n));
         }
+
         n -= 1;
         var a = p[0];
         var t = n + g + 0.5;
+
         for (var i = 1; i < p.length; i++) {
             a += p[i] / (n + i);
         }
+
         return Math.sqrt(2 * Math.PI) * Math.pow(t, n + 0.5) * Math.exp(-t) * a;
     };
-
     /*
      * beta function
      */
@@ -2447,13 +2473,12 @@
     Misc.beta = function(x, y) {
         return (this.gamma(x) * this.gamma(y)) / this.gamma(x + y);
     };
-
     /*
      * incomplete beta function
      */
 
     Misc.ibeta = function(x, a, b) {
-        return numeric.Numeric.adaptiveSimpson(
+        return Numeric.Numeric.adaptiveSimpson(
             function(y) {
                 return Math.pow(y, a - 1) * Math.pow(1 - y, b - 1);
             },
@@ -2463,7 +2488,6 @@
             10
         );
     };
-
     /*
      * regularized incomplete beta function
      */
@@ -2471,30 +2495,25 @@
     Misc.rbeta = function(x, a, b) {
         return this.ibeta(x, a, b) / this.beta(a, b);
     };
-
     /*
      * factorial
      */
 
     Misc.fac = function(n) {
         var result = 1;
+
         for (var i = 2; i <= n; i++) {
             result = result * i;
         }
+
         return result;
-    };
-
-    var Misc_1 = Misc;
-
-    var misc = {
-        Misc: Misc_1
     };
 
     /*
      * Normal distribution
      */
 
-    const Normal = function(mean, variance) {
+    var Normal = function Normal(mean, variance) {
         this.mean = mean;
         this.variance = variance;
     };
@@ -2507,17 +2526,17 @@
     };
 
     Normal.prototype._di = function(x) {
-        return (
-            0.5 * (1 + misc.Misc.erf((x - this.mean) / (Math.sqrt(this.variance) * Math.sqrt(2))))
-        );
+        return 0.5 * (1 + Misc.erf((x - this.mean) / (Math.sqrt(this.variance) * Math.sqrt(2))));
     };
 
     Normal.prototype.dens = function(arg) {
         if (arg instanceof vector.Vector) {
             result = new vector.Vector([]);
+
             for (var i = 0; i < arg.length(); ++i) {
                 result.push(this._de(arg.elements[i]));
             }
+
             return result;
         } else {
             return this._de(arg);
@@ -2527,9 +2546,11 @@
     Normal.prototype.distr = function(arg) {
         if (arg instanceof vector.Vector) {
             result = new vector.Vector([]);
+
             for (var i = 0; i < arg.length(); ++i) {
                 result.push(this._di(arg.elements[i]));
             }
+
             return result;
         } else {
             return this._di(arg);
@@ -2543,25 +2564,21 @@
         var a4 = 1.38357751867269e2;
         var a5 = -3.066479806614716e1;
         var a6 = 2.506628277459239;
-
         var b1 = -5.447609879822406e1;
         var b2 = 1.615858368580409e2;
         var b3 = -1.556989798598866e2;
         var b4 = 6.680131188771972e1;
         var b5 = -1.328068155288572e1;
-
         var c1 = -7.784894002430293e-3;
         var c2 = -3.223964580411365e-1;
         var c3 = -2.400758277161838;
         var c4 = -2.549732539343734;
         var c5 = 4.374664141464968;
         var c6 = 2.938163982698783;
-
         var d1 = 7.784695709041462e-3;
         var d2 = 3.224671290700398e-1;
         var d3 = 2.445134137142996;
         var d4 = 3.754408661907416;
-
         var q, r, y;
 
         if (x < 0.02425) {
@@ -2584,13 +2601,11 @@
 
         return y * this.variance + this.mean;
     };
-
     /*
      * Standard Normal distribution
      */
 
     StandardNormal.prototype = new Normal();
-
     StandardNormal.prototype.constructor = StandardNormal;
 
     function StandardNormal() {
@@ -2601,34 +2616,34 @@
      * T distribution
      */
 
-    const T = function(df) {
+    var T = function T(df) {
         this.df = df;
     };
 
     T.prototype._de = function(x) {
         return (
-            (misc.Misc.gamma((this.df + 1) / 2) /
-                (Math.sqrt(this.df * Math.PI) * misc.Misc.gamma(this.df / 2))) *
+            (Misc.gamma((this.df + 1) / 2) /
+                (Math.sqrt(this.df * Math.PI) * Misc.gamma(this.df / 2))) *
             Math.pow(1 + Math.pow(x, 2) / this.df, -(this.df + 1) / 2)
         );
     };
 
     T.prototype._di = function(x) {
         if (x < 0) {
-            return 0.5 * misc.Misc.rbeta(this.df / (Math.pow(x, 2) + this.df), this.df / 2, 0.5);
+            return 0.5 * Misc.rbeta(this.df / (Math.pow(x, 2) + this.df), this.df / 2, 0.5);
         } else {
-            return (
-                1 - 0.5 * misc.Misc.rbeta(this.df / (Math.pow(x, 2) + this.df), this.df / 2, 0.5)
-            );
+            return 1 - 0.5 * Misc.rbeta(this.df / (Math.pow(x, 2) + this.df), this.df / 2, 0.5);
         }
     };
 
     T.prototype.dens = function(arg) {
         if (arg instanceof vector.Vector) {
             result = new vector.Vector([]);
+
             for (var i = 0; i < arg.length(); ++i) {
                 result.push(this._de(arg.elements[i]));
             }
+
             return result;
         } else {
             return this._de(arg);
@@ -2638,9 +2653,11 @@
     T.prototype.distr = function(arg) {
         if (arg instanceof vector.Vector) {
             result = new vector.Vector([]);
+
             for (var i = 0; i < arg.length(); ++i) {
                 result.push(this._di(arg.elements[i]));
             }
+
             return result;
         } else {
             return this._di(arg);
@@ -2649,7 +2666,7 @@
 
     T.prototype.inverse = function(x) {
         return (function(o, x) {
-            var t = numeric.Numeric.bisection(
+            var t = Numeric.Numeric.bisection(
                 function(y) {
                     return o._di(y) - x;
                 },
@@ -2659,17 +2676,17 @@
             return t;
         })(this, x);
     };
-
     /*
      * Kolmogorov distribution
      */
 
-    const Kolmogorov = function() {};
+    var Kolmogorov = function Kolmogorov() {};
 
     Kolmogorov.prototype._di = function(x) {
         var term;
         var sum = 0;
         var k = 1;
+
         do {
             term = Math.exp(
                 (-Math.pow(2 * k - 1, 2) * Math.pow(Math.PI, 2)) / (8 * Math.pow(x, 2))
@@ -2677,15 +2694,18 @@
             sum = sum + term;
             k++;
         } while (Math.abs(term) > 0.000000000001);
+
         return (Math.sqrt(2 * Math.PI) * sum) / x;
     };
 
     Kolmogorov.prototype.distr = function(arg) {
         if (arg instanceof vector.Vector) {
             result = new vector.Vector([]);
+
             for (var i = 0; i < arg.length(); ++i) {
                 result.push(this._di(arg.elements[i]));
             }
+
             return result;
         } else {
             return this._di(arg);
@@ -2694,7 +2714,7 @@
 
     Kolmogorov.prototype.inverse = function(x) {
         return (function(o, x) {
-            var t = numeric.Numeric.bisection(
+            var t = Numeric.Numeric.bisection(
                 function(y) {
                     return o._di(y) - x;
                 },
@@ -2704,285 +2724,59 @@
             return t;
         })(this, x);
     };
-
     /*
      * F distribution
      */
 
-    const F = function(df1, df2) {
+    var F = function F(df1, df2) {
         this.df1 = df1;
         this.df2 = df2;
     };
 
     F.prototype._di = function(x) {
-        return misc.Misc.rbeta(
-            (this.df1 * x) / (this.df1 * x + this.df2),
-            this.df1 / 2,
-            this.df2 / 2
-        );
+        return Misc.rbeta((this.df1 * x) / (this.df1 * x + this.df2), this.df1 / 2, this.df2 / 2);
     };
 
     F.prototype.distr = function(arg) {
         if (arg instanceof vector.Vector) {
             result = new vector.Vector([]);
+
             for (var i = 0; i < arg.length(); ++i) {
                 result.push(this._di(arg.elements[i]));
             }
+
             return result;
         } else {
             return this._di(arg);
         }
     };
 
-    var Normal_1 = Normal;
-    var StandardNormal_1 = StandardNormal;
-    var T_1 = T;
-    var F_1 = F;
-    var Kolmogorov_1 = Kolmogorov;
-
     var distributions = {
-        Normal: Normal_1,
-        StandardNormal: StandardNormal_1,
-        T: T_1,
-        F: F_1,
-        Kolmogorov: Kolmogorov_1
+        Normal: Normal,
+        StandardNormal: StandardNormal,
+        T: T,
+        F: F,
+        Kolmogorov: Kolmogorov
     };
 
-    const StudentT = function() {};
-
-    StudentT.test = function(first, second) {
-        if (second instanceof vector.Vector) {
-            return this._twosample(first, second);
-        } else {
-            return this._onesample(first, second);
-        }
-    };
-
-    /*
-     * two-sample Student's t-test
-     */
-
-    StudentT._twosample = function(first, second) {
-        var result = {};
-        result.se = Math.sqrt(
-            first.variance() / first.length() + second.variance() / second.length()
-        );
-        result.t = (first.mean() - second.mean()) / result.se;
-        result.df = first.length() + second.length() - 2;
-        var tdistr = new distributions.T(result.df);
-        result.p = 2 * (1 - tdistr.distr(Math.abs(result.t)));
-        return result;
-    };
-
-    /*
-     * one-sample Student's t-test
-     */
-
-    StudentT._onesample = function(sample, mu) {
-        var result = {};
-        result.sample = sample;
-        result.mu = mu;
-        result.se = Math.sqrt(result.sample.variance()) / Math.sqrt(result.sample.length());
-        result.t = (result.sample.mean() - result.mu) / result.se;
-        result.df = result.sample.length() - 1;
-        var tdistr = new distributions.T(result.df);
-        result.p = 2 * (1 - tdistr.distr(Math.abs(result.t)));
-        return result;
-    };
-
-    var StudentT_1 = StudentT;
-
-    var t = {
-        StudentT: StudentT_1
-    };
-
-    const Regression = function() {};
-
-    /*
-     * simple linear regression
-     */
-
-    Regression.linear = function(x, y) {
-        var result = {};
-        result.n = x.length();
-
-        // means
-
-        var mx = x.mean();
-        var my = y.mean();
-
-        // parameters
-
-        var rx = x.add(-mx);
-        var ry = y.add(-my);
-
-        var ssxx = rx.pow(2).sum();
-        var ssyy = ry.pow(2).sum();
-        var ssxy = rx.multiply(ry).sum();
-
-        result.slope = ssxy / ssxx;
-        result.intercept = my - result.slope * mx;
-
-        // sum of squared residuals
-
-        var ssr = y
-            .add(
-                x
-                    .multiply(result.slope)
-                    .add(result.intercept)
-                    .multiply(-1)
-            )
-            .pow(2)
-            .sum();
-
-        // residual standard error
-
-        result.rse = Math.sqrt(ssr / (result.n - 2));
-
-        // slope
-
-        var tdistr = new distributions.T(result.n - 2);
-
-        result.slope_se = result.rse / Math.sqrt(ssxx);
-        result.slope_t = result.slope / result.slope_se;
-        result.slope_p = 2 * (1 - tdistr.distr(Math.abs(result.slope_t)));
-
-        // intercept
-
-        result.intercept_se =
-            (result.rse / Math.sqrt(ssxx) / Math.sqrt(result.n)) * Math.sqrt(x.pow(2).sum());
-        result.intercept_t = result.intercept / result.intercept_se;
-        result.intercept_p = 2 * (1 - tdistr.distr(Math.abs(result.intercept_t)));
-
-        // R-squared
-
-        result.rs = Math.pow(ssxy, 2) / (ssxx * ssyy);
-
-        return result;
-    };
-
-    var Regression_1 = Regression;
-
-    var regression = {
-        Regression: Regression_1
-    };
-
-    const Correlation = function() {};
-
-    /*
-     * Pearson correlation
-     */
-
-    Correlation.pearson = function(x, y) {
-        var result = {};
-        var n = x.length();
-        var mx = x.mean();
-        var my = y.mean();
-        result.r =
-            x
-                .add(-mx)
-                .multiply(y.add(-my))
-                .sum() /
-            Math.sqrt(
-                x
-                    .add(-mx)
-                    .pow(2)
-                    .sum() *
-                    y
-                        .add(-my)
-                        .pow(2)
-                        .sum()
-            );
-        result.t = result.r * Math.sqrt((n - 2) / (1 - Math.pow(result.r, 2)));
-        result.df = n - 2;
-        var tdistr = new distributions.T(result.df);
-        result.p = 2 * (1 - tdistr.distr(Math.abs(result.t)));
-        return result;
-    };
-
-    var Correlation_1 = Correlation;
-
-    var correlation = {
-        Correlation: Correlation_1
-    };
-
-    const Anova = function() {};
-
-    /*
-     * One-way ANOVA
-     */
-
-    Anova.oneway = function(x, y) {
-        var result = {};
-
-        var vectors = [];
-        for (var i = 0; i < x.groups(); i++) {
-            var v = new vector.Vector([]);
-            var indices = x.group(i);
-            for (var j = 0; j < indices.length; j++) {
-                v.push(y.elements[indices[j]]);
-            }
-            vectors.push(v);
-        }
-
-        var mean = new vector.Vector([]);
-        var n = new vector.Vector([]);
-        var v = new vector.Vector([]);
-        for (var i = 0; i < vectors.length; i++) {
-            mean.push(vectors[i].mean());
-            n.push(vectors[i].length());
-            v.push(vectors[i].variance());
-        }
-
-        result.tdf = x.groups() - 1;
-        result.tss = mean
-            .add(-y.mean())
-            .pow(2)
-            .multiply(n)
-            .sum();
-        result.tms = result.tss / result.tdf;
-
-        result.edf = x.length() - x.groups();
-        result.ess = v.multiply(n.add(-1)).sum();
-        result.ems = result.ess / result.edf;
-
-        result.f = result.tms / result.ems;
-
-        var fdistr = new distributions.F(result.tdf, result.edf);
-        result.p = 1 - fdistr.distr(Math.abs(result.f));
-
-        return result;
-    };
-
-    var Anova_1 = Anova;
-
-    var anova = {
-        Anova: Anova_1
-    };
-
-    const Normality = function() {};
+    var Normality = function Normality() {};
 
     Normality.shapiroWilk = function(x) {
-        const result = {};
+        var result = {};
         var xx = x.sort();
         var mean = x.mean();
         var n = x.length();
-        var u = 1 / Math.sqrt(n);
-
-        // m
+        var u = 1 / Math.sqrt(n); // m
 
         var sn = new distributions.StandardNormal();
         var m = new vector.Vector([]);
+
         for (var i = 1; i <= n; i++) {
             m.push(sn.inverse((i - 3 / 8) / (n + 1 / 4)));
-        }
-
-        // c
+        } // c
 
         var md = m.dot(m);
-        var c = m.multiply(1 / Math.sqrt(md));
-
-        // a
+        var c = m.multiply(1 / Math.sqrt(md)); // a
 
         var an =
             -2.706056 * Math.pow(u, 5) +
@@ -2998,7 +2792,6 @@
             0.293762 * Math.pow(u, 2) +
             0.042981 * u +
             c.elements[n - 2];
-
         var phi;
 
         if (n > 5) {
@@ -3010,27 +2803,28 @@
         }
 
         var a = new vector.Vector([]);
+
         if (n > 5) {
             a.push(-an);
             a.push(-ann);
+
             for (var i = 2; i < n - 2; i++) {
                 a.push(m.elements[i] * Math.pow(phi, -1 / 2));
             }
+
             a.push(ann);
             a.push(an);
         } else {
             a.push(-an);
+
             for (var i = 1; i < n - 1; i++) {
                 a.push(m.elements[i] * Math.pow(phi, -1 / 2));
             }
+
             a.push(an);
-        }
+        } // w
 
-        // w
-
-        result.w = Math.pow(a.multiply(xx).sum(), 2) / xx.ss();
-
-        // p
+        result.w = Math.pow(a.multiply(xx).sum(), 2) / xx.ss(); // p
 
         var g, mu, sigma;
 
@@ -3051,147 +2845,19 @@
         var z = (g - mu) / sigma;
         var norm = new distributions.StandardNormal();
         result.p = 1 - norm.distr(z);
-
         return result;
-    };
-
-    var Normality_1 = Normality;
-
-    var normality = {
-        Normality: Normality_1
-    };
-
-    const Confidence = function() {};
-
-    Confidence.normal = function(x, c) {
-        var alpha = 1 - c;
-        var t = new distributions.T(x.length() - 1);
-        var lower = x.mean() - t.inverse(1 - alpha / 2) * x.sem();
-        var upper = x.mean() + t.inverse(1 - alpha / 2) * x.sem();
-        return [lower, upper];
-    };
-
-    Confidence.normalUpper = function(x, c) {
-        var alpha = 1 - c;
-        var t = new distributions.T(x.length() - 1);
-        return x.mean() + t.inverse(1 - alpha) * x.sem();
-    };
-
-    Confidence.normalLower = function(x, c) {
-        var alpha = 1 - c;
-        var t = new distributions.T(x.length() - 1);
-        return x.mean() - t.inverse(1 - alpha) * x.sem();
-    };
-
-    var Confidence_1 = Confidence;
-
-    var confidence = {
-        Confidence: Confidence_1
-    };
-
-    const Power = function() {};
-
-    /*
-     * Sample size calculation
-     */
-
-    Power.sampleSize = function(a, power, sd, effect) {
-        var n = new distributions.Normal(0, 1);
-        return (
-            (2 * Math.pow(n.inverse(1 - a / 2) + n.inverse(power), 2) * Math.pow(sd, 2)) /
-            Math.pow(effect, 2)
-        );
-    };
-
-    var Power_1 = Power;
-
-    var power = {
-        Power: Power_1
-    };
-
-    const Nonparametric = function() {};
-
-    /*
-     * Two-sample Kolmogorov-Smirnov test
-     */
-
-    Nonparametric.kolmogorovSmirnov = function(x, y) {
-        var all = new vector.Vector(x.elements.concat(y.elements)).sort();
-        var ecdfx = x.ecdf(all);
-        var ecdfy = y.ecdf(all);
-        var d = ecdfy
-            .subtract(ecdfx)
-            .abs()
-            .max();
-        var n = (x.length() * y.length()) / (x.length() + y.length());
-        var ks = Math.sqrt(n) * d;
-        var p = 1 - new distributions.Kolmogorov().distr(ks);
-
-        return {
-            d: d,
-            ks: ks,
-            p: p
-        };
-    };
-
-    var Nonparametric_1 = Nonparametric;
-
-    var nonparametric = {
-        Nonparametric: Nonparametric_1
-    };
-
-    var Vector$1 = vector.Vector;
-    var Factor$1 = factor.Factor;
-    var Matrix = factor.Matrix;
-    var Sequence$1 = vector.Sequence;
-    var StudentT$1 = t.StudentT;
-    var Misc$1 = misc.Misc;
-    var Numeric$1 = numeric.Numeric;
-    var Normal$1 = distributions.Normal;
-    var StandardNormal$1 = distributions.StandardNormal;
-    var T$1 = distributions.T;
-    var F$1 = distributions.F;
-    var Kolmogorov$1 = distributions.Kolmogorov;
-    var Regression$1 = regression.Regression;
-    var Correlation$1 = correlation.Correlation;
-    var Anova$1 = anova.Anova;
-    var Normality$1 = normality.Normality;
-    var Confidence$1 = confidence.Confidence;
-    var Power$1 = power.Power;
-    var Nonparametric$1 = nonparametric.Nonparametric;
-
-    var jerzy = {
-        Vector: Vector$1,
-        Factor: Factor$1,
-        Matrix: Matrix,
-        Sequence: Sequence$1,
-        StudentT: StudentT$1,
-        Misc: Misc$1,
-        Numeric: Numeric$1,
-        Normal: Normal$1,
-        StandardNormal: StandardNormal$1,
-        T: T$1,
-        F: F$1,
-        Kolmogorov: Kolmogorov$1,
-        Regression: Regression$1,
-        Correlation: Correlation$1,
-        Anova: Anova$1,
-        Normality: Normality$1,
-        Confidence: Confidence$1,
-        Power: Power$1,
-        Nonparametric: Nonparametric$1
     };
 
     function runShapiroWilkTest() {
         var _this = this;
 
         if (this.config.test_normality) {
-            var x = new jerzy.Vector(
+            var x = new vector.Vector(
                 this.raw_data.map(function(d) {
                     return +d[_this.config.x.column];
                 })
             );
-            this.sw = jerzy.Normality.shapiroWilk(x); // Annotate p-value.
+            this.sw = Normality.shapiroWilk(x); // Annotate p-value.
 
             this.wrap.select('span.sh-sw-test').remove();
             var pValue = this.wrap
@@ -3212,10 +2878,68 @@
             pValue
                 .append('span')
                 .classed('sh-statistical-test__info', true)
-                .attr('title', 'Click to view information on the Shapiro-Wilkd test.')
+                .attr('title', 'Click to view information on the Shapiro-Wilk test.')
                 .html(' &#9432')
                 .on('click', function() {
                     window.open('https://en.wikipedia.org/wiki/Shapiro%E2%80%93Wilk_test');
+                });
+        }
+    }
+
+    var Nonparametric = function Nonparametric() {};
+    /*
+     * Two-sample Kolmogorov-Smirnov test
+     */
+
+    Nonparametric.kolmogorovSmirnov = function(x, y) {
+        var all = new vector.Vector(x.elements.concat(y.elements)).sort();
+        var ecdfx = x.ecdf(all);
+        var ecdfy = y.ecdf(all);
+        var d = ecdfy
+            .subtract(ecdfx)
+            .abs()
+            .max();
+        var n = (x.length() * y.length()) / (x.length() + y.length());
+        var ks = Math.sqrt(n) * d;
+        var p = 1 - new distributions.Kolmogorov().distr(ks);
+        return {
+            d: d,
+            ks: ks,
+            p: p
+        };
+    };
+
+    function runKolmogorovSmirnovTest() {
+        var _this = this;
+
+        if (this.config.compare_distributions && this.config.group_by !== 'sh_none') {
+            var allResults = new vector.Vector(
+                this.raw_data.map(function(d) {
+                    return +d[_this.config.x.column];
+                })
+            );
+            this.groups = d3
+                .set(
+                    this.initial_data.map(function(d) {
+                        return d[_this.config.group_by];
+                    })
+                )
+                .values()
+                .map(function(value) {
+                    var group = {
+                        value: value
+                    };
+                    group.results = new vector.Vector(
+                        _this.raw_data
+                            .filter(function(d) {
+                                return d[_this.config.group_by] === value;
+                            })
+                            .map(function(d) {
+                                return +d[_this.config.x.column];
+                            })
+                    );
+                    group.ks = Nonparametric.kolmogorovSmirnov(allResults, group.results);
+                    return group;
                 });
         }
     }
@@ -3225,6 +2949,7 @@
         resetRenderer.call(this);
         increasePrecision.call(this);
         runShapiroWilkTest.call(this);
+        runKolmogorovSmirnovTest.call(this);
     }
 
     function drawZeroRangeBar() {
@@ -3251,21 +2976,11 @@
     function defineSettings() {
         var settings = clone(this.settings); // x-axis
 
-        settings.x = Object.assign({}, this.config.x);
+        settings.x = clone(this.config.x);
         settings.x.label = ''; // y-axis
 
-        settings.y = Object.assign({}, this.config.y);
-        settings.y.label = ''; // dimensions
-
-        settings.width = 425;
-        settings.height = settings.width / 4;
-        settings.resizable = false; //settings.margin = {
-        //    top: 1,
-        //    right: 1,
-        //    bottom: 1,
-        //    left: 1
-        //};
-
+        settings.y = clone(this.config.y);
+        settings.y.label = '';
         return settings;
     }
 
@@ -3282,21 +2997,13 @@
             );
     }
 
-    function runKolmogorovSmirnovTest() {
+    function annotatePValues() {
         var _this = this;
 
         if (this.sh.config.compare_distributions) {
-            var x = new jerzy.Vector(
-                this.raw_data.map(function(d) {
-                    return +d[_this.config.x.column];
-                })
-            );
-            var y = new jerzy.Vector(
-                this.filtered_data.map(function(d) {
-                    return +d[_this.config.x.column];
-                })
-            );
-            this.ks = jerzy.Nonparametric.kolmogorovSmirnov(x, y); // Annotate p-value.
+            this.ks = this.sh.groups.find(function(group) {
+                return group.value === _this.filters[0].val;
+            }).ks; // Annotate p-value.
 
             var pValue = this.wrap
                 .select('.wc-chart-title')
@@ -3333,7 +3040,7 @@
         var context = this;
         var safetyHistogram = this.sh || this;
         var bins = this.svg.selectAll('.bar-group').each(function(d) {
-            var g = d3$1.select(this);
+            var g = d3.select(this);
             g.selectAll('.hover-bar').remove(); // Drawing a path instead of a rect because Webcharts messes up the original rect on resize.
 
             var x = context.x(d.rangeLow);
@@ -3355,22 +3062,26 @@
                     stroke: 'black',
                     'stroke-opacity': 0
                 });
-            d.footnote =
-                "<span style = 'font-weight: bold'>".concat(
-                    d.values.raw.length,
-                    ' records</span> with '
-                ) +
-                ''.concat(
+            d.footnote = "<span style = 'font-weight: bold'>"
+                .concat(d.values.raw.length, ' records</span> where ')
+                .concat(
+                    context.sh
+                        ? "<span style = 'font-weight: bold'>"
+                              .concat(safetyHistogram.config.group_label, ' = ')
+                              .concat(context.filters[0].val, '</span> and')
+                        : '',
+                    ' '
+                )
+                .concat(
                     safetyHistogram.measure.current,
-                    " values &ge;<span style = 'font-weight: bold'>"
-                ) +
-                ''
-                    .concat(safetyHistogram.config.x.d3format1(d.rangeLow), '</span> and ')
-                    .concat(
-                        d.rangeHigh < context.config.x.domain[1] ? '&lt;' : '&le;',
-                        "<span style = 'font-weight: bold'>"
-                    )
-                    .concat(safetyHistogram.config.x.d3format1(d.rangeHigh), '</span>');
+                    " is &ge;<span style = 'font-weight: bold'>"
+                )
+                .concat(safetyHistogram.config.x.d3format1(d.rangeLow), '</span> and ')
+                .concat(
+                    d.rangeHigh < context.config.x.domain[1] ? '&lt;' : '&le;',
+                    "<span style = 'font-weight: bold'>"
+                )
+                .concat(safetyHistogram.config.x.d3format1(d.rangeHigh), '</span>');
         });
     }
 
@@ -3386,7 +3097,7 @@
                 : '<br>'
         ); // Remove bar highlight.
 
-        var selection = d3$1.select(element);
+        var selection = d3.select(element);
         selection.selectAll('.bar').attr('stroke', this.colorScale()); // Remove highlight from corresponding bar in small multiples.
 
         if (this.config.draw_multiples) {
@@ -3400,7 +3111,7 @@
             otherCharts.forEach(function(chart) {
                 chart.marks[0].groups.each(function(di) {
                     if (di.key === d.key)
-                        d3$1.select(this)
+                        d3.select(this)
                             .selectAll('.bar')
                             .attr('stroke', context.colorScale());
                 });
@@ -3412,20 +3123,9 @@
         var _this = this;
         var safetyHistogram = this.sh ? this.sh : this; // Update bar details footnote.
 
-        safetyHistogram.footnotes.barDetails.html(
-            'Bar encompasses '
-                .concat(d.footnote)
-                .concat(
-                    this.sh
-                        ? " where <span style = 'font-weight: bold'>"
-                              .concat(safetyHistogram.config.group_label, ' = ')
-                              .concat(this.filters[0].val, '</span>')
-                        : '',
-                    '.'
-                )
-        ); // Highlight bar.
+        safetyHistogram.footnotes.barDetails.html('Bar encompasses '.concat(d.footnote, '.')); // Highlight bar.
 
-        var selection = d3$1.select(element);
+        var selection = d3.select(element);
         if (!/trident/i.test(navigator.userAgent)) selection.moveToFront();
         selection.selectAll('.bar').attr('stroke', 'black'); // Highlight corresponding bar in small multiples.
 
@@ -3472,7 +3172,7 @@
             });
         } // Highlight selected bar.
 
-        d3$1.select(element)
+        d3.select(element)
             .select('.bar')
             .attr('fill-opacity', 1); // Update bar click footnote.
 
@@ -3517,20 +3217,14 @@
                 'text-decoration': 'none'
             })
             .text('Click a bar for details.');
-        safetyHistogram.footnotes.barDetails.text(
-            ''.concat(d.values.raw.length, ' records with ') +
-                ''.concat(safetyHistogram.measure.current, ' values from ') +
-                ''
-                    .concat(safetyHistogram.config.x.d3format1(d.rangeLow), ' to ')
-                    .concat(safetyHistogram.config.x.d3format1(d.rangeHigh))
-        );
+        safetyHistogram.footnotes.barDetails.html('Bar encompases '.concat(d.footnote, '.'));
     }
 
     function click(element, d) {
         var safetyHistogram = this.sh ? this.sh : this;
         safetyHistogram.highlightedBin = d.key;
         safetyHistogram.highlighteD = d;
-        var selection = d3$1.select(element);
+        var selection = d3.select(element);
         var selected = selection.classed('selected'); // De-select all bars in the main chart.
 
         safetyHistogram.svg.selectAll('.bar-group').classed('selected', false);
@@ -3572,9 +3266,9 @@
         });
         this.multiples.on('draw', function() {
             annotatePercentage.call(this);
+            annotatePValues.call(this);
         });
         this.multiples.on('resize', function() {
-            runKolmogorovSmirnovTest.call(this);
             addHoverBars.call(this);
             addBinEventListeners.call(this);
         });
@@ -3605,7 +3299,7 @@
 
         if (this.config.display_normal_range && this.filtered_data.length > 0) {
             // Capture distinct normal ranges in filtered data.
-            var normalRanges = d3$1
+            var normalRanges = d3
                 .nest()
                 .key(function(d) {
                     return ''
@@ -3633,7 +3327,7 @@
                             ? ''
                                   .concat(d.lower, ' - ')
                                   .concat(d.upper, ' (')
-                                  .concat(d3$1.format('%')(d.rate), ' of records)')
+                                  .concat(d3.format('%')(d.rate), ' of records)')
                             : ''.concat(d.lower, ' - ').concat(d.upper); // plot if:
                     //  - at least one of the limits of normal fall within the current x-domain
                     //  - the lower limit is less than the current x-domain and the upper limit is greater than current the x-domain
@@ -3731,7 +3425,7 @@
             // Remove bin boundaries.
             this.svg.select('g.bin-boundaries').remove(); // Check for repeats of values formatted with lower precision.
 
-            var repeats = d3$1
+            var repeats = d3
                 .nest()
                 .key(function(d) {
                     return d.value1;
@@ -3767,7 +3461,7 @@
 
             var textDimensions = [];
             texts.each(function(d) {
-                var text = d3$1.select(this);
+                var text = d3.select(this);
                 var bbox = this.getBBox();
                 if (
                     textDimensions.some(function(textDimension) {
@@ -3807,7 +3501,7 @@
 
     function onDestroy() {
         this.listing.destroy();
-        d3$1.select(this.div)
+        d3.select(this.div)
             .selectAll('.loader')
             .remove();
     }

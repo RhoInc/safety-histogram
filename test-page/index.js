@@ -15,7 +15,7 @@ d3.csv(
                     {value_col: 'USUBJID', label: 'Participant ID'},
                 ],
                 groups: [
-                    {value_col: 'SITEID', label: 'Site ID'},
+                    {value_col: 'SITE', label: 'Site'},
                     {value_col: 'SEX', label: 'Sex'},
                     {value_col: 'RACE', label: 'Race'},
                     {value_col: 'ARM', label: 'Treatment Group'},

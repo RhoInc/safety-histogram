@@ -7,7 +7,10 @@ export default function deselect(element, d) {
     safetyHistogram.listing.draw([]);
     safetyHistogram.listing.wrap.style('display', 'none');
 
-    this.svg.selectAll('.bar').attr('fill-opacity', 0.75);
+    // Reset opacity of all bars in main chart.
+    safetyHistogram.svg.selectAll('.bar').attr('fill-opacity', 0.75);
+
+    // Reset opacity of all bars in small multiples.
     if (
         safetyHistogram.config.draw_multiples &&
         safetyHistogram.multiples &&

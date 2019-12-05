@@ -4,11 +4,13 @@ import resetRenderer from '../../../onDraw/resetRenderer';
 export default function select(element, d) {
     const safetyHistogram = this.sh ? this.sh : this;
 
-    // Reduce bin opacity and highlight selected bin.
-    this.svg
+    // Reduce bin opacity of all bars in main chart.
+    safetyHistogram.svg
         .selectAll('.bar-group')
         .selectAll('.bar')
         .attr('fill-opacity', 0.5);
+
+    // Reduce bin opacity of all bars in small multiples.
     if (
         safetyHistogram.config.draw_multiples &&
         safetyHistogram.multiples &&
@@ -21,11 +23,13 @@ export default function select(element, d) {
                 .attr('fill-opacity', 0.5);
         });
     }
+
+    // Highlight selected bar.
     d3select(element)
         .select('.bar')
         .attr('fill-opacity', 1);
 
-    // Update bar click footnote
+    // Update bar click footnote.
     safetyHistogram.footnotes.barClick
         .style({
             cursor: 'pointer',

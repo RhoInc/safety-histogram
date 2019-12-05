@@ -3452,12 +3452,12 @@
     }
 
     function select(element, d) {
-        var safetyHistogram = this.sh ? this.sh : this; // Reduce bin opacity and highlight selected bin.
+        var safetyHistogram = this.sh ? this.sh : this; // Reduce bin opacity of all bars in main chart.
 
-        this.svg
+        safetyHistogram.svg
             .selectAll('.bar-group')
             .selectAll('.bar')
-            .attr('fill-opacity', 0.5);
+            .attr('fill-opacity', 0.5); // Reduce bin opacity of all bars in small multiples.
 
         if (
             safetyHistogram.config.draw_multiples &&
@@ -3470,11 +3470,11 @@
                     .selectAll('.bar')
                     .attr('fill-opacity', 0.5);
             });
-        }
+        } // Highlight selected bar.
 
         d3$1.select(element)
             .select('.bar')
-            .attr('fill-opacity', 1); // Update bar click footnote
+            .attr('fill-opacity', 1); // Update bar click footnote.
 
         safetyHistogram.footnotes.barClick
             .style({
@@ -3497,8 +3497,9 @@
         delete safetyHistogram.highlightedBin;
         delete safetyHistogram.highlighteD;
         safetyHistogram.listing.draw([]);
-        safetyHistogram.listing.wrap.style('display', 'none');
-        this.svg.selectAll('.bar').attr('fill-opacity', 0.75);
+        safetyHistogram.listing.wrap.style('display', 'none'); // Reset opacity of all bars in main chart.
+
+        safetyHistogram.svg.selectAll('.bar').attr('fill-opacity', 0.75); // Reset opacity of all bars in small multiples.
 
         if (
             safetyHistogram.config.draw_multiples &&
@@ -3530,8 +3531,10 @@
         safetyHistogram.highlightedBin = d.key;
         safetyHistogram.highlighteD = d;
         var selection = d3$1.select(element);
-        var selected = selection.classed('selected');
-        this.svg.selectAll('.bar-group').classed('selected', false);
+        var selected = selection.classed('selected'); // De-select all bars in the main chart.
+
+        safetyHistogram.svg.selectAll('.bar-group').classed('selected', false);
+        console.log(safetyHistogram.svg.selectAll('.bar-group')); // De-select all bars in the small multiples.
 
         if (
             safetyHistogram.config.draw_multiples &&
@@ -3541,7 +3544,7 @@
             safetyHistogram.multiples.multiples.forEach(function(multiple) {
                 multiple.svg.selectAll('.bar-group').classed('selected', false);
             });
-        }
+        } // Toggle selected class of clicked bar.
 
         selection.classed('selected', !selected);
         if (!selected) select.call(this, element, d);

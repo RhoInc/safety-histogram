@@ -10,7 +10,12 @@ export default function click(element, d) {
 
     const selection = d3select(element);
     const selected = selection.classed('selected');
-    this.svg.selectAll('.bar-group').classed('selected', false);
+
+    // De-select all bars in the main chart.
+    safetyHistogram.svg.selectAll('.bar-group').classed('selected', false);
+    console.log(safetyHistogram.svg.selectAll('.bar-group'));
+
+    // De-select all bars in the small multiples.
     if (
         safetyHistogram.config.draw_multiples &&
         safetyHistogram.multiples &&
@@ -20,6 +25,8 @@ export default function click(element, d) {
             multiple.svg.selectAll('.bar-group').classed('selected', false);
         });
     }
+
+    // Toggle selected class of clicked bar.
     selection.classed('selected', !selected);
 
     if (!selected) select.call(this, element, d);

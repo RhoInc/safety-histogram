@@ -1,6 +1,7 @@
 import vector from '../../util/stats/vector';
 import normality from '../../util/stats/normality';
 import pValueFormat from '../../util/pValueFormat';
+import validationMessage from '../../util/validationMessage';
 
 // TODO: Code review the shapiroWilk method because it differs slightly from the R calculation.
 export default function runShapiroWilkTest() {
@@ -31,7 +32,10 @@ export default function runShapiroWilkTest() {
         pValue
             .append('span')
             .classed('sh-statistical-test__info', true)
-            .attr('title', 'Click to view information on the Shapiro-Wilk test.')
+            .attr(
+                'title',
+                `${validationMessage()}\nClick to view information on the Shapiro-Wilk normality test.`
+            )
             .html(' &#9432')
             .on('click', () => {
                 window.open('https://en.wikipedia.org/wiki/Shapiro%E2%80%93Wilk_test');

@@ -9,6 +9,10 @@ export default function customizeGroupByControl() {
     // Hide group-by control when no groups are specified.
     if (groupControl.datum().values.length === 1) groupControl.style('display', 'none');
     else {
+        groupControl.attr(
+            'title',
+            'Select a variable by which to stratify the distribution on the left.'
+        );
         const select = groupControl.selectAll('select').on('change', function(d) {
             context.config.group_label = this.value;
             context.config.group_by = context.config.groups.find(

@@ -1,4 +1,5 @@
 import pValueFormat from '../../../../util/pValueFormat';
+import validationMessage from '../../../../util/validationMessage';
 
 export default function annotatePValues() {
     if (this.sh.config.compare_distributions) {
@@ -23,7 +24,10 @@ export default function annotatePValues() {
         pValue
             .append('span')
             .classed('sh-statistical-test__info', true)
-            .attr('title', 'Click to view information on the two-sample Kolmogorov-Smirnov test.')
+            .attr(
+                'title',
+                `${validationMessage()}\nClick to view information on the Kolmogorov-Smirnov two-sample test.`
+            )
             .html(' &#9432')
             .on('click', () => {
                 window.open(

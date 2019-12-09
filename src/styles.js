@@ -46,6 +46,9 @@ export default function styles(settings) {
             '    font-size: 16px;' +
             '    margin-left: 5px;' +
             '}',
+            '#group-by {' +
+            '    cursor: help;' +
+            '}',
 
         /***--------------------------------------------------------------------------------------\
           Chart

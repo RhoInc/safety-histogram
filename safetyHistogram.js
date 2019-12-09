@@ -598,6 +598,7 @@
                 '    font-size: 16px;' +
                 '    margin-left: 5px;' +
                 '}',
+            '#group-by {' + '    cursor: help;' + '}',
             /***--------------------------------------------------------------------------------------\
         Chart
       \--------------------------------------------------------------------------------------***/
@@ -1277,6 +1278,11 @@
 
         if (groupControl.datum().values.length === 1) groupControl.style('display', 'none');
         else {
+            groupControl.attr(
+                'title',
+                'Select a variable by which to stratify the distribution on the left.'
+            );
+
             var _select = groupControl.selectAll('select').on('change', function(d) {
                 var _this = this;
 
@@ -2867,6 +2873,10 @@
         return pFmt;
     }
 
+    function validationMessage() {
+        return 'Caution: This graphic has been thoroughly tested, but is not validated.';
+    }
+
     function runShapiroWilkTest() {
         var _this = this;
 
@@ -2897,7 +2907,13 @@
             pValue
                 .append('span')
                 .classed('sh-statistical-test__info', true)
-                .attr('title', 'Click to view information on the Shapiro-Wilk test.')
+                .attr(
+                    'title',
+                    ''.concat(
+                        validationMessage(),
+                        '\nClick to view information on the Shapiro-Wilk normality test.'
+                    )
+                )
                 .html(' &#9432')
                 .on('click', function() {
                     window.open('https://en.wikipedia.org/wiki/Shapiro%E2%80%93Wilk_test');
@@ -3044,7 +3060,10 @@
                 .classed('sh-statistical-test__info', true)
                 .attr(
                     'title',
-                    'Click to view information on the two-sample Kolmogorov-Smirnov test.'
+                    ''.concat(
+                        validationMessage(),
+                        '\nClick to view information on the Kolmogorov-Smirnov two-sample test.'
+                    )
                 )
                 .html(' &#9432')
                 .on('click', function() {

@@ -85,11 +85,11 @@ fetch('https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinica
     .then(data => {
         writer
             .createObjectCsvWriter({
-                path: './test/kolmogorov-smirnov-two-sample-test-js.csv',
+                path: './test/kolmogorov-smirnov-two-sample-test.csv',
                 header: Object.keys(data[0]).map(key => { return { id: key, title: key }; }),
             })
             .writeRecords(data)
-            .then(() => console.log(`${'-'.repeat(100)}\n  > Output saved to kolmogorov-smirnov-two-sample-test-js.csv.\n${'-'.repeat(100)}`))
+            .then(() => console.log(`${'-'.repeat(100)}\n  > Output saved to kolmogorov-smirnov-two-sample-test.csv.\n${'-'.repeat(100)}`))
             .catch(error => console.log(error));
     })
     .catch(error => console.log(error));

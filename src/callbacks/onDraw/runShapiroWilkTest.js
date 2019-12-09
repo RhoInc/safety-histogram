@@ -1,6 +1,6 @@
 import vector from '../../util/stats/vector';
 import normality from '../../util/stats/normality';
-import { format } from 'd3';
+import pValueFormat from '../../util/pValueFormat';
 
 // TODO: Code review the shapiroWilk method because it differs slightly from the R calculation.
 export default function runShapiroWilkTest() {
@@ -26,7 +26,7 @@ export default function runShapiroWilkTest() {
                 'title',
                 'The Shapiro-Wilk test tests the null hypothesis that a sample x[1], ..., x[n] came from a normally distributed population.'
             )
-            .text(`p = ${format('.2f')(this.sw.p)}`);
+            .text(`p = ${pValueFormat(this.sw.p)}`);
 
         pValue
             .append('span')

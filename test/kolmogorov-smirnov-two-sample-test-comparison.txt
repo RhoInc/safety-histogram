@@ -1,0 +1,85 @@
+[1] "----------------------------------------------------------------------------------------------------"
+[1] "  Comparison of Kolmogorov-Smirnov tests between js and R"
+[1] "----------------------------------------------------------------------------------------------------"
+
+
+Table: Summary of data.frames
+
+version   arg          ncol   nrow
+--------  ----------  -----  -----
+x         r_output        6    294
+y         js_output       6    294
+
+
+
+Table: Summary of overall comparison
+
+statistic                                                      value
+------------------------------------------------------------  ------
+Number of by-variables                                             0
+Number of non-by variables in common                               6
+Number of variables compared                                       6
+Number of variables in x but not y                                 0
+Number of variables in y but not x                                 0
+Number of variables compared with some values unequal              1
+Number of variables compared with all values equal                 5
+Number of observations in common                                 294
+Number of observations in x but not y                              0
+Number of observations in y but not x                              0
+Number of observations with some compared variables unequal        1
+Number of observations with all compared variables equal         293
+Number of values unequal                                           1
+
+
+
+Table: Variables not shared
+
+|                        |
+|:-----------------------|
+|No variables not shared |
+
+
+
+Table: Other variables not compared
+
+|                                |
+|:-------------------------------|
+|No other variables not compared |
+
+
+
+Table: Observations not shared
+
+|                           |
+|:--------------------------|
+|No observations not shared |
+
+
+
+Table: Differences detected by variable
+
+var.x       var.y         n   NAs
+----------  ----------  ---  ----
+TEST        TEST          0     0
+group       group         0     0
+value       value         0     0
+n           n             0     0
+statistic   statistic     0     0
+p.value     p.value       1     0
+
+
+
+Table: Differences detected
+
+var.x     var.y      ..row.names..  values.x   values.y    row.x   row.y
+--------  --------  --------------  ---------  ---------  ------  ------
+p.value   p.value              257  0.3316     0.3315        257     257
+
+
+
+Table: Non-identical attributes
+
+|                            |
+|:---------------------------|
+|No non-identical attributes |
+

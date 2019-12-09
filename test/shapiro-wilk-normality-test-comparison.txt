@@ -1,0 +1,92 @@
+[1] "----------------------------------------------------------------------------------------------------"
+[1] "  Comparison of Shapiro-Wilk tests between js and R"
+[1] "----------------------------------------------------------------------------------------------------"
+
+
+Table: Summary of data.frames
+
+version   arg          ncol   nrow
+--------  ----------  -----  -----
+x         r_output        4     21
+y         js_output       4     21
+
+
+
+Table: Summary of overall comparison
+
+statistic                                                      value
+------------------------------------------------------------  ------
+Number of by-variables                                             0
+Number of non-by variables in common                               4
+Number of variables compared                                       4
+Number of variables in x but not y                                 0
+Number of variables in y but not x                                 0
+Number of variables compared with some values unequal              1
+Number of variables compared with all values equal                 3
+Number of observations in common                                  21
+Number of observations in x but not y                              0
+Number of observations in y but not x                              0
+Number of observations with some compared variables unequal       16
+Number of observations with all compared variables equal           5
+Number of values unequal                                          16
+
+
+
+Table: Variables not shared
+
+|                        |
+|:-----------------------|
+|No variables not shared |
+
+
+
+Table: Other variables not compared
+
+|                                |
+|:-------------------------------|
+|No other variables not compared |
+
+
+
+Table: Observations not shared
+
+|                           |
+|:--------------------------|
+|No observations not shared |
+
+
+
+Table: Differences detected by variable
+
+var.x       var.y         n   NAs
+----------  ----------  ---  ----
+TEST        TEST          0     0
+n           n             0     0
+statistic   statistic     0     0
+p.value     p.value      16     0
+
+
+
+Table: Differences detected (6 not shown)
+
+var.x     var.y      ..row.names..  values.x   values.y    row.x   row.y
+--------  --------  --------------  ---------  ---------  ------  ------
+p.value   p.value                1  0.75       0.7507          1       1
+p.value   p.value                2  0.0444     0.0447          2       2
+p.value   p.value                5  0.2587     0.2595          5       5
+p.value   p.value                6  0.669      0.6699          6       6
+p.value   p.value                7  0.5043     0.5052          7       7
+p.value   p.value                8  0.1645     0.1651          8       8
+p.value   p.value               10  0.2648     0.2656         10      10
+p.value   p.value               12  0.37       0.3709         12      12
+p.value   p.value               13  0.0577     0.058          13      13
+p.value   p.value               14  0.0157     0.0158         14      14
+
+
+
+Table: Non-identical attributes
+
+|                            |
+|:---------------------------|
+|No non-identical attributes |
+

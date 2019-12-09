@@ -32,7 +32,7 @@
     "format": "npm run format-src && npm run format-bundle",
     "format-src": "prettier --print-width=100 --tab-width=4 --single-quote --write \"./src/**/!(*styles).js\"",
     "format-bundle": "prettier --print-width=100 --tab-width=4 --single-quote --write ./safetyHistogram.js",
-    "test": "node ./test/shapiro-wilk-normality-test.js",
+    "test": "node ./test/shapiro-wilk-normality-test.js && node ./test/kolmogorov-smirnov-two-sample-test.js",
     "test-page": "start chrome ./test-page/index.html && start firefox ./test-page/index.html && start iexplore file://%CD%/test-page/index.html",
     "watch": "rollup -c -w"
   },

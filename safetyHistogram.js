@@ -2848,6 +2848,25 @@
         return result;
     };
 
+    function pValueFormat(p) {
+        var fmt = d3.format('.3f');
+        var pFmt =
+            p < 0.001
+                ? '<0.001***'
+                : p === 0.001
+                ? '0.001***'
+                : p < 0.01
+                ? ''.concat(fmt(p), '**')
+                : p < 0.05
+                ? ''.concat(fmt(p), '*')
+                : p < 0.999
+                ? fmt(p)
+                : p <= 1.0
+                ? '>0.999'
+                : 'NA';
+        return pFmt;
+    }
+
     function runShapiroWilkTest() {
         var _this = this;
 
@@ -2874,7 +2893,7 @@
                     'title',
                     'The Shapiro-Wilk test tests the null hypothesis that a sample x[1], ..., x[n] came from a normally distributed population.'
                 )
-                .text('p = '.concat(d3.format('.2f')(this.sw.p)));
+                .text('p = '.concat(pValueFormat(this.sw.p)));
             pValue
                 .append('span')
                 .classed('sh-statistical-test__info', true)
@@ -3019,7 +3038,7 @@
                             .concat(this.sh.config.group_label, ' = ')
                             .concat(this.filters[0].val, ' with that of the full set of results.')
                 )
-                .text('p = '.concat(d3.format('.2f')(this.ks.p)));
+                .text('p = '.concat(pValueFormat(this.ks.p)));
             pValue
                 .append('span')
                 .classed('sh-statistical-test__info', true)

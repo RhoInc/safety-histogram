@@ -3,8 +3,8 @@ const fs = require('fs');
 const fetch = require('node-fetch');
 const parse = require('csv-parse/lib/sync');
 const d3 = require('d3');
-const vector = require('../src/util/stats/vector').default;
-const normality = require('../src/util/stats/normality').default;
+const vector = require('../../src/util/stats/vector').default;
+const normality = require('../../src/util/stats/normality').default;
 const writer = require('csv-writer');
 
 fetch('https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinical-trials/renderer-specific/adbds.csv')
@@ -47,11 +47,11 @@ fetch('https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinica
     .then(data => {
         writer
             .createObjectCsvWriter({
-                path: './test/shapiro-wilk-normality-test.csv',
+                path: './test/shapiro-wilk-normality-test/results.csv',
                 header: Object.keys(data[0]).map(key => { return { id: key, title: key }; }),
             })
             .writeRecords(data)
-            .then(() => console.log(`${'-'.repeat(100)}\n  > Output saved to shapiro-wilk-normality-test.csv.\n${'-'.repeat(100)}`))
+            .then(() => console.log(`${'-'.repeat(100)}\n  > Output saved to shapiro-wilk-normality-test/results.csv.\n${'-'.repeat(100)}`))
             .catch(error => console.log(error));
     })
     .catch(error => console.log(error));

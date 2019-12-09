@@ -3,8 +3,8 @@ const fs = require('fs');
 const fetch = require('node-fetch');
 const parse = require('csv-parse/lib/sync');
 const d3 = require('d3');
-const vector = require('../src/util/stats/vector').default;
-const nonparametric = require('../src/util/stats/nonparametric').default;
+const vector = require('../../src/util/stats/vector').default;
+const nonparametric = require('../../src/util/stats/nonparametric').default;
 const writer = require('csv-writer');
 
 fetch('https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinical-trials/renderer-specific/adbds.csv')
@@ -85,11 +85,11 @@ fetch('https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinica
     .then(data => {
         writer
             .createObjectCsvWriter({
-                path: './test/kolmogorov-smirnov-two-sample-test.csv',
+                path: './test/kolmogorov-smirnov-two-sample-test/results.csv',
                 header: Object.keys(data[0]).map(key => { return { id: key, title: key }; }),
             })
             .writeRecords(data)
-            .then(() => console.log(`${'-'.repeat(100)}\n  > Output saved to kolmogorov-smirnov-two-sample-test.csv.\n${'-'.repeat(100)}`))
+            .then(() => console.log(`${'-'.repeat(100)}\n  > Output saved to kolmogorov-smirnov-two-sample-test/results.csv.\n${'-'.repeat(100)}`))
             .catch(error => console.log(error));
     })
     .catch(error => console.log(error));

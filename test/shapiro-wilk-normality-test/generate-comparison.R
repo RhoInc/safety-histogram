@@ -4,14 +4,14 @@ library(dplyr)
 library(arsenal)
 
 # read in raw data
-if (!exists('data'))
-    data <- 'https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinical-trials/renderer-specific/adbds.csv' %>%
+if (!exists('adbds'))
+    adbds <- 'https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinical-trials/renderer-specific/adbds.csv' %>%
         fread(
             sep = ','
         )
 
 # run Shapiro-Wilk normality test for each test
-r_output <- data %>%
+r_output <- adbds %>%
     filter(
         !is.na(STRESN)
     ) %>%
@@ -27,7 +27,7 @@ r_output <- data %>%
 
 
 # read in .js output
-js_output <- 'shapiro-wilk-normality-test.csv' %>%
+js_output <- 'results.csv' %>%
     fread(
         sep = ','
     ) %>%
@@ -37,7 +37,7 @@ js_output <- 'shapiro-wilk-normality-test.csv' %>%
     )
 
 # direct output of comparison of test results to text file
-con <- file('shapiro-wilk-normality-test-comparison.txt')
+con <- file('comparison.txt')
 sink(con)
 sink(con, type = 'message')
 

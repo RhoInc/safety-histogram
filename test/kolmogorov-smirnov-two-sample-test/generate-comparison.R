@@ -5,14 +5,14 @@ library(dplyr)
 library(arsenal)
 
 # read in raw data
-if (!exists('data'))
-    data <- 'https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinical-trials/renderer-specific/adbds.csv' %>%
+if (!exists('adbds'))
+    adbds <- 'https://raw.githubusercontent.com/RhoInc/data-library/master/data/clinical-trials/renderer-specific/adbds.csv' %>%
         fread(
             sep = ','
         )
 
 # run Kolmogorov-Smirnov two sample test on each test-groupVariable-groupValue combination
-r_output <- data %>%
+r_output <- adbds %>%
     filter(
         !is.na(STRESN)
     ) %>%
@@ -23,14 +23,14 @@ r_output <- data %>%
     group_by(TEST, group, value) %>%
     summarize(
         n = n(),
-        statistic = round(ks.test(STRESN, data %>% rename(test = TEST) %>% filter(test == TEST) %>% pull(STRESN))$statistic, 4),
-        p.value = round(ks.test(STRESN, data %>% rename(test = TEST) %>% filter(test == TEST) %>% pull(STRESN))$p.value, 4)
+        statistic = round(ks.test(STRESN, adbds %>% rename(test = TEST) %>% filter(test == TEST) %>% pull(STRESN))$statistic, 4),
+        p.value = round(ks.test(STRESN, adbds %>% rename(test = TEST) %>% filter(test == TEST) %>% pull(STRESN))$p.value, 4)
     ) %>%
     ungroup %>%
     arrange(TEST, group, value)
 
 # read in .js output
-js_output <- 'kolmogorov-smirnov-two-sample-test.csv' %>%
+js_output <- 'results.csv' %>%
     fread(
         sep = ','
     ) %>%
@@ -40,7 +40,7 @@ js_output <- 'kolmogorov-smirnov-two-sample-test.csv' %>%
     )
 
 # direct output of comparison of test results to text file
-con <- file('kolmogorov-smirnov-two-sample-test-comparison.txt')
+con <- file('comparison.txt')
 sink(con)
 sink(con, type = 'message')
 

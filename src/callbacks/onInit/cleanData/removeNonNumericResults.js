@@ -1,5 +1,5 @@
 export default function removeNonNumericResults() {
-    //Filter out non-numeric results.
+    // Filter out non-numeric results.
     const numericResults = this.raw_data.filter(d => /^-?[0-9.]+$/.test(d[this.config.value_col]));
     this.removedRecords.nonNumeric = this.raw_data.length - numericResults.length;
     if (this.removedRecords.nonNumeric > 0)
@@ -11,6 +11,6 @@ export default function removeNonNumericResults() {
             } been removed.`
         );
 
-    //Update data.
+    // Update data.
     this.raw_data = numericResults;
 }

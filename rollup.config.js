@@ -1,9 +1,9 @@
-import json from 'rollup-plugin-json';
 import babel from 'rollup-plugin-babel';
+import json from 'rollup-plugin-json';
 
-var pkg = require('./package.json');
+const pkg = require('./package.json');
 
-module.exports = {
+export default {
     input: pkg.module,
     output: {
         name: pkg.name
@@ -22,24 +22,24 @@ module.exports = {
         },
     },
     external: (function() {
-        var dependencies = pkg.dependencies;
+        const dependencies = Object.keys(pkg.dependencies)
+            .filter(dependency => dependency !== 'jerzy');
 
-        return Object.keys(dependencies);
+        return dependencies;
     }()),
     plugins: [
-        json({
-            include: ['settings-schema.json']
-        }),
         babel({
             exclude: 'node_modules/**',
             presets: [
-                [ 'env', {modules: false} ]
+                [ '@babel/preset-env' ]
             ],
-            plugins: [
-                'external-helpers'
-            ],
+            //plugins: [
+            //    '@babel/plugin-external-helpers'
+            //],
             babelrc: false
+        }),
+        json({
+            include: ['settings-schema.json']
         }),
     ]
 };
-

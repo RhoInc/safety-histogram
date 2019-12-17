@@ -1,18 +1,13 @@
 export default function addFootnoteContainer() {
     this.footnotes = {
-        container: this.wrap
-            .insert('div', '.wc-chart')
-            .classed('footnotes', true)
-            .style({
-                'border-top': '1px solid #ccc',
-                'padding-top': '10px'
-            })
+        container: this.wrap.insert('div', '.wc-chart').classed('sh-footnotes', true)
     };
     this.footnotes.barClick = this.footnotes.container
         .append('p')
-        .classed('footnote footnote--bar-click', true)
+        .classed('sh-foot-note sh-foot-note--bar-click', true)
         .text('Click a bar for details.');
     this.footnotes.barDetails = this.footnotes.container
         .append('p')
-        .classed('footnote footnote--bar-details', true);
+        .classed('sh-foot-note sh-foot-note--bar-details', true)
+        .html('<br>');
 }

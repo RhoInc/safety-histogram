@@ -82,6 +82,29 @@ the name of the variable
 
 
 
+## settings.groups
+`array`
+
+an array of variables and metadata that will appear as options in the Group by dropdown
+
+**default:** none
+
+### settings.groups[].label
+`string`
+
+a description of the variable
+
+**default:** none
+
+### settings.groups[].value_col
+`string`
+
+the name of the variable
+
+**default:** none
+
+
+
 ## settings.details
 `array`
 
@@ -114,6 +137,15 @@ the name of the initially displayed medical sign; defaults to the first measure 
 
 
 
+## settings.bin_algorithm
+`string`
+
+the name of the binning algorithm with which to bin the data initially
+
+**default:** `"Scott's normal reference rule"`
+
+
+
 ## settings.normal_range
 `boolean`
 
@@ -123,7 +155,7 @@ a boolean that dictates whether the normal range control will be generated
 
 
 
-## settings.displayNormalRange
+## settings.display_normal_range
 `boolean`
 
 a boolean that dictates whether the normal range will be displayed initially
@@ -132,19 +164,37 @@ a boolean that dictates whether the normal range will be displayed initially
 
 
 
-## settings.bin_algorithm
-`string`
-
-a boolean that dictates whether the normal range will be displayed initially
-
-**default:** `"Scott's normal reference rule"`
-
-
-
 ## settings.annotate_bin_boundaries
 `boolean`
 
 a boolean that dictates whether x-axis tick labels appear between bars or at regular intervals along the x-axis
+
+**default:** `false`
+
+
+
+## settings.test_normality
+`boolean`
+
+a boolean that dictates whether a Shapiro-Wilk normality test will be run and annotated in the top right of the chart
+
+**default:** `false`
+
+
+
+## settings.group_by
+`string`
+
+the name of the variable by which to group the data initially
+
+**default:** none
+
+
+
+## settings.compare_distributions
+`boolean`
+
+a boolean that dictates whether the a Kolmogorov-Smirnov two-sample test will be run for each subgroup and annotated in the top right of each small multiple
 
 **default:** `false`
 
@@ -188,6 +238,8 @@ The object below contains Webcharts settings that define the safety-histogram ch
             }
         }
     ],
-    "aspect": 3
+    "legend": {},
+    "aspect": 3,
+    "gridlines": "y"
 }
 ```

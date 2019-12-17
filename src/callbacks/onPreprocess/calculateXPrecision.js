@@ -1,27 +1,27 @@
 import { format } from 'd3';
 
 export default function calculateXPrecision() {
-    //define the precision of the x-axis
+    // define the precision of the x-axis
     this.config.x.precisionFactor = Math.round(
         this.measure[this.measure.domain_state].stats.log10range
     );
     this.config.x.precision = Math.pow(10, this.config.x.precisionFactor);
 
-    //x-axis format
+    // x-axis format
     this.config.x.format =
         this.config.x.precisionFactor > 0
             ? '.0f'
             : `.${Math.abs(this.config.x.precisionFactor) + 1}f`;
     this.config.x.d3format = format(this.config.x.format);
 
-    //one more precision please: bin format
+    // one more precision please: bin format
     this.config.x.format1 =
         this.config.x.precisionFactor > 0
             ? '.1f'
             : `.${Math.abs(this.config.x.precisionFactor) + 2}f`;
     this.config.x.d3format1 = format(this.config.x.format1);
 
-    //define the size of the x-axis limit increments
+    // define the size of the x-axis limit increments
     let step =
         this.measure[this.measure.domain_state].stats.range > 0
             ? Math.abs(this.measure[this.measure.domain_state].stats.range / 15) // non-zero range

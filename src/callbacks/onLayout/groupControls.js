@@ -1,12 +1,12 @@
 import insertGrouping from './groupControls/insertGrouping';
 
 export default function groupControls() {
-    //Group x-axis controls.
+    // Group x-axis controls.
     insertGrouping.call(this, '.x-axis', 'X-axis Limits');
 
-    //Group filters.
+    // Group filters.
     if (this.filters.length > 1) insertGrouping.call(this, '.subsetter:not(#measure)', 'Filters');
 
-    //Group bin controls.
+    // Group bin controls.
     insertGrouping.call(this, '.bin', 'Bins');
 }

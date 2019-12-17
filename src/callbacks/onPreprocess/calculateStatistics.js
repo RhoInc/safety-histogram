@@ -4,7 +4,7 @@ export default function calculateStatistics(obj) {
     ['raw', 'custom'].forEach(property => {
         const obj = this.measure[property];
 
-        //Calculate statistics.
+        // Calculate statistics.
         obj.stats = {
             n: obj.results.length,
             nUnique: obj.uniqueResults.length,

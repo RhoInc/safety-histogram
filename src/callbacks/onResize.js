@@ -1,4 +1,5 @@
 import drawZeroRangeBar from './onResize/drawZeroRangeBar';
+import drawSmallMultiples from './onResize/drawSmallMultiples';
 import addHoverBars from './onResize/addHoverBars';
 import addBinEventListeners from './onResize/addBinEventListeners';
 import drawNormalRanges from './onResize/drawNormalRanges';
@@ -7,24 +8,27 @@ import removeXAxisTicks from './onResize/removeXAxisTicks';
 import annotateBinBoundaries from './onResize/annotateBinBoundaries';
 
 export default function onResize() {
-    //Draw custom bin for single observation subsets.
+    // Draw custom bin for single observation subsets.
     drawZeroRangeBar.call(this);
 
-    //Add invisible bars for improved hovering.
+    // Group bars by group-by variable.
+    drawSmallMultiples.call(this);
+
+    // Add invisible bars for improved hovering.
     addHoverBars.call(this);
 
-    //Display data listing on bin click.
+    // Display data listing on bin click.
     addBinEventListeners.call(this);
 
-    //Visualize normal ranges.
+    // Visualize normal ranges.
     drawNormalRanges.call(this);
 
-    //Keep highlighted bin highlighted on resize.
+    // Keep highlighted bin highlighted on resize.
     maintainBinHighlighting.call(this);
 
-    //Remove x-axis ticks.
+    // Remove x-axis ticks.
     removeXAxisTicks.call(this);
 
-    //Annotate bin boundaries.
+    // Annotate bin boundaries.
     annotateBinBoundaries.call(this);
 }

@@ -2,17 +2,17 @@ import { set, nest, select } from 'd3';
 
 export default function annotateBinBoundaries() {
     if (this.config.annotate_bin_boundaries) {
-        //Remove bin boundaries.
+        // Remove bin boundaries.
         this.svg.select('g.bin-boundaries').remove();
 
-        //Check for repeats of values formatted with lower precision.
+        // Check for repeats of values formatted with lower precision.
         const repeats = nest()
             .key(d => d.value1)
             .rollup(d => d.length)
             .entries(this.measure.binBoundaries)
             .some(d => d.values > 1);
 
-        //Annotate bin boundaries.
+        // Annotate bin boundaries.
         const axis = this.svg.append('g').classed('bin-boundaries axis', true);
         const ticks = axis
             .selectAll('g.bin-boundary')
@@ -30,7 +30,7 @@ export default function annotateBinBoundaries() {
             })
             .text(d => (repeats ? d.value2 : d.value1));
 
-        //Thin ticks.
+        // Thin ticks.
         const textDimensions = [];
         texts.each(function(d) {
             const text = select(this);

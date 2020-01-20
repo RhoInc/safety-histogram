@@ -25,6 +25,8 @@ export default function webchartsSettings() {
                 attributes: { 'fill-opacity': 0.75 }
             }
         ],
-        aspect: 3
+        legend: {},
+        aspect: 3,
+        gridlines: 'y'
     };
 }

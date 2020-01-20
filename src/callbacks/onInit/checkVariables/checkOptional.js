@@ -28,7 +28,7 @@ export default function checkOptional() {
             });
         } // optional variable arrays (filters, listing columns)
 
-        //Remove participant ID column from listing if variable is missing.
+        // Remove participant ID column from listing if variable is missing.
         if (definition.property === 'id_col' && definition.missing) {
             const index = this.listing.config.cols.findIndex(col => col === definition.setting);
             this.listing.config.cols.splice(index, 1);

@@ -1,5 +1,5 @@
 export default function updateXAxisResetButton() {
-    //Update tooltip of x-axis domain reset button.
+    // Update tooltip of x-axis domain reset button.
     if (this.measure.current !== this.measure.previous) {
         this.controls.reset.container.attr(
             'title',

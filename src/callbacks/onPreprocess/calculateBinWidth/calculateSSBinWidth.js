@@ -1,7 +1,7 @@
 import { range, layout, mean, sum, min } from 'd3';
 
 export default function calculateSSBinWidth(obj) {
-    //https://en.wikipedia.org/wiki/Histogram#Shimazaki_and_Shinomoto's_choice
+    // https://en.wikipedia.org/wiki/Histogram#Shimazaki_and_Shinomoto's_choice
     const nBins = range(2, 100); // number of bins
     const cost = range(nBins.length); // cost function results
     const binWidths = [...cost]; // bin widths
@@ -28,24 +28,24 @@ export default function calculateSSBinWidth(obj) {
         });
     }
 
-    //consoleLogVars(
+    // consoleLogVars(
     //    {
     //        nBins,
     //        binWidths,
     //        binBoundaries,
-    //        //bins,
+    //        // bins,
     //        binSizes,
     //        meanBinSizes,
     //        residuals,
     //        cost
     //    },
     //    5
-    //);
+    // );
 
     const minCost = min(cost);
     const idx = cost.findIndex(c => c === minCost);
 
     obj.stats.SSBinWidth = binWidths[idx];
     obj.stats.SSBins = nBins[idx];
-    //const optBinBoundaries = range(obj.stats.min, obj.stats.max, obj.stats.range/optNBins);
+    // const optBinBoundaries = range(obj.stats.min, obj.stats.max, obj.stats.range/optNBins);
 }

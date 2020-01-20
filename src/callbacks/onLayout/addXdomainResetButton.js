@@ -1,7 +1,7 @@
 import { extent } from 'd3';
 
 export default function addXdomainResetButton() {
-    //Add x-domain reset button container.
+    // Add x-domain reset button container.
     this.controls.reset = {
         container: this.controls.wrap
             .insert('div', '#lower')
@@ -14,13 +14,13 @@ export default function addXdomainResetButton() {
             .style('vertical-align', 'bottom')
     };
 
-    //Add label.
+    // Add label.
     this.controls.reset.label = this.controls.reset.container
         .append('span')
         .attr('class', 'wc-control-label')
         .text('');
 
-    //Add button.
+    // Add button.
     this.controls.reset.button = this.controls.reset.container
         .append('button')
         .text(' Reset ')

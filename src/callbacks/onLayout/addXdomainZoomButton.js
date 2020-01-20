@@ -2,7 +2,7 @@ import { extent } from 'd3';
 
 export default function addXdomainZoomButton() {
     if (this.filters.find(filter => filter.col !== 'sh_measure')) {
-        //Add x-domain zoom button container.
+        // Add x-domain zoom button container.
         const resetContainer = this.controls.wrap
             .select('.x-axis-limits-grouping-fieldset')
             .append('div')
@@ -21,13 +21,13 @@ export default function addXdomainZoomButton() {
                 'margin-left': '2px'
             });
 
-        //Add label.
+        // Add label.
         resetContainer
             .append('span')
             .attr('class', 'wc-control-label')
             .text('');
 
-        //Add button.
+        // Add button.
         resetContainer
             .append('button')
             .text(' Zoom ')
